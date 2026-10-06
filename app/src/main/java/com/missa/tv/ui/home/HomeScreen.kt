@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -63,7 +67,13 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenManualSetup: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            // Les barres système sont translucides (affichage bord à bord) :
+            // sans cette marge, le titre passerait sous l'heure et la batterie.
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+    ) {
         EnTete(state = state, onOpenSettings = onOpenSettings)
 
         if (state.requiresAppUpdate) {
@@ -123,12 +133,6 @@ private fun EnTete(state: HomeUiState, onOpenSettings: () -> Unit) {
             if (state.groups.isNotEmpty()) {
                 Text(
                     text = stringResource(R.string.home_channel_count, state.groups.size),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else if (state.isEmpty) {
-                Text(
-                    text = stringResource(R.string.home_config_first_time),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -271,13 +275,29 @@ private fun AucuneChaine(onOpenManualSetup: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
         ) {
+            Icon(
+                imageVector = Icons.Filled.Tv,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.home_config_first_time),
+                modifier = Modifier.padding(top = 16.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+            )
             Text(
                 text = stringResource(R.string.empty_channels),
-                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
-            Button(onClick = onOpenManualSetup, modifier = Modifier.padding(top = 16.dp)) {
+            Button(onClick = onOpenManualSetup, modifier = Modifier.padding(top = 20.dp)) {
                 Text(text = stringResource(R.string.home_configure_portal))
             }
         }

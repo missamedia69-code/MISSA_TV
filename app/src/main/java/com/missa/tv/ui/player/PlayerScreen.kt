@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -146,7 +149,13 @@ private fun Commandes(
     onOuvrirSelecteur: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    // La vidéo occupe tout l'écran ; seules les commandes évitent les barres
+    // système, sinon le bouton de retour tomberait sous la barre d'état.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -244,6 +253,7 @@ private fun BandeauAnnonce(state: PlayerUiState, onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(bottom = 96.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
