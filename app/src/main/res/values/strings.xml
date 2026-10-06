@@ -68,8 +68,8 @@
     <string name="home_loading">Chargement des chaînes…</string>
     <string name="home_open_settings">Réglages</string>
     <string name="home_configure_portal">Configurer un portail</string>
-    <string name="home_config_first_time">Aucun portail n'est configuré. Saisissez les informations fournies par votre fournisseur d'accès.</string>
-    <string name="home_update_required">Une nouvelle version de l'application est disponible.</string>
+    <string name="home_config_first_time">Aucun portail n\'est configuré. Saisissez les informations fournies par votre fournisseur d\'accès.</string>
+    <string name="home_update_required">Une nouvelle version de l\'application est disponible.</string>
 
     <!-- Écran de lecture -->
     <string name="player_open">Regarder</string>
@@ -78,20 +78,20 @@
     <string name="notice_degraded">Qualité réduite automatiquement : %1$s</string>
     <string name="notice_upgraded">Qualité remontée automatiquement : %1$s</string>
     <string name="notice_buffering">Mise en mémoire tampon…</string>
-    <string name="notice_single_quality_buffering">Cette chaîne n'est diffusée qu'en une seule qualité : le mode économie agit sur le tampon et la stabilité, pas sur la résolution.</string>
+    <string name="notice_single_quality_buffering">Cette chaîne n\'est diffusée qu\'en une seule qualité : le mode économie agit sur le tampon et la stabilité, pas sur la résolution.</string>
     <string name="player_audio_only_notice">Mode audio seul : seule la bande sonore est téléchargée.</string>
 
     <!-- Sélecteur de qualité -->
     <string name="quality_choose">Choisir la qualité</string>
-    <string name="quality_auto_description">Laisse l'application adapter la qualité au débit mesuré.</string>
+    <string name="quality_auto_description">Laisse l\'application adapter la qualité au débit mesuré.</string>
     <string name="quality_lock">Verrouiller ce choix</string>
-    <string name="quality_unlock">Rétablir l'adaptation automatique</string>
+    <string name="quality_unlock">Rétablir l\'adaptation automatique</string>
     <string name="quality_measured">Débit mesuré : %1$d kb/s</string>
-    <string name="quality_measured_unknown">Débit mesuré : en cours d'évaluation</string>
+    <string name="quality_measured_unknown">Débit mesuré : en cours d\'évaluation</string>
     <string name="quality_connection_low">Connexion faible</string>
     <string name="quality_connection_medium">Connexion moyenne</string>
     <string name="quality_connection_good">Bonne connexion</string>
-    <string name="quality_connection_unknown">Connexion en cours d'évaluation</string>
+    <string name="quality_connection_unknown">Connexion en cours d\'évaluation</string>
 
     <!-- Réglages -->
     <string name="settings_title">Réglages</string>
@@ -100,10 +100,10 @@
     <string name="settings_profile_name">Nom du profil</string>
     <string name="settings_portal_url">Adresse du portail</string>
     <string name="settings_portal_url_hint">http://exemple/</string>
-    <string name="settings_mac">Adresse MAC de l'appareil</string>
+    <string name="settings_mac">Adresse MAC de l\'appareil</string>
     <string name="settings_mac_hint">00:1A:79:XX:XX:XX</string>
     <string name="settings_secrets_notice">Ces informations ne sont jamais affichées dans les journaux et restent stockées chiffrées sur cet appareil.</string>
-    <string name="settings_quality_section">Qualité d'image</string>
+    <string name="settings_quality_section">Qualité d\'image</string>
     <string name="settings_quality_default">Mode appliqué par défaut</string>
     <string name="settings_config_section">Configuration distante</string>
     <string name="settings_config_last_sync">Dernière vérification : %1$s</string>
@@ -112,7 +112,7 @@
     <string name="settings_diagnostics_section">Diagnostic</string>
     <string name="settings_about_section">À propos</string>
     <string name="settings_version">Version %1$s (%2$d)</string>
-    <string name="settings_legal">MISSA TV est un lecteur : l'application ne fournit aucune chaîne ni aucun flux. Vous êtes responsable de l'usage de contenus que vous avez le droit de regarder.</string>
+    <string name="settings_legal">MISSA TV est un lecteur : l\'application ne fournit aucune chaîne ni aucun flux. Vous êtes responsable de l\'usage de contenus que vous avez le droit de regarder.</string>
 
     <!-- Validation -->
     <string name="validation_url_required">Adresse du portail requise.</string>

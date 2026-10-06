@@ -49,6 +49,12 @@ jobs:
           chmod +x scripts/check-secrets.sh
           ./scripts/check-secrets.sh
 
+      # Les chaînes de caractères sont contrôlées avant la compilation : une
+      # apostrophe non échappée fait échouer aapt2 sur tout le fichier, et ce
+      # contrôle évite un cycle de CI complet pour une cause triviale.
+      - name: Contrôle des chaînes de caractères
+        run: python3 scripts/check-strings.py
+
   # ───────────────────────────────────────────────────────────────────────────
   # 2. Validation de la configuration distante (schéma + cohérence).
   # ───────────────────────────────────────────────────────────────────────────
