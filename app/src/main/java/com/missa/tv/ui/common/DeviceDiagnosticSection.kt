@@ -2,10 +2,8 @@ package com.missa.tv.ui.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -22,31 +20,30 @@ import com.missa.tv.ui.adaptive.WindowWidthClass
 import com.missa.tv.ui.theme.MissaTvTheme
 
 /**
- * Écran de diagnostic de l'adaptation à l'appareil.
+ * Diagnostic de l'adaptation à l'appareil.
  *
- * Il affiche ce que l'application a détecté : type d'appareil, classe de
- * largeur de fenêtre, présence d'un écran tactile, prise en charge du
- * Picture-in-Picture.
+ * Affiche ce que l'application a détecté : type d'appareil, classe de largeur de
+ * fenêtre, écran tactile, Picture-in-Picture, échelle de police.
  *
- * Cet écran est provisoire : il sera remplacé par le routeur de navigation
- * (interface TV / mobile / tablette). Il reste utile pour vérifier le
- * comportement sur un matériel donné.
+ * **Ce composant ne défile pas et ne remplit pas l'écran.** C'est délibéré : il
+ * est destiné à être inséré dans une page qui défile déjà (l'écran de réglages).
+ * Un composant défilant placé dans un autre composant défilant reçoit une
+ * contrainte de hauteur infinie, ce que Compose refuse par une exception — la
+ * cause exacte du plantage observé au premier lancement. Toute réutilisation
+ * doit donc se faire dans un conteneur qui défile, jamais à la racine d'un écran.
  */
 @Composable
-fun DeviceDiagnosticScreen(
+fun DeviceDiagnosticSection(
     deviceProfile: DeviceProfile,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = stringResource(R.string.device_diagnostic_title),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
 
@@ -65,6 +62,7 @@ fun DeviceDiagnosticScreen(
 @Composable
 private fun DiagnosticCard(rows: List<Pair<String, String>>) {
     Card(
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -109,10 +107,9 @@ private fun Boolean.yesNoLabel(): String =
     stringResource(if (this) R.string.yes else R.string.no)
 
 @Preview(name = "Téléphone", widthDp = 411, heightDp = 891)
-@Preview(name = "Tablette", widthDp = 800, heightDp = 1280)
 @Preview(name = "Télévision", widthDp = 960, heightDp = 540)
 @Composable
-private fun DeviceDiagnosticScreenPreview() {
+private fun DeviceDiagnosticSectionPreview() {
     val television = DeviceProfile(
         type = DeviceType.TELEVISION,
         widthClass = WindowWidthClass.EXPANDED,
@@ -122,6 +119,6 @@ private fun DeviceDiagnosticScreenPreview() {
         fontScale = 1f,
     )
     MissaTvTheme(deviceProfile = television) {
-        DeviceDiagnosticScreen(deviceProfile = television)
+        DeviceDiagnosticSection(deviceProfile = television)
     }
 }

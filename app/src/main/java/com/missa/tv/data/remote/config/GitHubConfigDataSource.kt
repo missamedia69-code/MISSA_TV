@@ -13,6 +13,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Réponse de l'API Contents de GitHub pour un fichier.
@@ -40,6 +41,9 @@ interface GitHubContentsApi {
         @Header("If-None-Match") etag: String? = null,
         @Header("X-GitHub-Api-Version") apiVersion: String = API_VERSION,
         @Header("Authorization") authorization: String? = null,
+        // Branche ou étiquette lue. Omis (null) : GitHub sert la branche par
+        // défaut du dépôt, qui est la seule à faire foi pour les appareils.
+        @Query("ref") ref: String? = null,
     ): Response<GitHubContentDto>
 
     companion object {
@@ -90,6 +94,7 @@ class GitHubConfigDataSource @Inject constructor(
                 path = RemoteConfigSource.path,
                 etag = etag,
                 authorization = RemoteConfigSource.authorization,
+                ref = RemoteConfigSource.ref,
             )
 
             when {
@@ -115,8 +120,16 @@ class GitHubConfigDataSource @Inject constructor(
                     }
                 }
 
-                // 404 : le fichier a été renommé ou supprimé. 401/403 : jeton
-                // invalide ou limite de requêtes atteinte.
+                // 404 : le fichier n'existe pas **sur la branche lue** — cas le
+                // plus fréquent : le fichier est publié sur une branche de travail
+                // et absent de la branche par défaut. Le message le dit, car la
+                // cause est sinon invisible depuis l'application.
+                reponse.code() == HTTP_NOT_FOUND -> {
+                    MissaLog.w("Configuration distante : fichier absent de la branche lue")
+                    ConfigFetchResult.Failed(AppError.ConfigNotFound)
+                }
+
+                // 401/403 : jeton invalide ou limite de requêtes atteinte.
                 else -> {
                     MissaLog.w("Configuration distante : réponse ${reponse.code()} de GitHub")
                     ConfigFetchResult.Failed(AppError.InvalidConfig)
@@ -133,6 +146,7 @@ class GitHubConfigDataSource @Inject constructor(
 
     private companion object {
         const val HTTP_NOT_MODIFIED = 304
+        const val HTTP_NOT_FOUND = 404
     }
 }
 
@@ -151,6 +165,15 @@ object RemoteConfigSource {
     val repo: String = BuildConfig.GITHUB_CONFIG_REPO
 
     val path: String = BuildConfig.GITHUB_CONFIG_PATH
+
+    /**
+     * Branche ou étiquette lue, ou `null` pour la branche par défaut du dépôt.
+     *
+     * Par défaut, aucune valeur n'est fournie : les appareils lisent donc la
+     * branche par défaut, celle qui fait autorité. Forcer une autre branche est
+     * un réglage de mise au point, pas un fonctionnement normal.
+     */
+    val ref: String? = BuildConfig.GITHUB_CONFIG_REF.takeIf { it.isNotBlank() }
 
     /** En-tête d'autorisation, ou `null` si aucun jeton n'est configuré. */
     val authorization: String? = BuildConfig.GITHUB_CONFIG_TOKEN

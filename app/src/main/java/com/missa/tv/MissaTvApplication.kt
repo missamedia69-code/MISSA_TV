@@ -3,6 +3,7 @@ package com.missa.tv
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.data.work.ConfigRefreshScheduler
 import dagger.hilt.android.HiltAndroidApp
@@ -30,6 +31,9 @@ class MissaTvApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var configRefreshScheduler: ConfigRefreshScheduler
 
+    @Inject
+    lateinit var crashRecorder: CrashRecorder
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -40,6 +44,11 @@ class MissaTvApplication : Application(), Configuration.Provider {
 
         // Les traces détaillées ne sont émises qu'en build de débogage : en
         // release, seuls les avertissements et les erreurs sont journalisés.
+        // Un arrêt inattendu laisse une trace lisible dans l'écran de réglages :
+        // sans cela, il ne resterait rien à transmettre depuis un appareil auquel
+        // on n'a pas accès par câble.
+        crashRecorder.install()
+
         MissaLog.verbose = BuildConfig.DEBUG
         MissaLog.i("Démarrage de MISSA TV ${BuildConfig.VERSION_NAME}")
 

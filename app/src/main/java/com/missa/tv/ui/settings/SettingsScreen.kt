@@ -49,7 +49,7 @@ import com.missa.tv.core.log.Secrets
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.ui.adaptive.DeviceProfile
-import com.missa.tv.ui.common.DeviceDiagnosticScreen
+import com.missa.tv.ui.common.DeviceDiagnosticSection
 
 /**
  * Réglages de l'application.
@@ -344,6 +344,15 @@ private fun SectionConfiguration(state: SettingsUiState, onCheckConfig: () -> Un
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        state.syncError?.let { erreur ->
+            // Sans ce message, un échec de vérification était invisible : le
+            // bouton semblait n'avoir rien fait.
+            Text(
+                text = stringResource(erreur),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
         Button(onClick = onCheckConfig, enabled = !state.isSyncing) {
             if (state.isSyncing) {
                 CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp).size(16.dp))
@@ -357,10 +366,10 @@ private fun SectionConfiguration(state: SettingsUiState, onCheckConfig: () -> Un
 private fun SectionDiagnostic(device: DeviceProfile) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         TitreSection(stringResource(R.string.settings_diagnostics_section))
-        // Le diagnostic d'appareil existant est réutilisé tel quel : il indique
-        // le type détecté, la classe de largeur et les capacités utiles au
-        // dépannage à distance.
-        DeviceDiagnosticScreen(deviceProfile = device)
+        // Composant volontairement NON défilant : l'imbriquer dans cette colonne
+        // défilante avec son propre défilement provoquait une exception de
+        // contrainte de hauteur infinie, donc un arrêt immédiat de l'application.
+        DeviceDiagnosticSection(deviceProfile = device)
     }
 }
 
@@ -381,6 +390,16 @@ private fun SectionAPropos(state: SettingsUiState) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        state.dernierIncident?.let { incident ->
+            // Une ligne seulement : c'est assez pour identifier la cause, sans
+            // transformer l'écran de réglages en journal technique.
+            Text(
+                text = stringResource(R.string.settings_last_incident, incident),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
     }
 }
 

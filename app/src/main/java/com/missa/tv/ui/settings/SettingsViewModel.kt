@@ -33,6 +33,19 @@ data class SettingsUiState(
     val profileSaved: Boolean = false,
     val versionName: String = "",
     val versionCode: Int = 0,
+    /**
+     * Dernier plantage enregistré, en une ligne, ou `null` si l'application ne
+     * s'est jamais arrêtée anormalement depuis son installation.
+     *
+     * La trace est masquée (adresses MAC, URL, jetons) : elle peut être
+     * transmise telle quelle pour diagnostic.
+     */
+    val dernierIncident: String? = null,
+    /**
+     * Résultat de la dernière vérification manuelle de la configuration, exprimé
+     * en ressource de chaîne. `null` tant qu'aucune vérification n'a échoué.
+     */
+    @StringRes val syncError: Int? = null,
 ) {
     val hasProfiles: Boolean get() = profiles.isNotEmpty()
 }
@@ -49,6 +62,7 @@ class SettingsViewModel @Inject constructor(
     private val profileSource: PortalProfileSource,
     private val settingsStore: SettingsStore,
     private val configRepository: RemoteConfigRepository,
+    private val crashRecorder: CrashRecorder,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -75,6 +89,7 @@ class SettingsViewModel @Inject constructor(
                     qualityMode = preferences.qualityMode,
                     qualityLocked = preferences.qualityLocked,
                     lastSyncMs = configRepository.lastSyncMs(),
+                    dernierIncident = crashRecorder.dernierIncident(),
                 )
             }
         }
@@ -159,12 +174,16 @@ class SettingsViewModel @Inject constructor(
     /** Vérifie immédiatement la configuration distante. */
     fun verifierConfiguration() {
         viewModelScope.launch(dispatchers.io) {
-            _state.update { it.copy(isSyncing = true) }
+            _state.update { it.copy(isSyncing = true, syncError = null) }
             val resultat = configRepository.refresh()
-            if (resultat is AppResult.Failure) {
-                MissaLog.w("Vérification manuelle de la configuration sans succès")
+            val erreur = when (resultat) {
+                is AppResult.Failure -> {
+                    MissaLog.w("Vérification manuelle de la configuration sans succès")
+                    resultat.error.messageRes
+                }
+                is AppResult.Success -> null
             }
-            _state.update { it.copy(isSyncing = false) }
+            _state.update { it.copy(isSyncing = false, syncError = erreur) }
             rafraichir()
         }
     }

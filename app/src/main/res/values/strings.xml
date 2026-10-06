@@ -122,4 +122,6 @@
     <string name="validation_name_required">Nom du profil requis.</string>
     <string name="settings_profile_saved">Profil enregistré.</string>
     <string name="home_cached_catalog">Catalogue mémorisé affiché : le portail n\'a pas pu être joint.</string>
+    <string name="settings_last_incident">Dernier incident : %1$s</string>
+    <string name="error_config_not_found">Fichier de configuration introuvable : vérifiez le chemin et la branche lus dans le dépôt.</string>
 </resources>

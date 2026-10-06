@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
+import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
@@ -41,6 +42,7 @@ interface AppEntryPoint {
     fun playbackQualityApplier(): PlaybackQualityApplier
     fun dispatcherProvider(): DispatcherProvider
     fun timeSource(): TimeSource
+    fun crashRecorder(): CrashRecorder
 }
 
 /** Récupère le point d'entrée depuis n'importe quel contexte d'application. */

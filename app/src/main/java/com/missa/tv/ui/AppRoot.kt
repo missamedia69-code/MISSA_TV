@@ -123,6 +123,7 @@ fun AppRoot(onExit: () -> Unit) {
                                 profileSource = point.portalProfileSource(),
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
+                                crashRecorder = point.crashRecorder(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },

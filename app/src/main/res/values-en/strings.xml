@@ -123,4 +123,6 @@
     <string name="validation_name_required">Profile name is required.</string>
     <string name="settings_profile_saved">Profile saved.</string>
     <string name="home_cached_catalog">Showing the saved catalog: the portal could not be reached.</string>
+    <string name="settings_last_incident">Last incident: %1$s</string>
+    <string name="error_config_not_found">Configuration file not found: check the path and branch read from the repository.</string>
 </resources>

@@ -98,6 +98,7 @@ Gradle ou par variable d'environnement :
 | `missa.config.owner` | `MISSA_CONFIG_OWNER` | compte propriétaire du dépôt de configuration |
 | `missa.config.repo` | `MISSA_CONFIG_REPO` | dépôt contenant `portal-config.json` |
 | `missa.config.path` | `MISSA_CONFIG_PATH` | chemin du fichier dans le dépôt |
+| `missa.config.ref` | — | branche ou étiquette lue ; vide = branche par défaut (`main`) |
 | `missa.config.token` | `MISSA_CONFIG_TOKEN` | jeton GitHub (facultatif : le dépôt public n'en exige pas) |
 | `missa.keystore.file` | `MISSA_KEYSTORE_FILE` | keystore de signature (release) |
 | `missa.keystore.password` | `MISSA_KEYSTORE_PASSWORD` | mot de passe du keystore |

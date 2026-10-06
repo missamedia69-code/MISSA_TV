@@ -13,7 +13,8 @@ défaut, plafonds, tampon, ou une adresse de portail pour un déploiement famili
 | --- | --- |
 | Dépôt | `missamedia69-code/MISSA_TV` |
 | Chemin | `remote-config/portal-config.json` |
-| API | `GET https://api.github.com/repos/{owner}/{repo}/contents/{path}` |
+| Branche lue | **branche par défaut du dépôt** (`main`), sauf si `missa.config.ref` est renseigné |
+| API | `GET https://api.github.com/repos/{owner}/{repo}/contents/{path}[?ref=<branche>]` |
 | En-têtes | `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `If-None-Match: <etag>` |
 | Jetons | `X-GitHub-Api-Version`, et `Authorization: Bearer <jeton>` **si** un jeton est fourni |
 
@@ -44,6 +45,21 @@ Le jeton n'est **jamais** affiché dans le journal de compilation : seuls le nom
 de la variable et le fait qu'elle est fournie apparaissent.
 
 ---
+
+### ⚠️ Le fichier doit exister sur la branche par défaut
+
+L'API Contents lit la **branche par défaut** (`main`) quand aucun `ref` n'est
+demandé. Un fichier publié uniquement sur une branche de travail est donc
+**invisible pour les appareils** : la requête répond `404`, et l'application
+affiche « Fichier de configuration introuvable : vérifiez le chemin et la branche
+lus dans le dépôt. »
+
+Deux façons de régler cela :
+
+1. **fusionner la modification dans `main`** (méthode normale : `main` est la
+   branche qui fait autorité pour les appareils) ;
+2. compiler avec `missa.config.ref=<branche>` pour lire une autre branche — c'est
+   un réglage de mise au point, à ne pas laisser dans une version publiée.
 
 ## 2. Format du fichier
 
@@ -145,7 +161,7 @@ l'analyseur sans invalider les données déjà reçues.
 | --- | --- | --- |
 | « Jamais vérifiée » reste affiché | aucune connexion réseau, ou jeton invalide | vérifier la connexion, puis le jeton si le dépôt est privé |
 | La configuration ne change pas | `configVersion` non incrémentée | incrémenter la version, pousser, revérifier |
-| `404` dans les journaux | mauvais propriétaire, dépôt ou chemin | vérifier les valeurs `missa.config.*` du build |
+| « Fichier de configuration introuvable » | fichier absent de la branche lue (souvent : publié sur une branche de travail, pas encore dans `main`) | fusionner dans `main`, ou renseigner `missa.config.ref` |
 | `401` / `403` | jeton expiré ou sans portée `contents:read` | régénérer un jeton en lecture seule sur le dépôt |
 | Les réglages distants sont ignorés | `schemaVersion` différente de 1 | corriger le fichier ; l'application refuse les formats qu'elle ne connaît pas |
 

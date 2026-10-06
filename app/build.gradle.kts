@@ -55,11 +55,16 @@ android {
         val configOwner = configValue("missa.config.owner", "missamedia69-code")
         val configRepo = configValue("missa.config.repo", "MISSA_TV")
         val configPath = configValue("missa.config.path", "remote-config/portal-config.json")
+        // Branche ou étiquette lue. Vide = branche par défaut du dépôt (`main`).
+        // Renseigner cette valeur permet de tester une configuration publiée sur
+        // une autre branche, sans la fusionner dans `main`.
+        val configRef = configValue("missa.config.ref", "")
         val configToken = configValue("missa.config.token", "", secret = true)
 
         buildConfigField("String", "GITHUB_CONFIG_OWNER", "\"$configOwner\"")
         buildConfigField("String", "GITHUB_CONFIG_REPO", "\"$configRepo\"")
         buildConfigField("String", "GITHUB_CONFIG_PATH", "\"$configPath\"")
+        buildConfigField("String", "GITHUB_CONFIG_REF", "\"$configRef\"")
         buildConfigField("String", "GITHUB_CONFIG_TOKEN", "\"$configToken\"")
     }
 
