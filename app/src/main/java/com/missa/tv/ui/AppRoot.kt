@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -67,6 +68,11 @@ fun AppRoot(onExit: () -> Unit) {
                     )
                     val etat by vm.state.collectAsStateWithLifecycle()
 
+                    // Se déclenche à chaque affichage de l'accueil, donc aussi au
+                    // retour depuis les réglages : la configuration saisie devient
+                    // visible sans redémarrer l'application.
+                    LaunchedEffect(Unit) { vm.rafraichirSiNecessaire() }
+
                     HomeScreen(
                         state = etat,
                         device = appareil,
@@ -123,6 +129,7 @@ fun AppRoot(onExit: () -> Unit) {
                                 profileSource = point.portalProfileSource(),
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
+                                portalRepository = point.portalRepository(),
                                 crashRecorder = point.crashRecorder(),
                                 dispatchers = point.dispatcherProvider(),
                             )
@@ -143,6 +150,7 @@ fun AppRoot(onExit: () -> Unit) {
                         onActivateProfile = vm::activerProfil,
                         onQualitySelected = vm::definirQualite,
                         onCheckConfig = vm::verifierConfiguration,
+                        onTestConnection = vm::testerConnexion,
                         onMessageShown = vm::effacerMessage,
                     )
                 }

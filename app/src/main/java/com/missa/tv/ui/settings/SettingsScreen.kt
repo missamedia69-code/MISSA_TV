@@ -1,5 +1,6 @@
 package com.missa.tv.ui.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
@@ -69,6 +70,7 @@ fun SettingsScreen(
     onActivateProfile: (String) -> Unit,
     onQualitySelected: (QualityMode?) -> Unit,
     onCheckConfig: () -> Unit,
+    onTestConnection: () -> Unit,
     onMessageShown: () -> Unit,
 ) {
     var formulaireOuvert by remember { mutableStateOf(ouvrirFormulaireParDefaut) }
@@ -118,6 +120,8 @@ fun SettingsScreen(
                 onSaveProfile = onSaveProfile,
                 onDeleteProfile = onDeleteProfile,
                 onActivateProfile = onActivateProfile,
+                onTestConnection = onTestConnection,
+                onMessageShown = onMessageShown,
             )
 
             SectionQualite(state = state, onQualitySelected = onQualitySelected)
@@ -144,6 +148,8 @@ private fun SectionProfils(
     onSaveProfile: (String, String, String) -> Unit,
     onDeleteProfile: (String) -> Unit,
     onActivateProfile: (String) -> Unit,
+    onTestConnection: () -> Unit,
+    onMessageShown: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         TitreSection(stringResource(R.string.settings_profiles))
@@ -166,10 +172,37 @@ private fun SectionProfils(
         }
 
         if (formulaireOuvert) {
-            FormulaireProfil(onSaveProfile = onSaveProfile)
+            FormulaireProfil(onSaveProfile = onSaveProfile, onFieldEdited = onMessageShown)
         } else {
             Button(onClick = onOuvrirFormulaire) {
                 Text(text = stringResource(R.string.settings_profile_add))
+            }
+        }
+
+        // Test réel de la connexion : c'est la réponse immédiate à « j'ai
+        // configuré mon portail, que se passe-t-il ? ». Sans lui, l'utilisateur
+        // devait quitter les réglages pour découvrir le résultat, sans savoir si
+        // sa saisie avait été prise en compte.
+        if (state.profiles.isNotEmpty()) {
+            Button(onClick = onTestConnection, enabled = !state.isTestingConnection) {
+                if (state.isTestingConnection) {
+                    CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp).size(16.dp))
+                }
+                Text(text = stringResource(R.string.settings_test_connection))
+            }
+
+            when (val resultat = state.connection) {
+                is ConnectionCheck.Nombre -> Text(
+                    text = stringResource(R.string.settings_connection_ok, resultat.chaines),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                is ConnectionCheck.Erreur -> Text(
+                    text = stringResource(resultat.messageRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                null -> Unit
             }
         }
 
@@ -196,12 +229,18 @@ private fun CarteProfil(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onActivate),
-        colors = CardDefaults.cardColors(
-            containerColor = if (actif) {
-                MaterialTheme.colorScheme.primaryContainer
+        // Le profil actif se distingue par un contour, jamais par un fond rouge :
+        // le rouge se lit comme une erreur, et un profil actif n'en est pas une.
+        border = BorderStroke(
+            width = if (actif) 2.dp else 1.dp,
+            color = if (actif) {
+                MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.outlineVariant
             },
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
     ) {
         Row(
@@ -239,22 +278,32 @@ private fun CarteProfil(
 }
 
 @Composable
-private fun FormulaireProfil(onSaveProfile: (String, String, String) -> Unit) {
+private fun FormulaireProfil(
+    onSaveProfile: (String, String, String) -> Unit,
+    onFieldEdited: () -> Unit,
+) {
     var nom by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
     var mac by remember { mutableStateOf("") }
 
+    // Un message d'erreur qui reste affiché alors que l'utilisateur a corrigé le
+    // champ concerné est trompeur : il disparaît dès la première frappe.
+    val effacerErreur: (String) -> Unit = { nouvelleValeur ->
+        onFieldEdited()
+        nouvelleValeur
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = nom,
-            onValueChange = { nom = it },
+            onValueChange = { nom = effacerErreur(it) },
             label = { Text(stringResource(R.string.settings_profile_name)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
             value = url,
-            onValueChange = { url = it },
+            onValueChange = { url = effacerErreur(it) },
             label = { Text(stringResource(R.string.settings_portal_url)) },
             placeholder = { Text(stringResource(R.string.settings_portal_url_hint)) },
             singleLine = true,
@@ -263,7 +312,7 @@ private fun FormulaireProfil(onSaveProfile: (String, String, String) -> Unit) {
         )
         OutlinedTextField(
             value = mac,
-            onValueChange = { mac = it },
+            onValueChange = { mac = effacerErreur(it) },
             label = { Text(stringResource(R.string.settings_mac)) },
             placeholder = { Text(stringResource(R.string.settings_mac_hint)) },
             singleLine = true,
@@ -294,7 +343,9 @@ private fun SectionQualite(state: SettingsUiState, onQualitySelected: (QualityMo
             selectionne = state.qualityMode == null,
             onClick = { onQualitySelected(null) },
         )
-        QualityMode.selectable.forEach { mode ->
+        // `selectable` contient AUTO_ECONOMY, déjà proposé par la ligne
+        // « automatique » ci-dessus : le filtrer évite une ligne en double.
+        QualityMode.selectable.filterNot { it == QualityMode.AUTO_ECONOMY }.forEach { mode ->
             LigneModeQualite(
                 libelle = stringResource(mode.labelRes),
                 selectionne = state.qualityMode == mode,

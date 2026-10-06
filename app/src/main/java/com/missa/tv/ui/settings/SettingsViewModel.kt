@@ -13,6 +13,7 @@ import com.missa.tv.data.remote.portal.PortalEndpointResolver
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.repository.PortalProfileSource
+import com.missa.tv.domain.repository.PortalRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Résultat d'un test de connexion au portail. */
+sealed interface ConnectionCheck {
+
+    /** Connexion réussie : le portail a répondu et fourni ses chaînes. */
+    data class Nombre(val chaines: Int) : ConnectionCheck
+
+    /** Échec : le message est celui de l'erreur rencontrée. */
+    data class Erreur(@StringRes val messageRes: Int) : ConnectionCheck
+}
 
 /** État des réglages. */
 data class SettingsUiState(
@@ -47,6 +58,16 @@ data class SettingsUiState(
      * en ressource de chaîne. `null` tant qu'aucune vérification n'a échoué.
      */
     @StringRes val syncError: Int? = null,
+    /** Vrai pendant un test de connexion au portail. */
+    val isTestingConnection: Boolean = false,
+    /**
+     * Résultat du dernier test de connexion.
+     *
+     * `Nombre` = connexion réussie, avec le nombre de chaînes reçues ;
+     * `Erreur` = échec, avec le message à afficher. C'est la réponse immédiate à
+     * « j'ai configuré mon portail, que se passe-t-il ? ».
+     */
+    val connection: ConnectionCheck? = null,
 ) {
     val hasProfiles: Boolean get() = profiles.isNotEmpty()
 }
@@ -63,6 +84,7 @@ class SettingsViewModel @Inject constructor(
     private val profileSource: PortalProfileSource,
     private val settingsStore: SettingsStore,
     private val configRepository: RemoteConfigRepository,
+    private val portalRepository: PortalRepository,
     private val crashRecorder: CrashRecorder,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
@@ -172,6 +194,36 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Teste réellement la connexion au portail configuré.
+     *
+     * L'application ouvre une session puis demande le catalogue : c'est le même
+     * chemin que celui emprunté par l'écran d'accueil. Le résultat est donc
+     * fiable, et non une simple vérification de forme de l'adresse.
+     */
+    fun testerConnexion() {
+        viewModelScope.launch(dispatchers.io) {
+            _state.update { it.copy(isTestingConnection = true, connection = null) }
+
+            val resultat = when (val session = portalRepository.connect()) {
+                is AppResult.Failure -> ConnectionCheck.Erreur(session.error.messageRes)
+                is AppResult.Success -> when (val catalogue = portalRepository.catalog(session.value)) {
+                    is AppResult.Failure -> ConnectionCheck.Erreur(catalogue.error.messageRes)
+                    is AppResult.Success -> ConnectionCheck.Nombre(catalogue.value.channels.size)
+                }
+            }
+
+            MissaLog.i(
+                when (resultat) {
+                    is ConnectionCheck.Nombre -> "Test de connexion réussi"
+                    is ConnectionCheck.Erreur -> "Test de connexion en échec"
+                },
+            )
+
+            _state.update { it.copy(isTestingConnection = false, connection = resultat) }
+        }
+    }
+
     /** Vérifie immédiatement la configuration distante. */
     fun verifierConfiguration() {
         viewModelScope.launch(dispatchers.io) {
@@ -189,7 +241,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /** Efface le message de saisie (après affichage). */
+    /** Efface le message de saisie, dès que l'utilisateur corrige un champ. */
     fun effacerMessage() {
         _state.update { it.copy(formError = null, profileSaved = false) }
     }

@@ -78,102 +78,141 @@ class HomeViewModel @Inject constructor(
     /** Mode de qualité en vigueur, utilisé pour choisir la variante à lire. */
     private var qualityMode: QualityMode = QualityMode.DEFAULT
 
-    init {
-        load()
+    /**
+     * Signature des profils au dernier chargement.
+     *
+     * Elle distingue deux retours sur l'accueil : revenir depuis le lecteur ne
+     * change rien et ne doit pas relancer une requête, tandis que revenir après
+     * avoir configuré un portail doit **impérativement** recharger. Sans cette
+     * distinction, l'application restait vide après une configuration : le
+     * ViewModel survit (il appartient à l'activité) et ne rechargeait jamais.
+     */
+    private var signatureProfils: Int? = null
+
+    /**
+     * Recharge le catalogue si la configuration a changé, si la liste est vide ou
+     * si le dernier chargement a échoué.
+     *
+     * Appelée à chaque affichage de l'accueil : c'est ce qui rend la
+     * configuration visible immédiatement, sans redémarrer l'application.
+     */
+    fun rafraichirSiNecessaire() {
+        viewModelScope.launch(dispatchers.io) {
+            val signature = signatureDesProfils()
+            val etat = _state.value
+            val doitRecharger = signature != signatureProfils ||
+                etat.groups.isEmpty() ||
+                etat.error != null
+
+            if (doitRecharger) {
+                signatureProfils = signature
+                charger()
+            }
+        }
     }
 
     /** Charge (ou recharge) les catégories et les chaînes. */
     fun load() {
         viewModelScope.launch(dispatchers.io) {
-            _state.update { it.copy(isLoading = true, error = null) }
+            signatureProfils = signatureDesProfils()
+            charger()
+        }
+    }
 
-            val config = configRepository.current()
-            qualityMode = settingsStore.playback().qualityMode ?: config.bandwidth.defaultMode
+    /** Signature des profils enregistrés, utilisée pour détecter un changement. */
+    private suspend fun signatureDesProfils(): Int =
+        profileSource.profiles().hashCode() * 31 +
+            (profileSource.activeProfileId()?.hashCode() ?: 0)
 
-            if (!profileSource.hasUsableProfile()) {
-                // Aucun portail configuré : ce n'est pas une erreur, c'est le
-                // premier lancement. L'écran propose la saisie manuelle.
+    /** Chargement du catalogue, exécuté dans une coroutine d'entrée-sortie. */
+    private suspend fun charger() {
+        _state.update { it.copy(isLoading = true, error = null) }
+
+        val config = configRepository.current()
+        qualityMode = settingsStore.playback().qualityMode ?: config.bandwidth.defaultMode
+
+        if (!profileSource.hasUsableProfile()) {
+            // Aucun portail configuré : ce n'est pas une erreur, c'est le premier
+            // lancement. L'écran propose la saisie manuelle.
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    error = null,
+                    groups = emptyList(),
+                    categories = emptyList(),
+                    qualityMode = qualityMode,
+                    isFromCache = false,
+                )
+            }
+            return
+        }
+
+        val portalId = identifiantPortail()
+
+        // Le catalogue mémorisé est affiché sans attendre : sur une connexion
+        // lente, la liste apparaît immédiatement au lieu de laisser un écran de
+        // chargement pendant toute la durée de l'interrogation du portail.
+        val groupesMemorises = catalogCache.groups(portalId)
+        if (groupesMemorises.isNotEmpty()) {
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    error = null,
+                    categories = catalogCache.categories(portalId),
+                    groups = groupesMemorises,
+                    qualityMode = qualityMode,
+                    isFromCache = true,
+                )
+            }
+        }
+
+        val session = when (val resultat = portalRepository.connect()) {
+            is AppResult.Success -> resultat.value
+            is AppResult.Failure -> {
+                MissaLog.w("Ouverture de session impossible au chargement des chaînes")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        isFromCache = groupesMemorises.isNotEmpty(),
+                        // Une liste mémorisée reste utilisable : l'échec est
+                        // signalé sans effacer ce que l'utilisateur avait.
+                        error = if (groupesMemorises.isEmpty()) resultat.error else null,
+                    )
+                }
+                return
+            }
+        }
+
+        when (val resultat = portalRepository.catalog(session)) {
+            is AppResult.Success -> {
+                val catalogue = resultat.value
                 _state.update {
                     it.copy(
                         isLoading = false,
                         error = null,
-                        groups = emptyList(),
-                        categories = emptyList(),
+                        categories = catalogue.categories,
+                        groups = ChannelVariantGrouper.group(catalogue.channels),
                         qualityMode = qualityMode,
+                        requiresAppUpdate = config.requiresAppUpdate(CURRENT_VERSION_CODE),
+                        isFromCache = false,
                     )
                 }
-                return@launch
+
+                // Mise en cache après l'affichage : l'écriture ne retarde jamais la
+                // liste, et son échec n'a aucune conséquence visible — la prochaine
+                // ouverture refera simplement l'appel au portail.
+                runCatching { catalogCache.save(portalId, catalogue) }
+                    .onFailure { erreur ->
+                        MissaLog.w("Catalogue local non enregistré : ${erreur.javaClass.simpleName}")
+                    }
             }
-
-            val portalId = identifiantPortail()
-
-            // Le catalogue mémorisé est affiché sans attendre : sur une connexion
-            // lente, la liste apparaît immédiatement au lieu de laisser un écran
-            // de chargement pendant toute la durée de l'interrogation du portail.
-            val groupesMemorises = catalogCache.groups(portalId)
-            if (groupesMemorises.isNotEmpty()) {
+            is AppResult.Failure -> {
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = null,
-                        categories = catalogCache.categories(portalId),
-                        groups = groupesMemorises,
-                        qualityMode = qualityMode,
-                        isFromCache = true,
+                        isFromCache = groupesMemorises.isNotEmpty(),
+                        error = if (groupesMemorises.isEmpty()) resultat.error else null,
                     )
-                }
-            }
-
-            val session = when (val resultat = portalRepository.connect()) {
-                is AppResult.Success -> resultat.value
-                is AppResult.Failure -> {
-                    MissaLog.w("Ouverture de session impossible au chargement des chaînes")
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            isFromCache = groupesMemorises.isNotEmpty(),
-                            // Une liste mémorisée reste utilisable : l'échec est
-                            // signalé sans effacer ce que l'utilisateur avait.
-                            error = if (groupesMemorises.isEmpty()) resultat.error else null,
-                        )
-                    }
-                    return@launch
-                }
-            }
-
-            when (val resultat = portalRepository.catalog(session)) {
-                is AppResult.Success -> {
-                    val catalogue = resultat.value
-                    val groupes = ChannelVariantGrouper.group(catalogue.channels)
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = null,
-                            categories = catalogue.categories,
-                            groups = groupes,
-                            qualityMode = qualityMode,
-                            requiresAppUpdate = config.requiresAppUpdate(CURRENT_VERSION_CODE),
-                            isFromCache = false,
-                        )
-                    }
-
-                    // Mise en cache après l'affichage : l'écriture ne retarde
-                    // jamais la liste, et son échec n'a aucune conséquence
-                    // visible — la prochaine ouverture refera simplement l'appel
-                    // au portail.
-                    runCatching { catalogCache.save(portalId, catalogue) }
-                        .onFailure { erreur ->
-                            MissaLog.w("Catalogue local non enregistré : ${erreur.javaClass.simpleName}")
-                        }
-                }
-                is AppResult.Failure -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            isFromCache = groupesMemorises.isNotEmpty(),
-                            error = if (groupesMemorises.isEmpty()) resultat.error else null,
-                        )
-                    }
                 }
             }
         }
@@ -209,8 +248,8 @@ class HomeViewModel @Inject constructor(
 
     private companion object {
         /**
-         * VersionCode de l'application, comparée à l'exigence de la
-         * configuration distante. Renseignée par le build.
+         * VersionCode de l'application, comparée à l'exigence de la configuration
+         * distante. Renseignée par le build.
          */
         val CURRENT_VERSION_CODE: Int = com.missa.tv.BuildConfig.VERSION_CODE
 
