@@ -48,8 +48,9 @@ class EncryptedPortalProfileSource @Inject constructor(
 
     override suspend fun activeProfileId(): String? = prefs()[KEY_ACTIVE]
 
-    override suspend fun setActiveProfileId(id: String) = withContext(dispatchers.io) {
+    override suspend fun setActiveProfileId(id: String): Unit = withContext(dispatchers.io) {
         dataStore.edit { preferences -> preferences[KEY_ACTIVE] = id }
+        Unit
     }
 
     override suspend fun save(profile: PortalProfile) = withContext(dispatchers.io) {
