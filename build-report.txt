@@ -1,6 +1,6 @@
 # MISSA TV — rapport de compilation
 
-- commit : 40a2f95bc05eb6ef09a3b74904b9ee9b6604a719
+- commit : 9668e9e17247b075117ee354d0c35e6686c06807
 - code retour Gradle : inconnu
 
 ```
@@ -38,17 +38,18 @@ Daemon will be stopped at the end of the build
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug
 > Task :app:processDebugMainManifest
+> Task :app:mergeDebugResources
 > Task :app:processDebugManifest
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:processDebugManifestForPackage
-> Task :app:mergeDebugResources
+> Task :app:kspDebugKotlin
 > Task :app:mergeDebugUnitTestManifest
 > Task :app:processDebugUnitTestManifest
+> Task :app:processDebugManifestForPackage
 > Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:writeFiltersDebugAndroidTest
 > Task :app:javaPreCompileDebugUnitTest
+> Task :app:writeFiltersDebugAndroidTest
 > Task :app:extractProguardFiles
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:compressDebugAssets
@@ -56,9 +57,9 @@ Daemon will be stopped at the end of the build
 > Task :app:generateDebugGlobalSynthetics
 > Task :app:packageDebugUnitTestForUnitTest
 > Task :app:generateDebugUnitTestConfig
-> Task :app:kspDebugKotlin
 > Task :app:checkDebugDuplicateClasses
 > Task :app:desugarDebugFileDependencies
+
 > Task :app:compileDebugKotlin
 w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:37:25 'class MasterKey : Any' is deprecated. Deprecated in Java.
 w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:37:35 'constructor(p0: Context): MasterKey.Builder' is deprecated. Deprecated in Java.
@@ -73,63 +74,18 @@ w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/dat
 > Task :app:mergeExtDexDebug
 > Task :app:compileDebugJavaWithJavac
 > Task :app:hiltCollectClassesDebug
-> Task :app:processDebugJavaRes
 > Task :app:hiltAggregateDepsDebug
-> Task :app:generateDebugLintReportModel
+> Task :app:processDebugJavaRes
 > Task :app:hiltJavaCompileDebug
 > Task :app:bundleDebugClassesToCompileJar
 > Task :app:transformDebugClassesWithAsm
+> Task :app:generateDebugLintReportModel
 > Task :app:bundleDebugClassesToRuntimeJar
 > Task :app:kspDebugUnitTestKotlin
 > Task :app:generateDebugAndroidTestLintModel
 > Task :app:generateDebugUnitTestLintModel
 
 > Task :app:compileDebugUnitTestKotlin
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:77:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:77:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:77:38 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:77:46 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:78:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:96:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:96:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:96:38 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:96:46 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:97:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:114:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:114:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:114:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:114:44 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:115:17 Return type mismatch: expected 'Boolean', actual 'String'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:144:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:144:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter <unused var>), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:144:36 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:144:39 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:144:44 Return type mismatch: expected 'Boolean', actual 'String'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:162:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:162:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter page)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:162:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:162:44 Cannot infer type for value parameter 'page'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:163:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:190:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:190:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:190:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:190:44 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:191:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:209:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:209:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:209:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:209:44 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:210:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:237:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:237:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:237:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:237:44 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:238:17 Return type mismatch: expected 'Boolean', actual 'String?'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:260:23 No value passed for parameter 'reponses'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:260:31 Argument type mismatch: actual type is '(String, ??? (Unknown type for value parameter action), ??? (Unknown type for value parameter <unused var>)) -> Boolean', but '(String) -> Boolean' was expected.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:260:36 Cannot infer type for value parameter 'action'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:260:44 Cannot infer type for implicit value parameter 'it'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:261:17 Return type mismatch: expected 'Boolean', actual 'String'.
 e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/domain/portal/PortalFailoverPolicyTest.kt:85:30 No value passed for parameter 'profiles'.
 e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/domain/portal/PortalFailoverPolicyTest.kt:86:13 No parameter with name 'profils' found.
 e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/domain/portal/PortalFailoverPolicyTest.kt:97:30 No value passed for parameter 'profiles'.
@@ -138,10 +94,8 @@ e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/dom
 e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/domain/portal/PortalFailoverPolicyTest.kt:106:13 No parameter with name 'profils' found.
 
 > Task :app:compileDebugUnitTestKotlin FAILED
-> Task :app:lintAnalyzeDebugAndroidTest
-> Task :app:lintAnalyzeDebugUnitTest
 > Task :app:lintAnalyzeDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791306238405.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791306606094.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/MISSA_TV/MISSA_TV/build/reports/problems/problems-report.html
 
@@ -152,8 +106,8 @@ Execution failed for task ':app:compileDebugUnitTestKotlin' (registered by plugi
 > A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
    > Kotlin compiler: NO_VALUE_FOR_PARAMETER
        Kotlin compiler error
-         No value passed for parameter 'reponses'.
-         Location: /home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/data/remote/portal/StalkerClientTest.kt:77
+         No value passed for parameter 'profiles'.
+         Location: /home/runner/work/MISSA_TV/MISSA_TV/app/src/test/java/com/missa/tv/domain/portal/PortalFailoverPolicyTest.kt:85
 
 * Try:
 > Run with --info or --debug option to get more log output.
@@ -309,7 +263,7 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
 	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.doExecute(DefaultTaskNodeExecutor.java:364)
 	... 25 more
-Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: No value passed for parameter 'reponses'.
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: No value passed for parameter 'profiles'.
 	at org.jetbrains.kotlin.gradle.plugin.diagnostics.DefaultCompilerDiagnosticsProblemsReporter.reportCompilerMessage(CompilerDiagnosticsProblemsReporter.kt:63)
 	at org.jetbrains.kotlin.compilerRunner.btapi.ProblemsApiCompilerMessageRenderer.replayTo(ProblemsApiCompilerMessageRenderer.kt:88)
 	at org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork.execute(BuildToolsApiCompilationWork.kt:251)
@@ -352,6 +306,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 3m 47s
-50 actionable tasks: 50 executed
+BUILD FAILED in 3m 34s
+48 actionable tasks: 48 executed
 ```
