@@ -286,24 +286,25 @@ private fun FormulaireProfil(
     var url by remember { mutableStateOf("") }
     var mac by remember { mutableStateOf("") }
 
-    // Un message d'erreur qui reste affiché alors que l'utilisateur a corrigé le
-    // champ concerné est trompeur : il disparaît dès la première frappe.
-    val effacerErreur: (String) -> Unit = { nouvelleValeur ->
-        onFieldEdited()
-        nouvelleValeur
-    }
-
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = nom,
-            onValueChange = { nom = effacerErreur(it) },
+            // Le message d'erreur disparaît dès la première frappe : le garder
+            // alors que l'utilisateur a corrigé le champ serait trompeur.
+            onValueChange = { valeur ->
+                onFieldEdited()
+                nom = valeur
+            },
             label = { Text(stringResource(R.string.settings_profile_name)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
             value = url,
-            onValueChange = { url = effacerErreur(it) },
+            onValueChange = { valeur ->
+                onFieldEdited()
+                url = valeur
+            },
             label = { Text(stringResource(R.string.settings_portal_url)) },
             placeholder = { Text(stringResource(R.string.settings_portal_url_hint)) },
             singleLine = true,
@@ -312,7 +313,10 @@ private fun FormulaireProfil(
         )
         OutlinedTextField(
             value = mac,
-            onValueChange = { mac = effacerErreur(it) },
+            onValueChange = { valeur ->
+                onFieldEdited()
+                mac = valeur
+            },
             label = { Text(stringResource(R.string.settings_mac)) },
             placeholder = { Text(stringResource(R.string.settings_mac_hint)) },
             singleLine = true,
