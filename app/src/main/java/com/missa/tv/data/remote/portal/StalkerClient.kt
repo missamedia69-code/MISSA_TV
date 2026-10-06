@@ -1,6 +1,7 @@
 package com.missa.tv.data.remote.portal
 
 import com.missa.tv.core.log.MissaLog
+import com.missa.tv.core.json.int
 import com.missa.tv.core.log.Secrets
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel

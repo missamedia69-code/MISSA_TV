@@ -9,6 +9,7 @@ import com.missa.tv.data.remote.portal.PortalFailure
 import com.missa.tv.data.remote.portal.PortalProtocolException
 import com.missa.tv.data.remote.portal.StalkerClient
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.PortalCatalog
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.PortalSession
 import com.missa.tv.domain.model.StreamLink

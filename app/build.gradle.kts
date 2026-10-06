@@ -101,10 +101,6 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
-        freeCompilerArgs.addAll(
-            // Erreurs explicites sur les API expérimentales mal utilisées.
-            "-Xannotation-default-target=param-property",
-        )
     }
 }
 
