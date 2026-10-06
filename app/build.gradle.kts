@@ -82,9 +82,8 @@ android {
         warningsAsErrors = false
         // Le lint des variantes release est coûteux et redondant avec debug.
         checkReleaseBuilds = false
-        htmlReport = true
-        xmlReport = true
-        sarifReport = false
+        // Les rapports (HTML/XML) sont désormais toujours générés par AGP 9 :
+        // les options htmlReport/xmlReport/sarifReport sont dépréciées.
     }
 
     testOptions {

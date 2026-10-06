@@ -39,7 +39,9 @@ media3 = "1.11.1"
 # Données
 room = "2.8.5"
 datastore = "1.2.1"
-work = "2.12.0"
+# WorkManager 2.12.0 exige minSdk 24 : la 2.11.2 est la dernière compatible
+# avec le minSdk 23 du projet (sondage des archives AAR, voir docs/ARCHITECTURE.md).
+work = "2.11.2"
 securityCrypto = "1.1.0"
 tink = "1.23.0"
 
