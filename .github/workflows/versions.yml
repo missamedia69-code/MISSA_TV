@@ -1,12 +1,17 @@
-name: Versions (outil temporaire)
+name: Sondage des dépendances (outil temporaire)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FICHIER TEMPORAIRE — à supprimer avant la livraison.
 #
-# But : interroger les dépôts Maven (Google Maven et Maven Central) et publier
-# dans les logs de la CI la liste des dernières versions publiées de chaque
-# artefact utilisé par le projet. Cela permet de figer des versions exactes
-# dans le catalogue de versions plutôt que de les deviner.
+# But : déterminer, pour chaque bibliothèque du projet, la version minimale
+# d'Android (minSdk) qu'elle déclare. Le projet cible minSdk 23 ; or les
+# bibliothèques AndroidX relèvent régulièrement ce seuil et le build s'arrête
+# alors sur une erreur de fusion de manifestes.
+#
+# Plutôt que de découvrir les incompatibilités une par une (un cycle de CI
+# chacune), ce workflow interroge les archives AAR de plusieurs versions
+# candidates et publie un tableau. Les versions retenues sont ensuite celles
+# qui préservent minSdk 23.
 # ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
@@ -18,139 +23,92 @@ permissions:
   contents: write
 
 jobs:
-  versions:
-    name: Résolution des versions
-    runs-on: ubuntu-latest
+  probe:
+    name: Sondage minSdk
+    runs-on: ubuntu-24.04
     steps:
       - name: Récupération du dépôt
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Dernières versions publiées
+      - name: Lecture du minSdk déclaré par chaque bibliothèque
         run: |
           set -uo pipefail
-          exec > versions-report.txt 2>&1
+          exec > minSdk-report.txt 2>&1
 
-          dernier() {
-            local repo="$1" groupe="$2" artefact="$3"
-            local url="${repo}/$(echo "$groupe" | tr '.' '/')/${artefact}/maven-metadata.xml"
-            local brut
-            brut="$(curl -sS --max-time 25 "$url" || true)"
-            if [[ -z "$brut" ]]; then
-              printf '%-58s %s\n' "$groupe:$artefact" "!! INDISPONIBLE"
+          echo "==================== minSdk déclaré par les bibliothèques ===================="
+          echo "Projet : minSdk 23"
+          echo
+
+          sonde() {
+            local depot="$1" groupe="$2" artefact="$3" version="$4"
+            local chemin
+            chemin="$(echo "$groupe" | tr '.' '/')/$artefact/$version/$artefact-$version.aar"
+            local temporaire
+            temporaire="$(mktemp -d)"
+
+            if ! curl -sSf --max-time 90 -o "$temporaire/a.aar" "$depot/$chemin" 2>/dev/null; then
+              printf '%-66s %s\n' "$groupe:$artefact:$version" "AAR indisponible"
+              rm -rf "$temporaire"
               return
             fi
-            local versions
-            versions="$(grep -oP '(?<=<version>)[^<]+' <<<"$brut" \
-              | grep -vE '(alpha|beta|rc|dev|SNAPSHOT|eap|M[0-9])' || true)"
-            local stables
-            stables="$(tail -3 <<<"$versions" | tr '\n' ' ')"
-            printf '%-58s %s\n' "$groupe:$artefact" "$stables"
+
+            local manifeste
+            manifeste="$(unzip -p "$temporaire/a.aar" AndroidManifest.xml 2>/dev/null | tr -d '\n' || true)"
+            local minsdk=""
+            if [[ -n "$manifeste" ]]; then
+              minsdk="$(grep -oE 'minSdkVersion="?[0-9]+' <<<"$manifeste" | head -1 | grep -oE '[0-9]+' || true)"
+            fi
+
+            local verdict="?"
+            if [[ -z "$minsdk" ]]; then
+              verdict="non déclaré (hérite)"
+            elif [[ "$minsdk" -le 23 ]]; then
+              verdict="minSdk=${minsdk}  -> COMPATIBLE 23"
+            else
+              verdict="minSdk=${minsdk}  -> INCOMPATIBLE 23"
+            fi
+            printf '%-66s %s\n' "$groupe:$artefact:$version" "$verdict"
+            rm -rf "$temporaire"
           }
 
           G="https://dl.google.com/dl/android/maven2"
           M="https://repo1.maven.org/maven2"
 
-          echo "==================== GOOGLE MAVEN ===================="
-          for a in \
-            "androidx.core:core-ktx" \
-            "androidx.activity:activity-compose" \
-            "androidx.lifecycle:lifecycle-viewmodel-compose" \
-            "androidx.lifecycle:lifecycle-runtime-compose" \
-            "androidx.navigation:navigation-compose" \
-            "androidx.media3:media3-exoplayer" \
-            "androidx.media3:media3-exoplayer-hls" \
-            "androidx.media3:media3-exoplayer-dash" \
-            "androidx.media3:media3-ui" \
-            "androidx.media3:media3-ui-compose" \
-            "androidx.media3:media3-session" \
-            "androidx.media3:media3-datasource-okhttp" \
-            "androidx.room:room-runtime" \
-            "androidx.room:room-ktx" \
-            "androidx.work:work-runtime-ktx" \
-            "androidx.datastore:datastore-preferences" \
-            "androidx.tv:tv-material" \
-            "androidx.tv:tv-foundation" \
-            "androidx.security:security-crypto" \
-            "androidx.window:window" \
-            "androidx.compose.material3:material3-window-size-class" \
-            "androidx.compose.material:material-icons-extended" \
-            "androidx.hilt:hilt-navigation-compose" \
-            "androidx.hilt:hilt-work" \
-            "androidx.test.ext:junit" \
-            "androidx.compose.ui:ui-test-junit4" \
-            "androidx.benchmark:benchmark-macro-junit4" \
-          ; do
-            dernier "$G" "${a%%:*}" "${a##*:}"
+          echo "--- WorkManager (candidats) ---"
+          for v in 2.12.0 2.11.2 2.10.1 2.10.0 2.9.1 2.9.0; do
+            sonde "$G" androidx.work work-runtime-ktx "$v"
           done
 
           echo
-          echo "==================== MAVEN CENTRAL ===================="
-          for a in \
-            "com.google.dagger:hilt-android" \
-            "com.google.dagger:hilt-android-gradle-plugin" \
-            "com.google.devtools.ksp:symbol-processing-gradle-plugin" \
-            "org.jetbrains.kotlin:kotlin-gradle-plugin" \
-            "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable" \
-            "com.squareup.retrofit2:retrofit" \
-            "com.squareup.retrofit2:converter-kotlinx-serialization" \
-            "com.squareup.okhttp3:okhttp" \
-            "com.squareup.okhttp3:logging-interceptor" \
-            "com.squareup.okhttp3:mockwebserver" \
-            "com.squareup.okhttp3:mockwebserver3-junit5" \
-            "org.jetbrains.kotlinx:kotlinx-serialization-json" \
-            "org.jetbrains.kotlinx:kotlinx-coroutines-android" \
-            "org.jetbrains.kotlinx:kotlinx-coroutines-test" \
-            "io.coil-kt.coil3:coil-compose" \
-            "io.coil-kt.coil3:coil-network-okhttp" \
-            "io.mockk:mockk" \
-            "app.cash.turbine:turbine" \
-            "org.junit.jupiter:junit-jupiter" \
-            "com.google.truth:truth" \
-            "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" \
-            "com.pinterest:ktlint" \
-            "com.google.crypto.tink:tink-android" \
-          ; do
-            dernier "$M" "${a%%:*}" "${a##*:}"
-          done
+          echo "--- Autres bibliothèques actuellement retenues ---"
+          sonde "$G" androidx.room room-runtime 2.8.5
+          sonde "$G" androidx.media3 media3-exoplayer 1.11.1
+          sonde "$G" androidx.media3 media3-ui 1.11.1
+          sonde "$G" androidx.media3 media3-session 1.11.1
+          sonde "$G" androidx.lifecycle lifecycle-runtime-ktx 2.11.0
+          sonde "$G" androidx.lifecycle lifecycle-viewmodel-compose 2.11.0
+          sonde "$G" androidx.activity activity-compose 1.13.0
+          sonde "$G" androidx.core core-ktx 1.19.1
+          sonde "$G" androidx.datastore datastore-preferences 1.2.1
+          sonde "$G" androidx.security security-crypto 1.1.0
+          sonde "$G" androidx.hilt hilt-work 1.4.0
+          sonde "$G" androidx.tv tv-material 1.1.0
+          sonde "$G" androidx.tv tv-foundation 1.0.0
+          sonde "$G" com.google.dagger hilt-android 2.60.1
+          sonde "$M" com.google.crypto.tink tink-android 1.23.0
 
           echo
-          echo "==================== GRADLE DISTRIBUTION ===================="
-          echo "--- sha256 gradle-9.8.0-bin.zip ---"
-          curl -sS --max-time 25 "https://services.gradle.org/distributions/gradle-9.8.0-bin.zip.sha256" || true
-          echo
-
-          echo
-          echo "==================== PLUGINS GRADLE ===================="
-          echo "--- org.jlleitschuh.gradle.ktlint ---"
-          curl -sS --max-time 25 "https://plugins.gradle.org/m2/org/jlleitschuh/gradle/ktlint/org.jlleitschuh.gradle.ktlint.gradle.plugin/maven-metadata.xml" \
-            | grep -oP '(?<=<version>)[^<]+' | tail -6 || true
-          echo "--- org.jetbrains.kotlin.plugin.compose ---"
-          curl -sS --max-time 25 "https://plugins.gradle.org/m2/org/jetbrains/kotlin/plugin/compose/org.jetbrains.kotlin.plugin.compose.gradle.plugin/maven-metadata.xml" \
-            | grep -oP '(?<=<version>)[^<]+' | grep -vE '(Beta|RC|dev)' | tail -6 || true
-          echo "--- com.google.devtools.ksp (portail) ---"
-          curl -sS --max-time 25 "https://plugins.gradle.org/m2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/maven-metadata.xml" \
-            | grep -oP '(?<=<version>)[^<]+' | tail -6 || true
-          echo "======================================================"
+          echo "==================== fin ===================="
 
       - name: Publication du rapport dans la branche
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add versions-report.txt
+          git add -f minSdk-report.txt
           if git diff --cached --quiet; then
-            echo "Aucune modification du rapport."
+            echo "Rapport inchangé."
           else
-            git commit -m "chore(ci): rapport temporaire des versions disponibles [skip ci]"
+            git commit -m "chore(ci): sondage des minSdk (temporaire) [skip ci]"
             git push
           fi
-
-      - name: Affichage dans le résumé du job
-        if: always()
-        run: |
-          {
-            echo '## Versions disponibles'
-            echo '```'
-            cat versions-report.txt || echo 'rapport indisponible'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
