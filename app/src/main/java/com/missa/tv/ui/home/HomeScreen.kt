@@ -74,11 +74,21 @@ fun HomeScreen(
             BandeauInformation(texte = stringResource(R.string.home_cached_catalog))
         }
 
-        CategoriesRow(
-            categories = state.categories,
-            selection = state.selectedCategoryId,
-            onSelected = onCategorySelected,
-        )
+        if (device.isTv) {
+            // Liste TV : recentrage sur l'élément sélectionné et focus visible à
+            // distance, ce que les composants tactiles ne font pas.
+            TvCategoriesRow(
+                categories = state.categories,
+                selection = state.selectedCategoryId,
+                onSelected = onCategorySelected,
+            )
+        } else {
+            CategoriesRow(
+                categories = state.categories,
+                selection = state.selectedCategoryId,
+                onSelected = onCategorySelected,
+            )
+        }
 
         when {
             // Une liste disponible est toujours préférée à un écran de
@@ -292,14 +302,22 @@ private fun Liste(
     ) {
         if (colonnes == 1) {
             items(items = groups, key = { it.key }) { groupe ->
-                LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                if (surTeleviseur) {
+                    TvChannelCard(groupe = groupe, onSelected = onChannelSelected)
+                } else {
+                    LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                }
             }
         } else {
             items(items = groups.chunked(colonnes), key = { it.first().key }) { rangee ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rangee.forEach { groupe ->
                         Box(modifier = Modifier.weight(1f)) {
-                            LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                            if (surTeleviseur) {
+                                TvChannelCard(groupe = groupe, onSelected = onChannelSelected)
+                            } else {
+                                LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                            }
                         }
                     }
                     // Garde l'alignement des colonnes quand la dernière rangée
@@ -363,7 +381,7 @@ private fun LigneChaine(groupe: ChannelGroup, onSelected: (ChannelGroup) -> Unit
 }
 
 @Composable
-private fun LogoChaine(url: String?) {
+internal fun LogoChaine(url: String?) {
     Box(
         modifier = Modifier
             .size(48.dp)
