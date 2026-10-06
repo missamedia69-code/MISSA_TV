@@ -159,10 +159,31 @@ jobs:
           python3 - <<'PYTHON'
           import pathlib
 
+          import re
+
           sortie = pathlib.Path("build-output.txt").read_text(errors="replace")
+
+          # Les messages d'erreur d'abord : ce sont eux qui permettent d'agir.
+          # Les publier séparément évite qu'ils soient noyés dans les piles
+          # d'exécution Gradle qui suivent, comme cela s'est produit.
+          motifs = (
+              r"^e: ",
+              r"error:", r"^FAILURE:", r"^Caused by:",
+              r"^> Task .*FAILED", r"^Execution failed for task",
+              r"^\s*\* What went wrong", r"^Cannot|^Unresolved",
+          )
+          lignes = sortie.splitlines()
+          erreurs = [
+              f"{numero}: {ligne.strip()}"
+              for numero, ligne in enumerate(lignes, start=1)
+              if any(re.search(motif, ligne) for motif in motifs)
+          ]
+          resume = "\n".join(erreurs[:60]) or "(aucune ligne d'erreur reconnue)"
+
           # 12 000 derniers caractères : assez pour les erreurs de compilation et
           # de lint, sans dépasser la taille acceptée par une annotation.
-          queue = sortie[-12_000:].replace("%", "%25").replace("\r", "")
+          queue = (resume + "\n\n--- fin du journal ---\n" + sortie[-8_000:])
+          queue = queue.replace("%", "%25").replace("\r", "")
           for index, debut in enumerate(range(0, len(queue), 6_000)):
               bloc = queue[debut:debut + 6_000].replace("\n", "%0A")
               print(f"::error title=gradle-{index}::{bloc}")
