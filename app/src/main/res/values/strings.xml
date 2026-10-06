@@ -59,4 +59,66 @@
     <string name="device_font_scale">Échelle de police</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
+    <!-- Écran d'accueil -->
+    <string name="home_title">Chaînes</string>
+    <string name="home_categories_all">Toutes</string>
+    <string name="home_channel_count">%1$d chaînes</string>
+    <string name="home_channel_count_one">%1$d chaîne</string>
+    <string name="home_variants">%1$d qualités disponibles</string>
+    <string name="home_loading">Chargement des chaînes…</string>
+    <string name="home_open_settings">Réglages</string>
+    <string name="home_configure_portal">Configurer un portail</string>
+    <string name="home_config_first_time">Aucun portail n'est configuré. Saisissez les informations fournies par votre fournisseur d'accès.</string>
+    <string name="home_update_required">Une nouvelle version de l'application est disponible.</string>
+
+    <!-- Écran de lecture -->
+    <string name="player_open">Regarder</string>
+    <string name="player_back">Retour</string>
+    <string name="player_quality_locked_hint">Qualité verrouillée : plus aucune adaptation automatique.</string>
+    <string name="notice_degraded">Qualité réduite automatiquement : %1$s</string>
+    <string name="notice_upgraded">Qualité remontée automatiquement : %1$s</string>
+    <string name="notice_buffering">Mise en mémoire tampon…</string>
+    <string name="notice_single_quality_buffering">Cette chaîne n'est diffusée qu'en une seule qualité : le mode économie agit sur le tampon et la stabilité, pas sur la résolution.</string>
+    <string name="player_audio_only_notice">Mode audio seul : seule la bande sonore est téléchargée.</string>
+
+    <!-- Sélecteur de qualité -->
+    <string name="quality_choose">Choisir la qualité</string>
+    <string name="quality_auto_description">Laisse l'application adapter la qualité au débit mesuré.</string>
+    <string name="quality_lock">Verrouiller ce choix</string>
+    <string name="quality_unlock">Rétablir l'adaptation automatique</string>
+    <string name="quality_measured">Débit mesuré : %1$d kb/s</string>
+    <string name="quality_measured_unknown">Débit mesuré : en cours d'évaluation</string>
+    <string name="quality_connection_low">Connexion faible</string>
+    <string name="quality_connection_medium">Connexion moyenne</string>
+    <string name="quality_connection_good">Bonne connexion</string>
+    <string name="quality_connection_unknown">Connexion en cours d'évaluation</string>
+
+    <!-- Réglages -->
+    <string name="settings_title">Réglages</string>
+    <string name="settings_profiles">Profils de connexion</string>
+    <string name="settings_profile_add">Ajouter un profil</string>
+    <string name="settings_profile_name">Nom du profil</string>
+    <string name="settings_portal_url">Adresse du portail</string>
+    <string name="settings_portal_url_hint">http://exemple/</string>
+    <string name="settings_mac">Adresse MAC de l'appareil</string>
+    <string name="settings_mac_hint">00:1A:79:XX:XX:XX</string>
+    <string name="settings_secrets_notice">Ces informations ne sont jamais affichées dans les journaux et restent stockées chiffrées sur cet appareil.</string>
+    <string name="settings_quality_section">Qualité d'image</string>
+    <string name="settings_quality_default">Mode appliqué par défaut</string>
+    <string name="settings_config_section">Configuration distante</string>
+    <string name="settings_config_last_sync">Dernière vérification : %1$s</string>
+    <string name="settings_config_never_synced">Jamais vérifiée</string>
+    <string name="settings_config_check_now">Vérifier maintenant</string>
+    <string name="settings_diagnostics_section">Diagnostic</string>
+    <string name="settings_about_section">À propos</string>
+    <string name="settings_version">Version %1$s (%2$d)</string>
+    <string name="settings_legal">MISSA TV est un lecteur : l'application ne fournit aucune chaîne ni aucun flux. Vous êtes responsable de l'usage de contenus que vous avez le droit de regarder.</string>
+
+    <!-- Validation -->
+    <string name="validation_url_required">Adresse du portail requise.</string>
+    <string name="validation_url_invalid">Adresse invalide : elle doit commencer par http:// ou https://</string>
+    <string name="validation_mac_required">Adresse MAC requise.</string>
+    <string name="validation_mac_invalid">Adresse MAC invalide : six groupes de deux caractères hexadécimaux.</string>
+    <string name="validation_name_required">Nom du profil requis.</string>
+    <string name="settings_profile_saved">Profil enregistré.</string>
 </resources>

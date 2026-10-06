@@ -216,6 +216,15 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
 
+    // --- Tests instrumentés (Compose) -----------------------------------------
+    // Ces tests s'exécutent sur un appareil ou un émulateur : la CI les compile
+    // pour garantir qu'ils restent valides, l'exécution relève de la recette
+    // manuelle (voir docs/TESTS_FAIBLE_DEBIT.md).
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
+
     // --- Outils de développement ---------------------------------------------
     debugImplementation(libs.compose.ui.tooling)
 }
