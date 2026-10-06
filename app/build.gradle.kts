@@ -28,8 +28,15 @@ android {
         applicationId = "com.missa.tv"
         minSdk = 23
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        // Version pilotée par l'étiquette de publication (voir
+        // .github/workflows/release.yml). Le versionCode est dérivé du nom de
+        // version (1.2.3 → 10203) pour que le système accepte la mise à jour,
+        // quelle que soit l'étiquette publiée, et peut être forcé par
+        // `-Pmissa.versionCode=...`.
+        val nomVersion = configValue("missa.versionName", "1.0.0")
+        versionName = nomVersion
+        versionCode = configValue("missa.versionCode", "").toIntOrNull()
+            ?: versionCodeOf(nomVersion)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -56,6 +63,38 @@ android {
         buildConfigField("String", "GITHUB_CONFIG_TOKEN", "\"$configToken\"")
     }
 
+    /**
+     * Signature de la variante release.
+     *
+     * Le keystore n'est **jamais** versionné : il est fourni par l'environnement
+     * de signature (secrets de la CI, ou `local.properties` pour un poste de
+     * développement) et écrit dans un dossier temporaire.
+     *
+     * Sans keystore, la variante release reste compilable : R8 s'exécute, les
+     * règles sont vérifiées, seul le fichier final n'est pas signé. C'est ce qui
+     * permet à la CI de valider la minification à chaque push, sans détenir de
+     * secret de signature.
+     */
+    signingConfigs {
+        create("release") {
+            val chemin = signingValue("missa.keystore.file", "MISSA_KEYSTORE_FILE")
+            val motDePasse = signingValue("missa.keystore.password", "MISSA_KEYSTORE_PASSWORD")
+            val aliasCle = signingValue("missa.key.alias", "MISSA_KEY_ALIAS", "missa")
+            val motDePasseCle = signingValue(
+                "missa.key.password",
+                "MISSA_KEY_PASSWORD",
+                motDePasse.orEmpty(),
+            )
+
+            if (!chemin.isNullOrBlank() && !motDePasse.isNullOrBlank()) {
+                storeFile = file(chemin)
+                storePassword = motDePasse
+                keyAlias = aliasCle
+                keyPassword = motDePasseCle
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -68,8 +107,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // La signature de release est fournie par la CI via des secrets
-            // (voir .github/workflows/release.yml) : aucun keystore ici.
+            // Signé seulement si un keystore est disponible ; sinon la variante
+            // reste utile pour vérifier R8 (voir signingConfigs ci-dessus).
+            signingConfigs.findByName("release")
+                ?.takeIf { !it.storeFile?.toString().isNullOrBlank() }
+                ?.let { signingConfig = it }
         }
     }
 
@@ -116,6 +158,26 @@ android {
 }
 
 /**
+ * Lit une valeur de signature, dans l'ordre :
+ *  1. `local.properties` (jamais versionné) ;
+ *  2. une variable d'environnement (secrets de la CI) ;
+ *  3. la valeur par défaut fournie.
+ *
+ * Aucune de ces valeurs n'est journalisée, même partiellement : seule leur
+ * présence est signalée.
+ */
+fun signingValue(key: String, envName: String, default: String? = null): String? {
+    val localProperties = Properties().apply {
+        val fichier = rootProject.file("local.properties")
+        if (fichier.exists()) fichier.inputStream().use { load(it) }
+    }
+
+    return localProperties.getProperty(key)
+        ?: providers.environmentVariable(envName).orNull
+        ?: default
+}
+
+/**
  * Lit une valeur de configuration, dans l'ordre :
  *  1. `local.properties` (jamais versionné) ;
  *  2. une propriété Gradle (`-Pmissa.config.owner=...`) ;
@@ -125,6 +187,21 @@ android {
  * Les valeurs marquées « secret » ne sont jamais écrites dans le journal de
  * compilation.
  */
+/**
+ * versionCode déduit d'un nom de version : `1.2.3` donne `10203`.
+ *
+ * Une étiquette inattendue (par exemple `2026.10`) ne fait pas échouer le build :
+ * on retombe sur `1`, et la publication reste possible.
+ */
+fun versionCodeOf(versionName: String): Int {
+    val morceaux = versionName.substringBefore('-').split('.').mapNotNull { it.toIntOrNull() }
+    if (morceaux.isEmpty()) return 1
+    val majeur = morceaux.getOrElse(0) { 0 }
+    val mineur = morceaux.getOrElse(1) { 0 }
+    val correctif = morceaux.getOrElse(2) { 0 }
+    return majeur * 10_000 + mineur * 100 + correctif
+}
+
 fun configValue(key: String, default: String, secret: Boolean = false): String {
     val localProperties = Properties().apply {
         val fichier = rootProject.file("local.properties")

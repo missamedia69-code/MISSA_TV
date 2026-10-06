@@ -83,11 +83,6 @@ jobs:
     name: Build / lint / tests
     runs-on: ubuntu-24.04
     needs: [hygiene]
-    # TEMPORAIRE : permet de publier le rapport de compilation dans la branche
-    # (le journal de la CI n'est pas exploitable depuis l'environnement de
-    # développement). À retirer avant la livraison.
-    permissions:
-      contents: write
     steps:
       - name: Récupération du dépôt
         uses: actions/checkout@v5
@@ -151,17 +146,27 @@ jobs:
           echo "Code retour Gradle : $(cat gradle-exit-code.txt)"
           tail -c 2000 build-output.txt
 
-      # TEMPORAIRE — diagnostic à distance.
-      #
-      # Le journal complet de la CI n'est pas joignable depuis l'environnement de
-      # développement ; la fin du journal est donc republiée en annotations, qui
-      # elles sont lisibles via l'API. À retirer avant la livraison, en même
-      # temps que scripts/publish-log-annotations.sh.
-      - name: Publication du journal en annotations
-        if: always()
+      # Les journaux complets d'une exécution ne sont pas toujours accessibles
+      # (ils sont stockés hors du dépôt) : les dernières lignes de la sortie
+      # Gradle sont donc republiées en annotations, qui restent lisibles depuis
+      # l'interface comme depuis l'API. Seules les exécutions en échec publient
+      # quelque chose.
+      - name: Dernières lignes de Gradle en annotations
+        if: steps.gradle.outcome == 'failure'
         run: |
-          chmod +x scripts/publish-log-annotations.sh
-          ./scripts/publish-log-annotations.sh build-output.txt gradle 4000 10
+          set -uo pipefail
+          [ -f build-output.txt ] || exit 0
+          python3 - <<'PYTHON'
+          import pathlib
+
+          sortie = pathlib.Path("build-output.txt").read_text(errors="replace")
+          # 12 000 derniers caractères : assez pour les erreurs de compilation et
+          # de lint, sans dépasser la taille acceptée par une annotation.
+          queue = sortie[-12_000:].replace("%", "%25").replace("\r", "")
+          for index, debut in enumerate(range(0, len(queue), 6_000)):
+              bloc = queue[debut:debut + 6_000].replace("\n", "%0A")
+              print(f"::error title=gradle-{index}::{bloc}")
+          PYTHON
 
       - name: Échec du job si la compilation a échoué
         if: always()
@@ -172,28 +177,6 @@ jobs:
             echo "::error title=compilation::Analyse statique, tests ou compilation en échec (code ${CODE})."
             exit 1
           fi
-
-      # TEMPORAIRE — conservé tant que la compilation n'est pas verte.
-      - name: Publication du rapport dans la branche
-        if: always()
-        continue-on-error: true
-        run: |
-          set -uo pipefail
-          {
-            echo "# MISSA TV — rapport de compilation"
-            echo
-            echo "- commit : ${{ github.sha }}"
-            echo "- code retour Gradle : $(cat gradle-exit-code.txt 2>/dev/null || echo inconnu)"
-            echo
-            echo '```'
-            tail -c 50000 build-output.txt 2>/dev/null || echo "(journal indisponible)"
-            echo '```'
-          } > build-report.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f build-report.txt
-          git commit -m "chore(ci): rapport de compilation (temporaire) [skip ci]"
-          git push
 
       - name: Publication des rapports de tests
         if: always()

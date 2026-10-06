@@ -78,3 +78,21 @@ Ouvrir une issue en décrivant l'appareil, la version d'Android, le mode
 (TV ou mobile) et les étapes de reproduction. **Ne joignez jamais** d'URL de
 portail, de MAC ou de capture contenant ces informations : masquez-les
 (`00:1A:79:**:**:**`).
+
+## 9. Contrôles automatiques locaux
+
+Les mêmes contrôles que la CI peuvent être lancés sans SDK Android :
+
+```bash
+./scripts/check-secrets.sh                     # aucun identifiant versionné
+python3 scripts/check-strings.py               # chaînes : apostrophes, formats, parité fr/en
+python3 scripts/validate-config.py             # schéma de la configuration distante
+./gradlew ktlintCheck testDebugUnitTest        # style et tests
+```
+
+`check-strings.py` mérite une explication : une apostrophe non échappée dans une
+valeur de chaîne fait échouer la compilation **de tout le fichier** de ressources
+(aapt2 répond « Invalid unicode escape sequence in string »), sans indiquer
+clairement la cause. Le contrôle détecte le problème avant la compilation, ainsi
+que les emplacements de formatage mal formés et les chaînes présentes d'un seul
+côté de la traduction français / anglais.
