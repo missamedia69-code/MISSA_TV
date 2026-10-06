@@ -67,9 +67,10 @@ class DataStoreSettingsStore @Inject constructor(
             MissaLog.e("Lecture des préférences impossible, valeurs par défaut utilisées", erreur)
             emit(emptyPreferences())
         }
-        return source
-            .map { preferences -> preferences.toPreferences() }
-            .flowOn(dispatchers.io)
+        val converti: Flow<PlaybackPreferences> = source.map { preferences ->
+            versPlayback(preferences)
+        }
+        return converti.flowOn(dispatchers.io)
     }
 
     override suspend fun playback(): PlaybackPreferences = observePlayback().first()
@@ -87,11 +88,12 @@ class DataStoreSettingsStore @Inject constructor(
         }
     }
 
-    private fun Preferences.toPreferences(): PlaybackPreferences = PlaybackPreferences(
+    /** Conversion des préférences stockées vers le modèle de l'application. */
+    private fun versPlayback(preferences: Preferences): PlaybackPreferences = PlaybackPreferences(
         // Un nom de mode inconnu (retour à une version antérieure, fichier
         // modifié) est ignoré : l'adaptation automatique reprend la main.
-        qualityMode = QualityMode.fromNameOrNull(this[KEY_QUALITY_MODE]),
-        qualityLocked = this[KEY_QUALITY_LOCKED] ?: false,
+        qualityMode = QualityMode.fromNameOrNull(preferences[KEY_QUALITY_MODE]),
+        qualityLocked = preferences[KEY_QUALITY_LOCKED] ?: false,
     )
 
     private companion object {
