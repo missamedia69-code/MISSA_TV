@@ -42,13 +42,13 @@ class MissaTvApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        // Les traces détaillées ne sont émises qu'en build de débogage : en
-        // release, seuls les avertissements et les erreurs sont journalisés.
         // Un arrêt inattendu laisse une trace lisible dans l'écran de réglages :
         // sans cela, il ne resterait rien à transmettre depuis un appareil auquel
         // on n'a pas accès par câble.
         crashRecorder.install()
 
+        // Les traces détaillées ne sont émises qu'en build de débogage : en
+        // release, seuls les avertissements et les erreurs sont journalisés.
         MissaLog.verbose = BuildConfig.DEBUG
         MissaLog.i("Démarrage de MISSA TV ${BuildConfig.VERSION_NAME}")
 

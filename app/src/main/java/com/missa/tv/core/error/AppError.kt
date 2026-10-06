@@ -34,10 +34,10 @@ sealed class AppError(
     /** Configuration distante invalide : la précédente est conservée. */
     data object InvalidConfig : AppError(R.string.error_config_invalid, retryable = false)
 
-    /** Aucune configuration disponible : saisie manuelle nécessaire. */
     /** Le fichier de configuration est absent de la branche lue du dépôt. */
     data object ConfigNotFound : AppError(R.string.error_config_not_found, retryable = false)
 
+    /** Aucune configuration disponible : saisie manuelle nécessaire. */
     data object MissingConfig : AppError(R.string.error_config_invalid, retryable = false)
 
     /** Toute autre erreur ; la cause est journalisée, jamais affichée. */

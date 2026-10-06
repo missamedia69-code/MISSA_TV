@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.missa.tv.R
 import com.missa.tv.core.dispatchers.DispatcherProvider
+import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
 import com.missa.tv.data.local.SettingsStore
