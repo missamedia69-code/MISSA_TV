@@ -178,6 +178,45 @@ jobs:
             exit 1
           fi
 
+      # L'APK de développement est publié comme artefact : il s'installe
+      # directement sur un appareil ou un émulateur (il est signé par la clé de
+      # débogage, ce qui suffit pour essayer l'application).
+      #
+      # En revanche il n'est PAS publiable sur un magasin, et il porte
+      # l'identifiant `com.missa.tv.debug` : il cohabite donc avec une version
+      # publiée, sans la remplacer.
+      - name: Publication de l'APK de développement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: missa-tv-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Résumé de l'APK
+        if: always()
+        run: |
+          set -uo pipefail
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' 2>/dev/null | head -1)"
+          {
+            echo "## APK de développement"
+            echo
+            if [ -z "${APK}" ]; then
+              echo "Aucun APK produit (la compilation a échoué avant cette étape)."
+            else
+              echo "| | |"
+              echo "| --- | --- |"
+              echo "| Fichier | $(basename "${APK}") |"
+              echo "| Taille | $(du -h "${APK}" | cut -f1) |"
+              echo "| Commit | ${GITHUB_SHA} |"
+              echo
+              echo '```'
+              sha256sum "${APK}"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publication des rapports de tests
         if: always()
         uses: actions/upload-artifact@v4
