@@ -4,6 +4,7 @@ import android.app.UiModeManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
