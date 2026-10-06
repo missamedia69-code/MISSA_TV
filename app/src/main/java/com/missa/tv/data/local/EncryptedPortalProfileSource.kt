@@ -78,6 +78,25 @@ class EncryptedPortalProfileSource @Inject constructor(
         }
     }
 
+    override suspend fun syncRemote(
+        remoteProfiles: List<PortalProfile>,
+        defaultProfileId: String?,
+    ) = withContext(dispatchers.io) {
+        if (remoteProfiles.isEmpty()) return@withContext
+
+        // Les profils distants font autorité sur ceux de même identifiant : ils
+        // sont publiés par l'administrateur du déploiement.
+        val distants = remoteProfiles.associateBy { it.id }
+        val manuels = profiles().filterNot { distants.containsKey(it.id) }
+        ecrire((manuels + remoteProfiles).sortedBy { it.id })
+
+        val choisi = defaultProfileId?.takeIf { id -> remoteProfiles.any { it.id == id } }
+        if (choisi != null && activeProfileId() != choisi) {
+            prefs.edit().putString(KEY_ACTIVE, choisi).apply()
+            MissaLog.i("Profil par défaut défini par la configuration distante")
+        }
+    }
+
     override suspend fun delete(id: String) = withContext(dispatchers.io) {
         val restants = profiles().filterNot { it.id == id }
         ecrire(restants)

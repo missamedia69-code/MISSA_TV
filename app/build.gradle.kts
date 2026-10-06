@@ -35,6 +35,24 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // ── Configuration distante ────────────────────────────────────────────
+        // L'emplacement du fichier de configuration publié dans le dépôt est
+        // injecté ici : aucune adresse n'est écrite dans le code source, et
+        // l'emplacement peut changer sans toucher au code.
+        //
+        // Le jeton GitHub est FACULTATIF (le dépôt est public). S'il est fourni,
+        // il ne doit jamais être versionné : il se déclare dans local.properties
+        // (fichier non suivi par Git) ou dans les secrets de la CI.
+        val configOwner = configValue("missa.config.owner", "missamedia69-code")
+        val configRepo = configValue("missa.config.repo", "MISSA_TV")
+        val configPath = configValue("missa.config.path", "remote-config/portal-config.json")
+        val configToken = configValue("missa.config.token", "", secret = true)
+
+        buildConfigField("String", "GITHUB_CONFIG_OWNER", "\"$configOwner\"")
+        buildConfigField("String", "GITHUB_CONFIG_REPO", "\"$configRepo\"")
+        buildConfigField("String", "GITHUB_CONFIG_PATH", "\"$configPath\"")
+        buildConfigField("String", "GITHUB_CONFIG_TOKEN", "\"$configToken\"")
     }
 
     buildTypes {
@@ -96,6 +114,34 @@ android {
     }
 }
 
+/**
+ * Lit une valeur de configuration, dans l'ordre :
+ *  1. `local.properties` (jamais versionné) ;
+ *  2. une propriété Gradle (`-Pmissa.config.owner=...`) ;
+ *  3. une variable d'environnement, pour les secrets de la CI ;
+ *  4. la valeur par défaut fournie.
+ *
+ * Les valeurs marquées « secret » ne sont jamais écrites dans le journal de
+ * compilation.
+ */
+fun configValue(key: String, default: String, secret: Boolean = false): String {
+    val localProperties = java.util.Properties().apply {
+        val fichier = rootProject.file("local.properties")
+        if (fichier.exists()) fichier.inputStream().use { load(it) }
+    }
+    val nomVariable = key.uppercase().replace('.', '_').replace('-', '_')
+
+    val valeur = localProperties.getProperty(key)
+        ?: providers.gradleProperty(key).orNull
+        ?: providers.environmentVariable(nomVariable).orNull
+        ?: default
+
+    if (secret && valeur.isNotBlank()) {
+        logger.lifecycle("$nomVariable : fourni (valeur non affichée)")
+    }
+    return valeur.replace("\\", "\\\\").replace("\"", "\\\"")
+}
+
 // Cible JVM commune à Java et Kotlin : indispensable pour éviter l'erreur
 // « Inconsistent JVM-target compatibility ».
 kotlin {
@@ -136,6 +182,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     // --- Persistance ----------------------------------------------------------
     implementation(libs.room.runtime)

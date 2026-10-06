@@ -64,6 +64,14 @@ class PortalRepositoryImplTest {
         override suspend fun delete(id: String) {
             liste = liste.filterNot { it.id == id }
         }
+
+        override suspend fun syncRemote(
+            remoteProfiles: List<PortalProfile>,
+            defaultProfileId: String?,
+        ) {
+            liste = (liste.filterNot { p -> remoteProfiles.any { it.id == p.id } } + remoteProfiles)
+            if (defaultProfileId != null) actif = defaultProfileId
+        }
     }
 
     private fun mac(suffixe: Int): String =

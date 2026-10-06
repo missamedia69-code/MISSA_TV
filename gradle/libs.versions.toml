@@ -104,6 +104,7 @@ media3-datasource-okhttp = { module = "androidx.media3:media3-datasource-okhttp"
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltExt" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltExt" }
 
 # --- Persistance -------------------------------------------------------------
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

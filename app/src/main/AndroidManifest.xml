@@ -9,7 +9,8 @@
   Aucune donnée de connexion (URL de portail, adresse MAC) n'est présente ici :
   la configuration est lue à distance ou saisie par l'utilisateur.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Réseau : appels au portail et récupération de la configuration. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -41,6 +42,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MissaTv">
+
+        <!-- WorkManager est initialisé par l'application, avec la fabrique de
+             Workers fournie par Hilt. L'initialiseur automatique est donc retiré :
+             il est le seul à être retiré, les autres initialiseurs AndroidX
+             restant en place. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <activity
             android:name=".MainActivity"

@@ -26,6 +26,15 @@ interface PortalProfileSource {
     /** Supprime un profil. */
     suspend fun delete(id: String)
 
+    /**
+     * Fusionne les profils publiés dans la configuration distante.
+     *
+     * Un profil distant remplace celui de même identifiant ; les profils saisis
+     * à la main et non concernés sont conservés. [defaultProfileId] désigne le
+     * profil à utiliser en priorité, s'il existe.
+     */
+    suspend fun syncRemote(remoteProfiles: List<PortalProfile>, defaultProfileId: String?)
+
     /** Vrai si au moins un profil complet est disponible. */
     suspend fun hasUsableProfile(): Boolean = profiles().any { it.enabled && it.isComplete }
 }

@@ -1,8 +1,12 @@
 package com.missa.tv
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.missa.tv.core.log.MissaLog
+import com.missa.tv.data.work.ConfigRefreshScheduler
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Point d'entrée de l'application.
@@ -11,7 +15,25 @@ import dagger.hilt.android.HiltAndroidApp
  * d'injection de dépendances.
  */
 @HiltAndroidApp
-class MissaTvApplication : Application() {
+class MissaTvApplication : Application(), Configuration.Provider {
+
+    /**
+     * Fabrique fournie par Hilt : les Workers reçoivent leurs dépendances par
+     * injection, comme le reste de l'application.
+     *
+     * WorkManager n'est donc pas initialisé automatiquement (voir le manifeste) :
+     * l'initialisation a lieu au premier usage, avec cette fabrique.
+     */
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var configRefreshScheduler: ConfigRefreshScheduler
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()
@@ -19,6 +41,10 @@ class MissaTvApplication : Application() {
         // Les traces détaillées ne sont émises qu'en build de débogage : en
         // release, seuls les avertissements et les erreurs sont journalisés.
         MissaLog.verbose = BuildConfig.DEBUG
-        MissaLog.i("Demarrage de MISSA TV ${BuildConfig.VERSION_NAME}")
+        MissaLog.i("Démarrage de MISSA TV ${BuildConfig.VERSION_NAME}")
+
+        // Vérification périodique de la configuration distante, même si
+        // l'utilisateur n'ouvre pas l'application.
+        configRefreshScheduler.schedulePeriodic()
     }
 }
