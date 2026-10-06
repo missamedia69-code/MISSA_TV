@@ -87,20 +87,27 @@ object DeviceProfileDetector {
      * Détecte un poste de bureau ou un Chromebook : grand écran avec pointeur
      * ou fenêtres redimensionnables.
      */
-    fun isDesktop(context: Context, widthClass: WindowWidthClass): Boolean {
+    fun isDesktop(
+        context: Context,
+        widthClass: WindowWidthClass,
+        sdkInt: Int = Build.VERSION.SDK_INT,
+    ): Boolean {
         if (widthClass == WindowWidthClass.COMPACT) return false
-        val packageManager = context.packageManager
-        val hasPc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.hasSystemFeature(PackageManager.FEATURE_PC)
+        val hasPc = if (sdkInt >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.hasSystemFeature(PackageManager.FEATURE_PC)
         } else {
             false
         }
         return hasPc
     }
 
-    fun detectType(context: Context, widthClass: WindowWidthClass): DeviceType = when {
+    fun detectType(
+        context: Context,
+        widthClass: WindowWidthClass,
+        sdkInt: Int = Build.VERSION.SDK_INT,
+    ): DeviceType = when {
         isTelevision(context) -> DeviceType.TELEVISION
-        isDesktop(context, widthClass) -> DeviceType.DESKTOP
+        isDesktop(context, widthClass, sdkInt) -> DeviceType.DESKTOP
         widthClass == WindowWidthClass.COMPACT -> DeviceType.PHONE
         else -> DeviceType.TABLET
     }
@@ -112,9 +119,11 @@ object DeviceProfileDetector {
      * Le Picture-in-Picture n'existe qu'à partir d'Android 7 et seulement si le
      * matériel le permet.
      */
-    fun supportsPictureInPicture(context: Context): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-            context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+    fun supportsPictureInPicture(
+        context: Context,
+        sdkInt: Int = Build.VERSION.SDK_INT,
+    ): Boolean = sdkInt >= Build.VERSION_CODES.N &&
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
     /**
      * Construit le profil à partir de valeurs simples plutôt que d'un objet
@@ -126,14 +135,15 @@ object DeviceProfileDetector {
         screenWidthDp: Int,
         isLandscape: Boolean,
         fontScale: Float,
+        sdkInt: Int = Build.VERSION.SDK_INT,
     ): DeviceProfile {
         val widthClass = windowWidthClass(screenWidthDp)
         return DeviceProfile(
-            type = detectType(context, widthClass),
+            type = detectType(context, widthClass, sdkInt),
             widthClass = widthClass,
             isLandscape = isLandscape,
             hasTouchscreen = hasTouchscreen(context),
-            supportsPictureInPicture = supportsPictureInPicture(context),
+            supportsPictureInPicture = supportsPictureInPicture(context, sdkInt),
             fontScale = fontScale,
         )
     }

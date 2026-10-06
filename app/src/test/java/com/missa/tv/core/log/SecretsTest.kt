@@ -69,8 +69,10 @@ class SecretsTest {
         assertThat(masquee).doesNotContain("jetonEnClair12345678")
         assertThat(masquee).doesNotContain(jetonGitHub)
         assertThat(masquee).doesNotContain("192.0.2.10")
-        // Le masquage remplace par un repère lisible plutôt que de tout supprimer.
-        assertThat(masquee).contains("mac=**")
+        // Une URL masquée l'est en entier, chaîne de requête comprise : c'est le
+        // comportement le plus protecteur. Le repère « mac=** » reste vérifié
+        // par le test dédié ci-dessous, sur une ligne sans URL.
+        assertThat(masquee).contains("http://1***:8080/***")
     }
 
     @Test

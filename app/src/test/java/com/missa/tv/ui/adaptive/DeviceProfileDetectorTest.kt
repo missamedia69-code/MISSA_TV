@@ -121,9 +121,50 @@ class DeviceProfileDetectorTest {
                 screenWidthDp = 411,
                 isLandscape = false,
                 fontScale = 1f,
+                sdkInt = Build.VERSION_CODES.TIRAMISU,
             )
 
             assertThat(profil.supportsPictureInPicture).isTrue()
+        }
+
+        @Test
+        fun `pas de picture-in-picture avant Android 7 meme si le materiel le permet`() {
+            // Le Picture-in-Picture n'existe qu'à partir de l'API 24 : sur une
+            // version antérieure, l'application ne doit pas proposer l'option.
+            every {
+                packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+            } returns true
+
+            val profil = DeviceProfileDetector.from(
+                context = context,
+                screenWidthDp = 411,
+                isLandscape = false,
+                fontScale = 1f,
+                sdkInt = Build.VERSION_CODES.M,
+            )
+
+            assertThat(profil.supportsPictureInPicture).isFalse()
+        }
+
+        @Test
+        fun `un poste de bureau n_est reconnu qu_a partir d_Android 13`() {
+            every { packageManager.hasSystemFeature(PackageManager.FEATURE_PC) } returns true
+
+            assertThat(
+                DeviceProfileDetector.detectType(
+                    context = context,
+                    widthClass = WindowWidthClass.EXPANDED,
+                    sdkInt = Build.VERSION_CODES.TIRAMISU,
+                ),
+            ).isEqualTo(DeviceType.DESKTOP)
+
+            assertThat(
+                DeviceProfileDetector.detectType(
+                    context = context,
+                    widthClass = WindowWidthClass.EXPANDED,
+                    sdkInt = Build.VERSION_CODES.M,
+                ),
+            ).isEqualTo(DeviceType.TABLET)
         }
 
         @Test

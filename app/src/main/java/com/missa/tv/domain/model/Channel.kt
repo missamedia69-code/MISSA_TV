@@ -34,6 +34,13 @@ data class Channel(
  * par qualité (« TF1 », « TF1 HD », « TF1 FHD »). Ce classement permet de
  * regrouper ces diffusions et de choisir automatiquement la plus légère en mode
  * économie de données.
+ *
+ * [rank] définit l'ordre de légèreté, du plus léger au plus lourd. Le cas
+ * [UNKNOWN] est volontairement placé **entre SD et HD** : une diffusion sans
+ * marqueur de qualité est la diffusion « de base » du portail, plus lourde
+ * qu'une SD annoncée mais plus légère qu'une HD annoncée. Le placer en tête
+ * ferait choisir une diffusion au débit inconnu alors qu'une SD explicite est
+ * disponible — exactement l'inverse du but recherché en mode économie.
  */
 enum class VideoQuality(
     val rank: Int,
@@ -41,12 +48,12 @@ enum class VideoQuality(
     /** Hauteur de vidéo attendue, utilisée pour appliquer un plafond de mode. */
     val approximateHeight: Int,
 ) {
-    UNKNOWN(0, "", 720),
-    LQ(1, "LQ", 360),
-    SD(2, "SD", 480),
-    HD(3, "HD", 720),
-    FHD(4, "FHD", 1080),
-    UHD(5, "4K", 2160),
+    LQ(10, "LQ", 360),
+    SD(20, "SD", 480),
+    UNKNOWN(25, "", 720),
+    HD(30, "HD", 720),
+    FHD(40, "FHD", 1080),
+    UHD(50, "4K", 2160),
 }
 
 /** Une diffusion d'une chaîne, avec la qualité qui lui a été reconnue. */
