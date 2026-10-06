@@ -30,7 +30,6 @@ composeBom = "2026.09.00"
 coreKtx = "1.19.1"
 activityCompose = "1.13.0"
 lifecycle = "2.11.0"
-navigationCompose = "2.10.2"
 tvMaterial = "1.1.0"
 tvFoundation = "1.0.0"
 
@@ -64,7 +63,6 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 
 # --- Compose (versions gérées par la BOM) ------------------------------------
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -74,6 +72,12 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+
+# Remarque : androidx.navigation (et androidx.hilt:hilt-navigation-compose qui en
+# dépend) exige minSdk 24. Le projet cible minSdk 23 pour rester installable sur
+# les boîtiers Android TV anciens : la navigation est donc écrite à la main
+# (ui/navigation) et les ViewModels sont fournis par des fabriques Hilt
+# explicites (core/ui/ViewModelFactory.kt). Voir docs/ARCHITECTURE.md.
 
 # --- Android TV ---------------------------------------------------------------
 androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMaterial" }
@@ -90,7 +94,6 @@ media3-datasource-okhttp = { module = "androidx.media3:media3-datasource-okhttp"
 # --- Injection ---------------------------------------------------------------
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
-androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltExt" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltExt" }
 
 # --- Persistance -------------------------------------------------------------
