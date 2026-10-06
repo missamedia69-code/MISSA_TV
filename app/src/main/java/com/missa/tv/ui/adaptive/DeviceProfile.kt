@@ -116,16 +116,25 @@ object DeviceProfileDetector {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
             context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
-    /** Construit le profil à partir de la configuration courante. */
-    fun from(context: Context, configuration: Configuration): DeviceProfile {
-        val widthClass = windowWidthClass(configuration.screenWidthDp)
+    /**
+     * Construit le profil à partir de valeurs simples plutôt que d'un objet
+     * [Configuration] : la détection reste ainsi testable sans dépendre du
+     * framework Android.
+     */
+    fun from(
+        context: Context,
+        screenWidthDp: Int,
+        isLandscape: Boolean,
+        fontScale: Float,
+    ): DeviceProfile {
+        val widthClass = windowWidthClass(screenWidthDp)
         return DeviceProfile(
             type = detectType(context, widthClass),
             widthClass = widthClass,
-            isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            isLandscape = isLandscape,
             hasTouchscreen = hasTouchscreen(context),
             supportsPictureInPicture = supportsPictureInPicture(context),
-            fontScale = configuration.fontScale,
+            fontScale = fontScale,
         )
     }
 }
@@ -145,6 +154,11 @@ fun rememberDeviceProfile(): DeviceProfile {
         configuration.orientation,
         configuration.fontScale,
     ) {
-        DeviceProfileDetector.from(context, configuration)
+        DeviceProfileDetector.from(
+            context = context,
+            screenWidthDp = configuration.screenWidthDp,
+            isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            fontScale = configuration.fontScale,
+        )
     }
 }

@@ -13,6 +13,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    // Exécute les tests unitaires avec JUnit 5 (Jupiter) sur le runner Android.
+    alias(libs.plugins.junit5)
 }
 
 android {
@@ -159,6 +161,18 @@ dependencies {
     // --- Images ---------------------------------------------------------------
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // --- Tests unitaires ------------------------------------------------------
+    // Écrits avec JUnit 5, vérifiés par Truth, avec MockK pour les doublures et
+    // Turbine pour les flux. La BOM JUnit garantit l'alignement des versions
+    // entre Jupiter et la plateforme de test.
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockk)
+    testImplementation(libs.truth)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // --- Outils de développement ---------------------------------------------
     debugImplementation(libs.compose.ui.tooling)
