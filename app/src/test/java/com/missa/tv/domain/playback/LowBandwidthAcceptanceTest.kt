@@ -78,7 +78,9 @@ class LowBandwidthAcceptanceTest {
     fun `degradation complete`() {
         val horloge = Horloge()
         val controleur = controleurFrais(horloge)
-        controleur.initialMode(QualityMode.AUTO_ECONOMY, ConnectionClass.LOW)
+        // Connexion encore inconnue : aucun rabais initial, on part donc du mode
+        // automatique et la dégradation parcourt toute l'échelle.
+        controleur.initialMode(QualityMode.AUTO_ECONOMY, ConnectionClass.UNKNOWN)
 
         val paliers = mutableListOf<QualityMode>()
         repeat(6) {

@@ -70,15 +70,16 @@ class PlaybackCapsTest {
     }
 
     @Test
-    @DisplayName("le plafond de débit suit la résolution quand il n'est pas donné")
-    fun `debit deduit de la resolution`() {
+    @DisplayName("une résolution surchargée ne crée pas de plafond de débit implicite")
+    fun `pas de plafond deduit`() {
         val surcharges = BandwidthSettings(maxVideoHeightByMode = mapOf(QualityMode.AUTO_ECONOMY to 576))
 
         val caps = PlaybackCaps.forMode(QualityMode.AUTO_ECONOMY, surcharges)
 
+        // La résolution baisse, le débit reste celui du mode : c'est la
+        // sélection de piste qui fait le travail, sans bride arbitraire.
         assertThat(caps.maxHeightPx).isEqualTo(576)
-        assertThat(caps.effectiveMaxBitrateBps)
-            .isEqualTo(576 * PlaybackCaps.ESTIMATED_BPS_PER_PIXEL_ROW)
+        assertThat(caps.effectiveMaxBitrateBps).isEqualTo(QualityMode.AUTO_ECONOMY.defaultMaxBitrate)
     }
 
     @Test

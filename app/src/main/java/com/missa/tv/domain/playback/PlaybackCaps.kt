@@ -26,26 +26,15 @@ data class PlaybackCaps(
     /**
      * Plafond de débit retenu pour le moteur.
      *
-     * Un mode sans plafond explicite reçoit une limite déduite de sa résolution :
-     * laisser le lecteur choisir librement sur une connexion faible est
-     * exactement ce qui provoque les coupures.
+     * Aucun plafond n'est déduit de la résolution : le mode « qualité maximale »
+     * doit rester sans limite, sinon une connexion rapide serait bridée à son
+     * insu. La résolution est déjà contrainte séparément, par le plafond de
+     * hauteur transmis au moteur de lecture.
      */
     val effectiveMaxBitrateBps: Int
-        get() = when {
-            videoDisabled -> 0
-            maxBitrateBps > 0 -> maxBitrateBps
-            maxHeightPx <= 0 -> 0
-            else -> maxHeightPx * ESTIMATED_BPS_PER_PIXEL_ROW
-        }
+        get() = if (videoDisabled) 0 else maxBitrateBps
 
     companion object {
-
-        /**
-         * Débit approximatif par rangée de pixels de hauteur, en bits par
-         * seconde. Ordre de grandeur constaté sur les flux H.264 diffusés par
-         * ces portails.
-         */
-        const val ESTIMATED_BPS_PER_PIXEL_ROW = 2_400
 
         /** Contraintes correspondant à un mode, compte tenu des surcharges. */
         fun forMode(mode: QualityMode, settings: BandwidthSettings): PlaybackCaps = PlaybackCaps(
