@@ -70,6 +70,10 @@ fun HomeScreen(
             BandeauInformation(texte = stringResource(R.string.home_update_required))
         }
 
+        if (state.isFromCache) {
+            BandeauInformation(texte = stringResource(R.string.home_cached_catalog))
+        }
+
         CategoriesRow(
             categories = state.categories,
             selection = state.selectedCategoryId,
@@ -77,14 +81,16 @@ fun HomeScreen(
         )
 
         when {
-            state.isLoading -> Chargement()
-            state.error != null -> Erreur(state = state, onRetry = onRetry)
-            state.groups.isEmpty() -> AucuneChaine(onOpenManualSetup = onOpenManualSetup)
-            else -> Liste(
+            // Une liste disponible est toujours préférée à un écran de
+            // chargement : elle vient du portail ou du catalogue mémorisé.
+            state.groups.isNotEmpty() -> Liste(
                 groups = state.visibleGroups,
                 device = device,
                 onChannelSelected = onChannelSelected,
             )
+            state.isLoading -> Chargement()
+            state.error != null -> Erreur(state = state, onRetry = onRetry)
+            else -> AucuneChaine(onOpenManualSetup = onOpenManualSetup)
         }
     }
 }

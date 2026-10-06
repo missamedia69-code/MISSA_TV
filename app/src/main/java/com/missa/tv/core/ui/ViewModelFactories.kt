@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.time.TimeSource
+import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
@@ -35,6 +36,7 @@ interface AppEntryPoint {
     fun remoteConfigRepository(): RemoteConfigRepository
     fun portalProfileSource(): PortalProfileSource
     fun settingsStore(): SettingsStore
+    fun catalogCache(): CatalogCache
     fun playerFactory(): PlayerFactory
     fun playbackQualityApplier(): PlaybackQualityApplier
     fun dispatcherProvider(): DispatcherProvider

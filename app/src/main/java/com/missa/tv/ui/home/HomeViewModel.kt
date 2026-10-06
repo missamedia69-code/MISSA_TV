@@ -6,6 +6,7 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
+import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.channel.ChannelVariantGrouper
 import com.missa.tv.domain.model.Category
@@ -32,6 +33,14 @@ data class HomeUiState(
     val qualityMode: QualityMode = QualityMode.DEFAULT,
     /** Vrai si la configuration distante demande une version plus récente. */
     val requiresAppUpdate: Boolean = false,
+    /**
+     * Vrai quand la liste affichée vient du catalogue local, et non du portail.
+     *
+     * L'écran le signale à l'utilisateur : une liste mémorisée peut être
+     * légèrement en retard, il doit le savoir avant de conclure qu'une chaîne a
+     * disparu du portail.
+     */
+    val isFromCache: Boolean = false,
 ) {
     /** Chaînes à afficher, filtrées par la catégorie choisie. */
     val visibleGroups: List<ChannelGroup>
@@ -59,6 +68,7 @@ class HomeViewModel @Inject constructor(
     private val configRepository: RemoteConfigRepository,
     private val settingsStore: SettingsStore,
     private val profileSource: PortalProfileSource,
+    private val catalogCache: CatalogCache,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -95,11 +105,38 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
+            val portalId = identifiantPortail()
+
+            // Le catalogue mémorisé est affiché sans attendre : sur une connexion
+            // lente, la liste apparaît immédiatement au lieu de laisser un écran
+            // de chargement pendant toute la durée de l'interrogation du portail.
+            val groupesMemorises = catalogCache.groups(portalId)
+            if (groupesMemorises.isNotEmpty()) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = null,
+                        categories = catalogCache.categories(portalId),
+                        groups = groupesMemorises,
+                        qualityMode = qualityMode,
+                        isFromCache = true,
+                    )
+                }
+            }
+
             val session = when (val resultat = portalRepository.connect()) {
                 is AppResult.Success -> resultat.value
                 is AppResult.Failure -> {
                     MissaLog.w("Ouverture de session impossible au chargement des chaînes")
-                    _state.update { it.copy(isLoading = false, error = resultat.error) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            isFromCache = groupesMemorises.isNotEmpty(),
+                            // Une liste mémorisée reste utilisable : l'échec est
+                            // signalé sans effacer ce que l'utilisateur avait.
+                            error = if (groupesMemorises.isEmpty()) resultat.error else null,
+                        )
+                    }
                     return@launch
                 }
             }
@@ -107,19 +144,36 @@ class HomeViewModel @Inject constructor(
             when (val resultat = portalRepository.catalog(session)) {
                 is AppResult.Success -> {
                     val catalogue = resultat.value
+                    val groupes = ChannelVariantGrouper.group(catalogue.channels)
                     _state.update {
                         it.copy(
                             isLoading = false,
                             error = null,
                             categories = catalogue.categories,
-                            groups = ChannelVariantGrouper.group(catalogue.channels),
+                            groups = groupes,
                             qualityMode = qualityMode,
                             requiresAppUpdate = config.requiresAppUpdate(CURRENT_VERSION_CODE),
+                            isFromCache = false,
                         )
                     }
+
+                    // Mise en cache après l'affichage : l'écriture ne retarde
+                    // jamais la liste, et son échec n'a aucune conséquence
+                    // visible — la prochaine ouverture refera simplement l'appel
+                    // au portail.
+                    runCatching { catalogCache.save(portalId, catalogue) }
+                        .onFailure { erreur ->
+                            MissaLog.w("Catalogue local non enregistré : ${erreur.javaClass.simpleName}")
+                        }
                 }
                 is AppResult.Failure -> {
-                    _state.update { it.copy(isLoading = false, error = resultat.error) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            isFromCache = groupesMemorises.isNotEmpty(),
+                            error = if (groupesMemorises.isEmpty()) resultat.error else null,
+                        )
+                    }
                 }
             }
         }
@@ -138,11 +192,29 @@ class HomeViewModel @Inject constructor(
      */
     fun channelToPlay(group: ChannelGroup): Channel = group.bestFor(qualityMode).channel
 
+    /**
+     * Identifiant du portail servant de clé au cache.
+     *
+     * C'est le profil actif, à défaut le premier profil complet enregistré : deux
+     * profils ne partagent jamais leur catalogue, et un cache orphelin ne peut
+     * donc pas afficher les chaînes d'un autre abonnement.
+     */
+    private suspend fun identifiantPortail(): String {
+        val profils = profileSource.profiles()
+        val actif = profileSource.activeProfileId()
+        return profils.firstOrNull { it.id == actif }?.id
+            ?: profils.firstOrNull { it.isComplete }?.id
+            ?: CACHE_SANS_PROFIL
+    }
+
     private companion object {
         /**
          * VersionCode de l'application, comparée à l'exigence de la
          * configuration distante. Renseignée par le build.
          */
         val CURRENT_VERSION_CODE: Int = com.missa.tv.BuildConfig.VERSION_CODE
+
+        /** Clé de cache utilisée lorsqu'aucun profil n'est encore complet. */
+        const val CACHE_SANS_PROFIL: String = "sans-profil"
     }
 }

@@ -49,6 +49,7 @@ fun AppRoot(onExit: () -> Unit) {
                             configRepository = point.remoteConfigRepository(),
                             settingsStore = point.settingsStore(),
                             profileSource = point.portalProfileSource(),
+                            catalogCache = point.catalogCache(),
                             dispatchers = point.dispatcherProvider(),
                         )
                     },
