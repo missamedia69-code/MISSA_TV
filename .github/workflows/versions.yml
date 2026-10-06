@@ -15,16 +15,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   versions:
     name: Résolution des versions
     runs-on: ubuntu-latest
     steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v4
+
       - name: Dernières versions publiées
         run: |
           set -uo pipefail
+          exec > versions-report.txt 2>&1
 
           dernier() {
             local repo="$1" groupe="$2" artefact="$3"
@@ -127,3 +131,26 @@ jobs:
           curl -sS --max-time 25 "https://plugins.gradle.org/m2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/maven-metadata.xml" \
             | grep -oP '(?<=<version>)[^<]+' | tail -6 || true
           echo "======================================================"
+
+      - name: Publication du rapport dans la branche
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add versions-report.txt
+          if git diff --cached --quiet; then
+            echo "Aucune modification du rapport."
+          else
+            git commit -m "chore(ci): rapport temporaire des versions disponibles [skip ci]"
+            git push
+          fi
+
+      - name: Affichage dans le résumé du job
+        if: always()
+        run: |
+          {
+            echo '## Versions disponibles'
+            echo '```'
+            cat versions-report.txt || echo 'rapport indisponible'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
