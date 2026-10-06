@@ -1,6 +1,6 @@
 # MISSA TV — rapport de compilation
 
-- commit : 8ab6bbca0ba3c4db937c6d17e9cb93ae31fc1b68
+- commit : a49239c8f5d3f5222303b6386b1b5eb687e04a66
 - code retour Gradle : inconnu
 
 ```
@@ -35,54 +35,55 @@ Daemon will be stopped at the end of the build
 > Task :app:checkDebugAarMetadata
 > Task :app:mapDebugSourceSetPaths
 > Task :app:compileDebugNavigationResources
-
-> Task :app:mergeDebugResources
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:69:4: Failed to flatten XML for resource 'home_config_first_time' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:69:4: string/home_config_first_time does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:66:4: Failed to flatten XML for resource 'home_update_required' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:66:4: string/home_update_required does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:78:4: Failed to flatten XML for resource 'notice_single_quality_buffering' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:78:4: string/notice_single_quality_buffering does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:24:4: Failed to flatten XML for resource 'quality_auto_description' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:24:4: string/quality_auto_description does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:25:4: Failed to flatten XML for resource 'quality_connection_unknown' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:25:4: string/quality_connection_unknown does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:31:4: Failed to flatten XML for resource 'quality_measured_unknown' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:31:4: string/quality_measured_unknown does not contain a valid string resource.
-/home/runner/.gradle/caches/9.8.0/transforms/a4c05e83a3aaba086206ec6545ab31a1/transformed/ui/res/values/values.xml:52:4: Failed to flatten XML for resource 'quality_unlock' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/.gradle/caches/9.8.0/transforms/a4c05e83a3aaba086206ec6545ab31a1/transformed/ui/res/values/values.xml:52:4: string/quality_unlock does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:102:4: Failed to flatten XML for resource 'settings_legal' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:102:4: string/settings_legal does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:103:4: Failed to flatten XML for resource 'settings_mac' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:103:4: string/settings_mac does not contain a valid string resource.
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:104:4: Failed to flatten XML for resource 'settings_quality_section' with error: Invalid unicode escape sequence in string
-"{str}"
-/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/res/values/strings.xml:104:4: string/settings_quality_section does not contain a valid string resource.
-
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug
-> Task :app:mergeDebugResources FAILED
 > Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeDebugResources
+
+> Task :app:mergeDebugUnitTestManifest
+/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/AndroidManifest.xml:55:13-58:39 Warning:
+	meta-data#androidx.work.WorkManagerInitializer was tagged at AndroidManifest.xml:55 to remove other declarations but no other declaration present
+
+> Task :app:processDebugUnitTestManifest
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:writeFiltersDebugAndroidTest
+> Task :app:extractProguardFiles
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:compressDebugAssets
+> Task :app:processDebugResources
+> Task :app:generateDebugGlobalSynthetics
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :app:checkDebugDuplicateClasses
 > Task :app:kspDebugKotlin
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791311651426.json
+> Task :app:desugarDebugFileDependencies
+> Task :app:compileDebugKotlin
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/ui/settings/SettingsScreen.kt:303:14 Unresolved reference 'clip' on receiver of type 'Modifier'.
+e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/ui/settings/SettingsScreen.kt:340:83 Unresolved reference 'size' on receiver of type 'Modifier'.
+e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/ui/settings/SettingsScreen.kt:392:14 Unresolved reference 'clip' on receiver of type 'Modifier'.
+e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/ui/settings/SettingsScreen.kt:409:14 Unresolved reference 'clip' on receiver of type 'Modifier'.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791311922071.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/MISSA_TV/MISSA_TV/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:mergeDebugResources' (registered by plugin 'com.android.internal.application').
-> A failure occurred while executing com.android.build.gradle.internal.res.ResourceCompilerRunnable
-   > Resource compilation failed (Failed to compile values resource file /home/runner/work/MISSA_TV/MISSA_TV/app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir/values/values.xml. Cause: java.lang.IllegalStateException: Can not extract resource from com.android.aaptcompiler.ParsedResource@54117025.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3edf648f.,Can not extract resource from com.android.aaptcompiler.ParsedResource@68fa1043.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1c3b45f6.,Can not extract resource from com.android.aaptcompiler.ParsedResource@43749e0c.,Can not extract resource from com.android.aaptcompiler.ParsedResource@64a71f1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3e8a1173.,Can not extract resource from com.android.aaptcompiler.ParsedResource@78d8f7a1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1fbb8248.,Can not extract resource from com.android.aaptcompiler.ParsedResource@4aabadb7.). Check logs for more details.
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: UNRESOLVED_REFERENCE
+       Kotlin compiler error
+         Unresolved reference 'clip' on receiver of type 'Modifier'.
+         Location: /home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/ui/settings/SettingsScreen.kt:303
 
 * Try:
 > Run with --info or --debug option to get more log output.
@@ -90,7 +91,7 @@ Execution failed for task ':app:mergeDebugResources' (registered by plugin 'com.
 > Get more help at https://help.gradle.org.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:mergeDebugResources' (registered by plugin 'com.android.internal.application').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
 	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.lambda$doExecute$1(DefaultTaskNodeExecutor.java:367)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.doExecute(DefaultTaskNodeExecutor.java:365)
@@ -119,7 +120,7 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:mer
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:392)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:65)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.ResourceCompilerRunnable
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
 	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:273)
 	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:132)
 	at org.gradle.internal.Factories$1.create(Factories.java:30)
@@ -211,7 +212,7 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:65)
 	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:45)
 	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeWithNonEmptySources(SkipEmptyMutableWorkStep.java:210)
-	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:85)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:90)
 	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:53)
 	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
@@ -238,11 +239,10 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
 	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.doExecute(DefaultTaskNodeExecutor.java:364)
 	... 25 more
-Caused by: com.android.aaptcompiler.ResourceCompilationException: Resource compilation failed (Failed to compile values resource file /home/runner/work/MISSA_TV/MISSA_TV/app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir/values/values.xml. Cause: java.lang.IllegalStateException: Can not extract resource from com.android.aaptcompiler.ParsedResource@54117025.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3edf648f.,Can not extract resource from com.android.aaptcompiler.ParsedResource@68fa1043.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1c3b45f6.,Can not extract resource from com.android.aaptcompiler.ParsedResource@43749e0c.,Can not extract resource from com.android.aaptcompiler.ParsedResource@64a71f1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3e8a1173.,Can not extract resource from com.android.aaptcompiler.ParsedResource@78d8f7a1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1fbb8248.,Can not extract resource from com.android.aaptcompiler.ParsedResource@4aabadb7.). Check logs for more details.
-	at com.android.aaptcompiler.ResourceCompiler.compileResource(ResourceCompiler.kt:120)
-	at com.android.build.gradle.internal.res.ResourceCompilerRunnable$Companion.compileSingleResource(ResourceCompilerRunnable.kt:33)
-	at com.android.build.gradle.internal.res.ResourceCompilerRunnable.run(ResourceCompilerRunnable.kt:13)
-	at com.android.build.gradle.internal.profile.ProfileAwareWorkAction.execute(ProfileAwareWorkAction.kt:66)
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Unresolved reference 'clip' on receiver of type 'Modifier'.
+	at org.jetbrains.kotlin.gradle.plugin.diagnostics.DefaultCompilerDiagnosticsProblemsReporter.reportCompilerMessage(CompilerDiagnosticsProblemsReporter.kt:63)
+	at org.jetbrains.kotlin.compilerRunner.btapi.ProblemsApiCompilerMessageRenderer.replayTo(ProblemsApiCompilerMessageRenderer.kt:88)
+	at org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork.execute(BuildToolsApiCompilationWork.kt:251)
 	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:64)
 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:61)
@@ -274,18 +274,6 @@ Caused by: com.android.aaptcompiler.ResourceCompilationException: Resource compi
 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:163)
 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:125)
 	... 2 more
-Caused by: com.android.aaptcompiler.ResourceCompilationException: Failed to compile values resource file /home/runner/work/MISSA_TV/MISSA_TV/app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir/values/values.xml
-	at com.android.aaptcompiler.ResourceCompiler.compileTable(ResourceCompiler.kt:179)
-	at com.android.aaptcompiler.ResourceCompiler.access$compileTable(ResourceCompiler.kt:1)
-	at com.android.aaptcompiler.ResourceCompiler$getCompileMethod$1.invoke(ResourceCompiler.kt:130)
-	at com.android.aaptcompiler.ResourceCompiler$getCompileMethod$1.invoke(ResourceCompiler.kt:130)
-	at com.android.aaptcompiler.ResourceCompiler.compileResource(ResourceCompiler.kt:116)
-	... 35 more
-Caused by: java.lang.IllegalStateException: Can not extract resource from com.android.aaptcompiler.ParsedResource@54117025.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3edf648f.,Can not extract resource from com.android.aaptcompiler.ParsedResource@68fa1043.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1c3b45f6.,Can not extract resource from com.android.aaptcompiler.ParsedResource@43749e0c.,Can not extract resource from com.android.aaptcompiler.ParsedResource@64a71f1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@3e8a1173.,Can not extract resource from com.android.aaptcompiler.ParsedResource@78d8f7a1.,Can not extract resource from com.android.aaptcompiler.ParsedResource@1fbb8248.,Can not extract resource from com.android.aaptcompiler.ParsedResource@4aabadb7.
-	at com.android.aaptcompiler.TableExtractor.extractResourceValues(TableExtractor.kt:248)
-	at com.android.aaptcompiler.TableExtractor.extract(TableExtractor.kt:162)
-	at com.android.aaptcompiler.ResourceCompiler.compileTable(ResourceCompiler.kt:175)
-	... 39 more
 
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
@@ -294,6 +282,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 1m 55s
-18 actionable tasks: 18 executed
+BUILD FAILED in 4m 6s
+35 actionable tasks: 35 executed
 ```
