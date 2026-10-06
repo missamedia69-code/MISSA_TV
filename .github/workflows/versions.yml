@@ -1,0 +1,129 @@
+name: Versions (outil temporaire)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FICHIER TEMPORAIRE — à supprimer avant la livraison.
+#
+# But : interroger les dépôts Maven (Google Maven et Maven Central) et publier
+# dans les logs de la CI la liste des dernières versions publiées de chaque
+# artefact utilisé par le projet. Cela permet de figer des versions exactes
+# dans le catalogue de versions plutôt que de les deviner.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    paths:
+      - ".github/workflows/versions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    name: Résolution des versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dernières versions publiées
+        run: |
+          set -uo pipefail
+
+          dernier() {
+            local repo="$1" groupe="$2" artefact="$3"
+            local url="${repo}/$(echo "$groupe" | tr '.' '/')/${artefact}/maven-metadata.xml"
+            local brut
+            brut="$(curl -sS --max-time 25 "$url" || true)"
+            if [[ -z "$brut" ]]; then
+              printf '%-58s %s\n' "$groupe:$artefact" "!! INDISPONIBLE"
+              return
+            fi
+            local versions
+            versions="$(grep -oP '(?<=<version>)[^<]+' <<<"$brut" \
+              | grep -vE '(alpha|beta|rc|dev|SNAPSHOT|eap|M[0-9])' || true)"
+            local stables
+            stables="$(tail -3 <<<"$versions" | tr '\n' ' ')"
+            printf '%-58s %s\n' "$groupe:$artefact" "$stables"
+          }
+
+          G="https://dl.google.com/dl/android/maven2"
+          M="https://repo1.maven.org/maven2"
+
+          echo "==================== GOOGLE MAVEN ===================="
+          for a in \
+            "androidx.core:core-ktx" \
+            "androidx.activity:activity-compose" \
+            "androidx.lifecycle:lifecycle-viewmodel-compose" \
+            "androidx.lifecycle:lifecycle-runtime-compose" \
+            "androidx.navigation:navigation-compose" \
+            "androidx.media3:media3-exoplayer" \
+            "androidx.media3:media3-exoplayer-hls" \
+            "androidx.media3:media3-exoplayer-dash" \
+            "androidx.media3:media3-ui" \
+            "androidx.media3:media3-ui-compose" \
+            "androidx.media3:media3-session" \
+            "androidx.media3:media3-datasource-okhttp" \
+            "androidx.room:room-runtime" \
+            "androidx.room:room-ktx" \
+            "androidx.work:work-runtime-ktx" \
+            "androidx.datastore:datastore-preferences" \
+            "androidx.tv:tv-material" \
+            "androidx.tv:tv-foundation" \
+            "androidx.security:security-crypto" \
+            "androidx.window:window" \
+            "androidx.compose.material3:material3-window-size-class" \
+            "androidx.compose.material:material-icons-extended" \
+            "androidx.hilt:hilt-navigation-compose" \
+            "androidx.hilt:hilt-work" \
+            "androidx.test.ext:junit" \
+            "androidx.compose.ui:ui-test-junit4" \
+            "androidx.benchmark:benchmark-macro-junit4" \
+          ; do
+            dernier "$G" "${a%%:*}" "${a##*:}"
+          done
+
+          echo
+          echo "==================== MAVEN CENTRAL ===================="
+          for a in \
+            "com.google.dagger:hilt-android" \
+            "com.google.dagger:hilt-android-gradle-plugin" \
+            "com.google.devtools.ksp:symbol-processing-gradle-plugin" \
+            "org.jetbrains.kotlin:kotlin-gradle-plugin" \
+            "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable" \
+            "com.squareup.retrofit2:retrofit" \
+            "com.squareup.retrofit2:converter-kotlinx-serialization" \
+            "com.squareup.okhttp3:okhttp" \
+            "com.squareup.okhttp3:logging-interceptor" \
+            "com.squareup.okhttp3:mockwebserver" \
+            "com.squareup.okhttp3:mockwebserver3-junit5" \
+            "org.jetbrains.kotlinx:kotlinx-serialization-json" \
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android" \
+            "org.jetbrains.kotlinx:kotlinx-coroutines-test" \
+            "io.coil-kt.coil3:coil-compose" \
+            "io.coil-kt.coil3:coil-network-okhttp" \
+            "io.mockk:mockk" \
+            "app.cash.turbine:turbine" \
+            "org.junit.jupiter:junit-jupiter" \
+            "com.google.truth:truth" \
+            "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" \
+            "com.pinterest:ktlint" \
+            "com.google.crypto.tink:tink-android" \
+          ; do
+            dernier "$M" "${a%%:*}" "${a##*:}"
+          done
+
+          echo
+          echo "==================== GRADLE DISTRIBUTION ===================="
+          echo "--- sha256 gradle-9.8.0-bin.zip ---"
+          curl -sS --max-time 25 "https://services.gradle.org/distributions/gradle-9.8.0-bin.zip.sha256" || true
+          echo
+
+          echo
+          echo "==================== PLUGINS GRADLE ===================="
+          echo "--- org.jlleitschuh.gradle.ktlint ---"
+          curl -sS --max-time 25 "https://plugins.gradle.org/m2/org/jlleitschuh/gradle/ktlint/org.jlleitschuh.gradle.ktlint.gradle.plugin/maven-metadata.xml" \
+            | grep -oP '(?<=<version>)[^<]+' | tail -6 || true
+          echo "--- org.jetbrains.kotlin.plugin.compose ---"
+          curl -sS --max-time 25 "https://plugins.gradle.org/m2/org/jetbrains/kotlin/plugin/compose/org.jetbrains.kotlin.plugin.compose.gradle.plugin/maven-metadata.xml" \
+            | grep -oP '(?<=<version>)[^<]+' | grep -vE '(Beta|RC|dev)' | tail -6 || true
+          echo "--- com.google.devtools.ksp (portail) ---"
+          curl -sS --max-time 25 "https://plugins.gradle.org/m2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/maven-metadata.xml" \
+            | grep -oP '(?<=<version>)[^<]+' | tail -6 || true
+          echo "======================================================"

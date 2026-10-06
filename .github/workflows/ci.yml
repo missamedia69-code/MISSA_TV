@@ -107,42 +107,62 @@ jobs:
     name: Build / lint / tests
     runs-on: ubuntu-latest
     needs: [hygiene]
-    if: ${{ hashFiles('gradlew') != '' }}
     steps:
       - name: Récupération du dépôt
         uses: actions/checkout@v4
 
+      # La fonction hashFiles() n'est pas disponible dans un « if » de job :
+      # on détecte donc le wrapper dans une étape dédiée, puis on conditionne
+      # les étapes suivantes à sa présence.
+      - name: Détection du wrapper Gradle
+        id: wrapper
+        run: |
+          if [ -f ./gradlew ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Wrapper Gradle absent — compilation ignorée pour l'instant."
+          fi
+
       - name: Configuration du JDK 17
+        if: steps.wrapper.outputs.present == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Configuration du SDK Android
+        if: steps.wrapper.outputs.present == 'true'
         uses: android-actions/setup-android@v3
 
       - name: Configuration de Gradle (cache)
+        if: steps.wrapper.outputs.present == 'true'
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Permissions du wrapper
+        if: steps.wrapper.outputs.present == 'true'
         run: chmod +x ./gradlew
 
       - name: Analyse statique (ktlint + detekt)
+        if: steps.wrapper.outputs.present == 'true'
         run: ./gradlew ktlintCheck detekt --stacktrace
 
       - name: Tests unitaires
+        if: steps.wrapper.outputs.present == 'true'
         run: ./gradlew testDebugUnitTest --stacktrace
 
       - name: Lint Android
+        if: steps.wrapper.outputs.present == 'true'
         run: ./gradlew lintDebug --stacktrace
 
       - name: Assemblage du debug
+        if: steps.wrapper.outputs.present == 'true'
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Publication des rapports de tests
-        if: always()
+        if: always() && steps.wrapper.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: rapports-tests
