@@ -32,6 +32,7 @@ toujours ce qu'elle fait — y compris quand elle ne peut rien améliorer.
 | Configuration distante GitHub (ETag, cache chiffré, WorkManager 6 h) | terminé |
 | Interface mobile / tablette / Android TV | terminé |
 | Lecteur Media3 et mode faible débit (5 modes, adaptation automatique) | terminé |
+| Composants Android TV (focus `tv-material`, navigation au D-pad) | terminé |
 | Catalogue local Room (ouverture immédiate, repli hors ligne) | terminé |
 | Publication signée (R8, keystore par secrets) | terminé |
 | EPG complet, code parental, enregistrement, Chromecast | **phase 2** (architecture préparée, non implémentée) |

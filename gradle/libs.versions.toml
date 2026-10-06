@@ -31,7 +31,6 @@ coreKtx = "1.19.1"
 activityCompose = "1.13.0"
 lifecycle = "2.11.0"
 tvMaterial = "1.1.0"
-tvFoundation = "1.0.0"
 
 # Lecture vidéo
 media3 = "1.11.1"
@@ -92,7 +91,9 @@ compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 
 # --- Android TV ---------------------------------------------------------------
 androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMaterial" }
-androidx-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvFoundation" }
+# androidx-tv-foundation n'est pas utilisé : ses listes paresseuses (TvLazyRow,
+# TvLazyColumn) ont été fusionnées dans Compose Foundation, et le reste du
+# module n'apporte rien ici. Conservé en commentaire pour mémoire.
 
 # --- Media3 -------------------------------------------------------------------
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }

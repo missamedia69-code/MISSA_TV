@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.tv.foundation.lazy.list.TvLazyRow
-import androidx.tv.foundation.lazy.list.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.tv.material3.Card
 import com.missa.tv.R
 import com.missa.tv.domain.model.Category
@@ -30,16 +30,19 @@ import com.missa.tv.domain.model.ChannelGroup
  * Composants d'interface réservés à Android TV.
  *
  * Le matériel TV se pilote à la télécommande et se regarde à plusieurs mètres :
- * les composants de `androidx.tv.material3` et `androidx.tv.foundation` rendent
- * un **focus franc** (mise à l'échelle, halo) invisible sur les composants
- * tactiles, et leurs listes horizontales recentrent l'élément sélectionné plutôt
- * que de le laisser sortir de l'écran.
+ * les cartes de `androidx.tv.material3` rendent un **focus franc** (mise à
+ * l'échelle, halo) que les composants tactiles n'affichent pas.
+ *
+ * Les listes paresseuses de télévision (`TvLazyRow`) ont été fusionnées dans
+ * Compose Foundation : `androidx.tv:tv-foundation` 1.0.0 ne les expose plus. La
+ * liste horizontale est donc une `LazyRow` ordinaire — le défilement au D-pad
+ * étant déjà assuré par Compose — et seule la carte est spécifique à la TV.
  *
  * Ces composants ne sont utilisés que si un téléviseur est détecté ; sur
  * téléphone et tablette, l'interface Material 3 habituelle reste en place.
  */
 
-/** Barre de catégories défilante, avec recentrage sur l'élément sélectionné. */
+/** Barre de catégories défilante, pilotable à la télécommande. */
 @Composable
 fun TvCategoriesRow(
     categories: List<Category>,
@@ -49,7 +52,7 @@ fun TvCategoriesRow(
     if (categories.isEmpty()) return
 
     val toutes = stringResource(R.string.home_categories_all)
-    TvLazyRow(
+    LazyRow(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

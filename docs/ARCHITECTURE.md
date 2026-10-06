@@ -154,7 +154,7 @@ police) est calculé une fois par `rememberDeviceProfile()`.
 
 | Appareil détecté | Interface |
 | --- | --- |
-| Télévision | Thème sombre forcé, densité adaptée au recul, navigation au D-pad, sélecteur de qualité en boîte de dialogue (lisible à distance) |
+| Télévision | Thème sombre forcé, densité adaptée au recul, navigation au D-pad, cartes `androidx.tv.material3` (focus mis à l'échelle, visible à distance), sélecteur de qualité en boîte de dialogue |
 | Téléphone / tablette | Material 3, navigation tactile, sélecteur de qualité en feuille glissante |
 
 Le **`WindowSizeClass` n'est pas utilisé** : il appartient à
@@ -163,6 +163,12 @@ cible minSdk 23 pour rester installable sur des boîtiers Android TV anciens. La
 classe de largeur est donc calculée à partir de la taille de fenêtre réelle
 (`WindowWidthClass`), ce qui couvre le besoin d'adaptation sans relever le
 minimum d'API.
+
+`androidx.tv:tv-foundation` n'est **pas** utilisé : ses listes paresseuses
+(`TvLazyRow`, `TvLazyColumn`) ont été fusionnées dans Compose Foundation, et le
+reste du module n'apporte rien à ce projet. Les listes de l'écran d'accueil sont
+donc des `LazyRow` / `LazyColumn` ordinaires, et seule la carte de chaîne est
+spécifique à la télévision (`androidx.tv.material3.Card`).
 
 De même, `androidx.navigation` (et `hilt-navigation-compose`) est écarté pour la
 même raison : la navigation est écrite à la main (`ui/navigation`), avec une pile

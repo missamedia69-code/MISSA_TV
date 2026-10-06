@@ -245,8 +245,10 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
 
     // --- Android TV -----------------------------------------------------------
+    // Seul tv-material est utilisé : les listes de télévision (TvLazyRow) sont
+    // désormais fournies par Compose Foundation, et androidx.tv:tv-foundation
+    // 1.0.0 ne contient plus de composant utile à ce projet.
     implementation(libs.androidx.tv.material)
-    implementation(libs.androidx.tv.foundation)
 
     // --- Lecture vidéo (Media3 / ExoPlayer) -----------------------------------
     implementation(libs.media3.exoplayer)
