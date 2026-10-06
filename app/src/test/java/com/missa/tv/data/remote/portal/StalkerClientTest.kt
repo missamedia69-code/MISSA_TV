@@ -190,6 +190,7 @@ class StalkerClientTest {
             val api = FakeApi { _, action, _ ->
                 when (action) {
                     "handshake" -> reponseHandshake()
+                    "get_profile" -> reponseProfil()
                     "get_genres" -> """{"js":[]}"""
                     "get_all_channels" -> """{"js":{"data":[
                         {"id":"1","number":1,"name":"Une","cmd":"a"}]}}"""
