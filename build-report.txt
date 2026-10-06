@@ -1,6 +1,6 @@
 # MISSA TV — rapport de compilation
 
-- commit : e344010f8999966be8e8c76bc310819ef7420ca5
+- commit : fce69e3597ad3e716c1dfcce505d5aaaca708d15
 - code retour Gradle : inconnu
 
 ```
@@ -37,39 +37,35 @@ Daemon will be stopped at the end of the build
 > Task :app:compileDebugNavigationResources
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug
-> Task :app:mergeDebugResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
 > Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugResources
 > Task :app:mergeDebugAssets
-> Task :app:processDebugManifestForPackage
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:processDebugResources
 
 > Task :app:mergeDebugUnitTestManifest
 /home/runner/work/MISSA_TV/MISSA_TV/app/src/main/AndroidManifest.xml:55:13-58:39 Warning:
 	meta-data#androidx.work.WorkManagerInitializer was tagged at AndroidManifest.xml:55 to remove other declarations but no other declaration present
 
-> Task :app:packageDebugUnitTestForUnitTest
 > Task :app:processDebugUnitTestManifest
-> Task :app:generateDebugUnitTestConfig
 > Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:writeFiltersDebugAndroidTest
 > Task :app:javaPreCompileDebugUnitTest
+> Task :app:writeFiltersDebugAndroidTest
 > Task :app:extractProguardFiles
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:compressDebugAssets
-> Task :app:generateDebugGlobalSynthetics
 > Task :app:kspDebugKotlin
+> Task :app:generateDebugGlobalSynthetics
 > Task :app:checkDebugDuplicateClasses
 > Task :app:desugarDebugFileDependencies
-
-> Task :app:compileDebugKotlin
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/SettingsStore.kt:65:65 Return type mismatch: expected 'Flow<PlaybackPreferences>', actual 'Flow<Preferences>'.
+> Task :app:processDebugManifestForPackage
 
 > Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/SettingsStore.kt:70:16 Return type mismatch: expected 'Flow<PlaybackPreferences>', actual 'Flow<Preferences>'.
+
 > Task :app:mergeExtDexDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791309006996.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791309262391.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/MISSA_TV/MISSA_TV/build/reports/problems/problems-report.html
 
@@ -81,7 +77,7 @@ Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.a
    > Kotlin compiler: RETURN_TYPE_MISMATCH
        Kotlin compiler error
          Return type mismatch: expected 'Flow<PlaybackPreferences>', actual 'Flow<Preferences>'.
-         Location: /home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/SettingsStore.kt:65
+         Location: /home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/SettingsStore.kt:70
 
 * Try:
 > Run with --info or --debug option to get more log output.
@@ -280,6 +276,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 3m 7s
-35 actionable tasks: 35 executed
+BUILD FAILED in 2m 59s
+32 actionable tasks: 32 executed
 ```
