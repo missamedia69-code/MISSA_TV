@@ -38,8 +38,8 @@ class StalkerClientTest {
 
     /** Doublure d'API : répond selon l'URL et l'action demandées. */
     private class FakeApi(
-        private val reponses: (url: String, action: String, page: String?) -> String?,
         private val echecs: (url: String) -> Boolean = { false },
+        private val reponses: (url: String, action: String, page: String?) -> String?,
     ) : StalkerApi {
 
         var appels = 0
