@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "configVersion": 1,
+  "updatedAt": "2026-10-06T00:00:00Z",
+  "profiles": [],
+  "defaultProfileId": null,
+  "minAppVersion": 1,
+  "bandwidth": {
+    "lowBandwidthThresholdKbps": 1000,
+    "defaultMode": "AUTO_ECONOMY",
+    "maxVideoHeightByMode": {
+      "AUTO_ECONOMY": 720,
+      "ECONOMY_480": 480,
+      "ULTRA_ECONOMY": 360,
+      "MAX_QUALITY": 2160,
+      "AUDIO_ONLY": 0
+    },
+    "maxVideoBitrateByMode": {
+      "AUTO_ECONOMY": 900000,
+      "ECONOMY_480": 700000,
+      "ULTRA_ECONOMY": 400000,
+      "MAX_QUALITY": 0,
+      "AUDIO_ONLY": 0
+    },
+    "buffer": {
+      "minMs": 15000,
+      "maxMs": 40000,
+      "playbackMs": 3000,
+      "afterRebufferMs": 6000
+    }
+  }
+}
