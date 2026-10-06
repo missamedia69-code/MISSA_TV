@@ -277,8 +277,10 @@ private fun AucuneChaine(onOpenManualSetup: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
         ) {
+            // Engrenage : le geste attendu ici est de configurer le portail,
+            // pas de lancer une lecture.
             Icon(
-                imageVector = Icons.Filled.Tv,
+                imageVector = Icons.Filled.Settings,
                 contentDescription = null,
                 modifier = Modifier.size(56.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
