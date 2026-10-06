@@ -141,47 +141,53 @@ jobs:
           set -uo pipefail
           ./gradlew ktlintCheck testDebugUnitTest lintDebug assembleDebug \
             --stacktrace --no-daemon > build-output.txt 2>&1
-          CODE=$?
-          echo "code=$CODE" >> "$GITHUB_OUTPUT"
-          {
-            echo "# MISSA TV — rapport de compilation"
-            echo
-            echo "- commit : ${GITHUB_SHA}"
-            echo "- branche : ${GITHUB_REF_NAME}"
-            echo "- code retour Gradle : ${CODE}"
-            echo "- SDK : ${ANDROID_HOME:-inconnu}"
-            echo
-            echo '```'
-            tail -c 60000 build-output.txt
-            echo '```'
-          } > build-report.txt
-          exit "$CODE"
+          echo "$?" > gradle-exit-code.txt
+          echo "Code retour Gradle : $(cat gradle-exit-code.txt)"
+          tail -c 2000 build-output.txt
 
       # TEMPORAIRE — diagnostic à distance.
       #
-      # Le journal d'exécution de la CI n'est pas lisible depuis l'environnement
-      # de développement : la fin du journal Gradle est donc publiée dans la
-      # branche, où elle peut être lue. Cette étape et le fichier
-      # build-report.txt seront supprimés avant la livraison.
-      - name: Publication du rapport de compilation
+      # Le journal complet de la CI n'est pas joignable depuis l'environnement de
+      # développement ; la fin du journal est donc republiée en annotations, qui
+      # elles sont lisibles via l'API. À retirer avant la livraison, en même
+      # temps que scripts/publish-log-annotations.sh.
+      - name: Publication du journal en annotations
         if: always()
         run: |
-          set -uo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f build-report.txt
-          git commit -m "chore(ci): rapport de compilation (temporaire) [skip ci]" || exit 0
-          git push || true
+          chmod +x scripts/publish-log-annotations.sh
+          ./scripts/publish-log-annotations.sh build-output.txt gradle 4000 10
 
       - name: Échec du job si la compilation a échoué
         if: always()
         run: |
-          CODE="${{ steps.gradle.outputs.code }}"
-          echo "Code retour Gradle : ${CODE:-inconnu}"
-          if [ "${CODE:-1}" != "0" ]; then
-            echo "::error::Analyse statique, tests ou compilation en échec (code ${CODE})."
+          CODE="$(cat gradle-exit-code.txt 2>/dev/null || echo inconnu)"
+          echo "Code retour Gradle : ${CODE}"
+          if [ "${CODE}" != "0" ]; then
+            echo "::error title=compilation::Analyse statique, tests ou compilation en échec (code ${CODE})."
             exit 1
           fi
+
+      # TEMPORAIRE — conservé tant que la compilation n'est pas verte.
+      - name: Publication du rapport dans la branche
+        if: always()
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          {
+            echo "# MISSA TV — rapport de compilation"
+            echo
+            echo "- commit : ${{ github.sha }}"
+            echo "- code retour Gradle : $(cat gradle-exit-code.txt 2>/dev/null || echo inconnu)"
+            echo
+            echo '```'
+            tail -c 50000 build-output.txt 2>/dev/null || echo "(journal indisponible)"
+            echo '```'
+          } > build-report.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f build-report.txt
+          git commit -m "chore(ci): rapport de compilation (temporaire) [skip ci]"
+          git push
 
       - name: Publication des rapports de tests
         if: always()
