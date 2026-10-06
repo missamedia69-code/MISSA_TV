@@ -1,6 +1,6 @@
 # MISSA TV — rapport de compilation
 
-- commit : 1ef3009e1bc74cea5133f101a9b60fb8ceac2805
+- commit : a84a25d47265edcac45fc00f457bce3143b17215
 - code retour Gradle : inconnu
 
 ```
@@ -19,51 +19,262 @@ For more details see https://docs.gradle.org/9.8.0/release-notes.html
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :loadKtlintReporters
+> Task :runKtlintCheckOverKotlinScripts
+> Task :ktlintKotlinScriptCheck
+> Task :ktlintCheck
+> Task :app:processDebugNavigationResources
+> Task :app:parseDebugLocalResources
+> Task :app:javaPreCompileDebug
+> Task :app:generateDebugRFile
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:compileDebugNavigationResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
 
-> Configure project :app
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/build.gradle.kts:128:32: Unresolved reference 'util'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/build.gradle.kts:130:53: Cannot infer type for type parameter 'R'. Specify it explicitly.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/build.gradle.kts:130:59: Unresolved reference 'load'.
-e: file:///home/runner/work/MISSA_TV/MISSA_TV/app/build.gradle.kts:134:34: Unresolved reference 'getProperty'.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791307959575.json
+> Task :app:mergeDebugUnitTestManifest
+/home/runner/work/MISSA_TV/MISSA_TV/app/src/main/AndroidManifest.xml:55:13-58:39 Warning:
+	meta-data#androidx.work.WorkManagerInitializer was tagged at AndroidManifest.xml:55 to remove other declarations but no other declaration present
+
+> Task :app:processDebugUnitTestManifest
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:writeFiltersDebugAndroidTest
+> Task :app:extractProguardFiles
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:compressDebugAssets
+> Task :app:generateDebugGlobalSynthetics
+> Task :app:kspDebugKotlin
+> Task :app:checkDebugDuplicateClasses
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugManifestForPackage
+> Task :app:compileDebugKotlin
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:37:25 'class MasterKey : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:37:35 'constructor(p0: Context): MasterKey.Builder' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:38:27 'class MasterKey : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:38:37 'enum class KeyScheme : Enum<MasterKey.KeyScheme!>' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:41:9 'class EncryptedSharedPreferences : Any, SharedPreferences' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:45:13 'class EncryptedSharedPreferences : Any, SharedPreferences' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:45:40 'enum class PrefKeyEncryptionScheme : Enum<EncryptedSharedPreferences.PrefKeyEncryptionScheme!>' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:46:13 'class EncryptedSharedPreferences : Any, SharedPreferences' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/MISSA_TV/MISSA_TV/app/src/main/java/com/missa/tv/data/local/EncryptedPortalProfileSource.kt:46:40 'enum class PrefValueEncryptionScheme : Enum<EncryptedSharedPreferences.PrefValueEncryptionScheme!>' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltCollectClassesDebug
+> Task :app:hiltAggregateDepsDebug
+> Task :app:processDebugResources
+
+> Task :app:hiltJavaCompileDebug
+/home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] com.missa.tv.core.security.AndroidKeystoreCipher cannot be provided without an @Inject constructor or an @Provides-annotated method.
+  public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                         ^
+  
+      com.missa.tv.core.security.AndroidKeystoreCipher is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindSecretCipher(impl)
+      com.missa.tv.core.security.SecretCipher is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.local.DataStoreConfigStore(…, cipher, …)
+      com.missa.tv.data.local.DataStoreConfigStore is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindConfigStore(impl)
+      com.missa.tv.data.local.ConfigStore is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, store, …)
+      com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+      com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+      com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+      java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+      androidx.hilt.work.HiltWorkerFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+      com.missa.tv.MissaTvApplication is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+/home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] kotlin.jvm.functions.Function0<java.lang.Long> cannot be provided without an @Provides-annotated method.
+  public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                         ^
+  
+      kotlin.jvm.functions.Function0<java.lang.Long> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, clockMs)
+      com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+      com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+      com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+      java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+      androidx.hilt.work.HiltWorkerFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+      com.missa.tv.MissaTvApplication is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+2 errors
+
+> Task :app:hiltJavaCompileDebug FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/gradle-1791308089869.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/MISSA_TV/MISSA_TV/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
-* Where:
-Build file '/home/runner/work/MISSA_TV/MISSA_TV/app/build.gradle.kts' line: 128
-
 * What went wrong:
-Script compilation errors:
-
-  Line 128:     val localProperties = java.util.Properties().apply {
-                                           ^ Unresolved reference 'util'.
-
-  Line 130:         if (fichier.exists()) fichier.inputStream().use { load(it) }
-                                                                ^ Cannot infer type for type parameter 'R'. Specify it explicitly.
-
-  Line 130:         if (fichier.exists()) fichier.inputStream().use { load(it) }
-                                                                      ^ Unresolved reference 'load'.
-
-  Line 134:     val valeur = localProperties.getProperty(key)
-                                             ^ Unresolved reference 'getProperty'.
-
-4 errors
+Execution failed for task ':app:hiltJavaCompileDebug' (registered by plugin 'com.android.internal.application').
+> Compilation failed; see the compiler output below.
+  /home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] com.missa.tv.core.security.AndroidKeystoreCipher cannot be provided without an @Inject constructor or an @Provides-annotated method.
+    public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                           ^
+    
+        com.missa.tv.core.security.AndroidKeystoreCipher is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindSecretCipher(impl)
+        com.missa.tv.core.security.SecretCipher is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.local.DataStoreConfigStore(…, cipher, …)
+        com.missa.tv.data.local.DataStoreConfigStore is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindConfigStore(impl)
+        com.missa.tv.data.local.ConfigStore is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, store, …)
+        com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+        com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+        com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+        java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+        androidx.hilt.work.HiltWorkerFactory is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+        com.missa.tv.MissaTvApplication is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+  /home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] kotlin.jvm.functions.Function0<java.lang.Long> cannot be provided without an @Provides-annotated method.
+    public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                           ^
+    
+        kotlin.jvm.functions.Function0<java.lang.Long> is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, clockMs)
+        com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+        com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+        com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+        java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+        androidx.hilt.work.HiltWorkerFactory is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+        com.missa.tv.MissaTvApplication is injected at
+            [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+  2 errors
 
 * Try:
-> Run with --info or --debug option to get more log output.
+> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
-> Get more help at https://help.gradle.org.
 
 * Exception is:
-ScriptCompilationException(scriptCompilationErrors=[ScriptCompilationError(message=Unresolved reference 'util'., location=/home/runner/.gradle/.tmp/gradle-kotlin-dsl-14418980937420119801.tmp/build.gradle.kts (128:32)), ScriptCompilationError(message=Cannot infer type for type parameter 'R'. Specify it explicitly., location=/home/runner/.gradle/.tmp/gradle-kotlin-dsl-14418980937420119801.tmp/build.gradle.kts (130:53)), ScriptCompilationError(message=Unresolved reference 'load'., location=/home/runner/.gradle/.tmp/gradle-kotlin-dsl-14418980937420119801.tmp/build.gradle.kts (130:59)), ScriptCompilationError(message=Unresolved reference 'getProperty'., location=/home/runner/.gradle/.tmp/gradle-kotlin-dsl-14418980937420119801.tmp/build.gradle.kts (134:34))])
-	at org.gradle.kotlin.dsl.support.KotlinCompilerKt.reportToMessageCollectorAndThrowOnErrors(KotlinCompiler.kt:211)
-	at org.gradle.kotlin.dsl.support.KotlinCompilerKt.compileKotlinScriptModuleTo(KotlinCompiler.kt:180)
-	at org.gradle.kotlin.dsl.support.KotlinCompilerKt.compileKotlinScriptToDirectory(KotlinCompiler.kt:134)
-	at org.gradle.kotlin.dsl.execution.ResidualProgramCompiler.compileScript_C5AE47M$lambda$0(ResidualProgramCompiler.kt:717)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator$InterpreterHost$runCompileBuildOperation$1.call(KotlinScriptEvaluator.kt:211)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator$InterpreterHost$runCompileBuildOperation$1.call(KotlinScriptEvaluator.kt:208)
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:hiltJavaCompileDebug' (registered by plugin 'com.android.internal.application').
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.lambda$doExecute$1(DefaultTaskNodeExecutor.java:367)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.doExecute(DefaultTaskNodeExecutor.java:365)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeTrackingTaskIdentity(DefaultTaskNodeExecutor.java:332)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeFinalizingProperties(DefaultTaskNodeExecutor.java:318)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeSkippingWithNoActions(DefaultTaskNodeExecutor.java:289)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeSkippingOnlyIf(DefaultTaskNodeExecutor.java:272)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeCatchingFailures(DefaultTaskNodeExecutor.java:228)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeWithFallbackOperationId(DefaultTaskNodeExecutor.java:197)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.executeWithLifecycle(DefaultTaskNodeExecutor.java:171)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.access$000(DefaultTaskNodeExecutor.java:67)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor$1.run(DefaultTaskNodeExecutor.java:136)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.execute(DefaultTaskNodeExecutor.java:133)
+	at org.gradle.execution.plan.LocalTaskNode.execute(LocalTaskNode.java:229)
+	at org.gradle.execution.DefaultBuildWorkExecutor.lambda$executePlan$0(DefaultBuildWorkExecutor.java:153)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.lambda$execute$0(DefaultPlanExecutor.java:476)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:475)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:392)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:65)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] com.missa.tv.core.security.AndroidKeystoreCipher cannot be provided without an @Inject constructor or an @Provides-annotated method.
+  public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                         ^
+  
+      com.missa.tv.core.security.AndroidKeystoreCipher is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindSecretCipher(impl)
+      com.missa.tv.core.security.SecretCipher is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.local.DataStoreConfigStore(…, cipher, …)
+      com.missa.tv.data.local.DataStoreConfigStore is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindConfigStore(impl)
+      com.missa.tv.data.local.ConfigStore is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, store, …)
+      com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+      com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+      com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+      java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+      androidx.hilt.work.HiltWorkerFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+      com.missa.tv.MissaTvApplication is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+/home/runner/work/MISSA_TV/MISSA_TV/app/build/generated/hilt/component_sources/debug/com/missa/tv/MissaTvApplication_HiltComponents.java:145: error: [Dagger/MissingBinding] kotlin.jvm.functions.Function0<java.lang.Long> cannot be provided without an @Provides-annotated method.
+  public abstract static class SingletonC implements MissaTvApplication_GeneratedInjector,
+                         ^
+  
+      kotlin.jvm.functions.Function0<java.lang.Long> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.repository.RemoteConfigRepositoryImpl(…, clockMs)
+      com.missa.tv.data.repository.RemoteConfigRepositoryImpl is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.di.ConfigModule.bindRemoteConfigRepository(impl)
+      com.missa.tv.domain.repository.RemoteConfigRepository is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker(…, repository)
+      com.missa.tv.data.work.ConfigRefreshWorker_AssistedFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.data.work.ConfigRefreshWorker_HiltModule.bind(factory)
+      java.util.Map<java.lang.String,javax.inject.Provider<androidx.hilt.work.WorkerAssistedFactory<? extends androidx.work.ListenableWorker>>> is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] androidx.hilt.work.WorkerFactoryModule.provideFactory(workerFactories)
+      androidx.hilt.work.HiltWorkerFactory is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication.workerFactory
+      com.missa.tv.MissaTvApplication is injected at
+          [com.missa.tv.MissaTvApplication_HiltComponents.SingletonC] com.missa.tv.MissaTvApplication_GeneratedInjector.injectMissaTvApplication(com.missa.tv.MissaTvApplication)
+2 errors
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:88)
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:49)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
+	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
+	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$0(JavaCompile.java:213)
+	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:55)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:70)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$CompileOperation.call(CompileJavaBuildOperationReportingCompiler.java:78)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$CompileOperation.call(CompileJavaBuildOperationReportingCompiler.java:52)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
@@ -71,15 +282,27 @@ ScriptCompilationException(scriptCompilationErrors=[ScriptCompilationError(messa
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator$InterpreterHost.runCompileBuildOperation(KotlinScriptEvaluator.kt:208)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost$compileSecondStageOf$cacheDir$1$1$1$1$1.invoke(Interpreter.kt:506)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost$compileSecondStageOf$cacheDir$1$1$1$1$1.invoke(Interpreter.kt:506)
-	at org.gradle.kotlin.dsl.execution.ResidualProgramCompiler.compileScript-C5AE47M(ResidualProgramCompiler.kt:715)
-	at org.gradle.kotlin.dsl.execution.ResidualProgramCompiler.compileScript-C5AE47M$default(ResidualProgramCompiler.kt:707)
-	at org.gradle.kotlin.dsl.execution.ResidualProgramCompiler.emitStage2ProgramFor(ResidualProgramCompiler.kt:366)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost.compileSecondStageOf$lambda$0(Interpreter.kt:507)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator$KotlinScriptCompilationAndInstrumentation.compile(KotlinScriptEvaluator.kt:446)
-	at org.gradle.internal.scripts.BuildScriptCompilationAndInstrumentation.execute(BuildScriptCompilationAndInstrumentation.java:140)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:49)
+	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:231)
+	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:172)
+	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:157)
+	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:268)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:253)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:236)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:219)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:185)
 	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:167)
 	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:47)
 	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:137)
@@ -92,16 +315,22 @@ ScriptCompilationException(scriptCompilationErrors=[ScriptCompilationError(messa
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
 	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:134)
-	at org.gradle.internal.execution.steps.ExecuteStep$Immutable.execute(ExecuteStep.java:49)
+	at org.gradle.internal.execution.steps.ExecuteStep$Mutable.execute(ExecuteStep.java:80)
 	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
 	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
 	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
 	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:51)
 	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:29)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:39)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
 	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:42)
 	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:24)
 	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
 	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:28)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
 	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
 	at org.gradle.internal.execution.steps.BuildCacheStep.executeAndStoreInCache(BuildCacheStep.java:145)
 	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$3(BuildCacheStep.java:104)
@@ -113,245 +342,57 @@ ScriptCompilationException(scriptCompilationErrors=[ScriptCompilationError(messa
 	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
 	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:74)
 	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:49)
-	at org.gradle.internal.execution.steps.NeverUpToDateStep.execute(NeverUpToDateStep.java:35)
-	at org.gradle.internal.execution.steps.NeverUpToDateStep.execute(NeverUpToDateStep.java:23)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
-	at org.gradle.internal.execution.steps.ResolveImmutableCachingStateStep.executeDelegate(ResolveImmutableCachingStateStep.java:45)
-	at org.gradle.internal.execution.steps.ResolveImmutableCachingStateStep.executeDelegate(ResolveImmutableCachingStateStep.java:25)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:70)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:32)
 	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:69)
 	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:37)
-	at org.gradle.internal.execution.steps.ValidateStep$Immutable.executeDelegate(ValidateStep.java:61)
-	at org.gradle.internal.execution.steps.ValidateStep$Immutable.executeDelegate(ValidateStep.java:47)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:63)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:34)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:79)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:65)
 	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:105)
-	at org.gradle.internal.execution.steps.ValidateStep$Immutable.execute(ValidateStep.java:47)
-	at org.gradle.internal.execution.steps.CaptureImmutableStateBeforeExecutionStep.execute(CaptureImmutableStateBeforeExecutionStep.java:45)
-	at org.gradle.internal.execution.steps.CaptureImmutableStateBeforeExecutionStep.execute(CaptureImmutableStateBeforeExecutionStep.java:26)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.execute(ValidateStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.executeMutable(CaptureMutableStateBeforeExecutionStep.java:86)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:45)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeWithNonEmptySources(SkipEmptyMutableWorkStep.java:210)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:90)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:53)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.executeInWorkspace(AssignImmutableWorkspaceStep.java:233)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.lambda$loadOrCreateWorkspace$0(AssignImmutableWorkspaceStep.java:149)
-	at org.gradle.cache.internal.DefaultFineGrainedPersistentCache.withFileLock(DefaultFineGrainedPersistentCache.java:127)
-	at org.gradle.cache.internal.DefaultCacheFactory$ReferenceTrackingFineGrainedCache.withFileLock(DefaultCacheFactory.java:294)
-	at org.gradle.internal.execution.workspace.impl.CacheBasedImmutableWorkspaceProvider$1.withFileLock(CacheBasedImmutableWorkspaceProvider.java:71)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.loadOrCreateWorkspace(AssignImmutableWorkspaceStep.java:141)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.lambda$execute$0(AssignImmutableWorkspaceStep.java:115)
-	at org.gradle.internal.execution.workspace.impl.CacheBasedImmutableWorkspaceProvider$1.getOrCompute(CacheBasedImmutableWorkspaceProvider.java:89)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.execute(AssignImmutableWorkspaceStep.java:115)
-	at org.gradle.internal.execution.steps.AssignImmutableWorkspaceStep.execute(AssignImmutableWorkspaceStep.java:80)
-	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:77)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:43)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$executeMutable$0(AssignMutableWorkspaceStep.java:34)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:314)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:30)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:21)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
 	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$1(ExecuteWorkBuildOperationFiringStep.java:53)
-	at org.gradle.internal.execution.steps.BuildOperationStep$1.call(BuildOperationStep.java:38)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.internal.execution.steps.BuildOperationStep.operation(BuildOperationStep.java:35)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$0(ExecuteWorkBuildOperationFiringStep.java:51)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:51)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
 	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
 	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
 	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:56)
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:38)
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator$InterpreterHost.cachedDirFor(KotlinScriptEvaluator.kt:306)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost.compileSecondStageOf(Interpreter.kt:482)
-	at Program.loadSecondStageFor(Unknown Source)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost.evaluateSecondStageOf(Interpreter.kt:446)
-	at Program.execute(Unknown Source)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost$eval$1.run(Interpreter.kt:532)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-	at org.gradle.kotlin.dsl.execution.Interpreter$ProgramHost.eval(Interpreter.kt:527)
-	at org.gradle.kotlin.dsl.execution.Interpreter.eval(Interpreter.kt:223)
-	at org.gradle.kotlin.dsl.provider.StandardKotlinScriptEvaluator.evaluate(KotlinScriptEvaluator.kt:133)
-	at org.gradle.kotlin.dsl.provider.KotlinScriptPluginFactory.create$lambda$0(KotlinScriptPluginFactory.kt:61)
-	at org.gradle.kotlin.dsl.provider.KotlinScriptPlugin.apply(KotlinScriptPlugin.kt:35)
-	at org.gradle.configuration.BuildOperationScriptPlugin$1.run(BuildOperationScriptPlugin.java:68)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-	at org.gradle.configuration.BuildOperationScriptPlugin.lambda$apply$0(BuildOperationScriptPlugin.java:65)
-	at org.gradle.internal.code.DefaultUserCodeApplicationContext.apply(DefaultUserCodeApplicationContext.java:44)
-	at org.gradle.configuration.BuildOperationScriptPlugin.apply(BuildOperationScriptPlugin.java:65)
-	at org.gradle.api.internal.project.DefaultProjectState.lambda$applyToMutableState$0(DefaultProjectState.java:222)
-	at org.gradle.api.internal.project.DefaultProjectState.lambda$fromMutableState$0(DefaultProjectState.java:229)
-	at org.gradle.api.internal.project.DefaultProjectState.runWithModelLock(DefaultProjectState.java:252)
-	at org.gradle.api.internal.project.DefaultProjectState.fromMutableState(DefaultProjectState.java:229)
-	at org.gradle.api.internal.project.DefaultProjectState.applyToMutableState(DefaultProjectState.java:221)
-	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:46)
-	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:27)
-	at org.gradle.configuration.project.ConfigureActionsProjectEvaluator.evaluate(ConfigureActionsProjectEvaluator.java:35)
-	at org.gradle.configuration.project.LifecycleProjectEvaluator$EvaluateProject.lambda$run$0(LifecycleProjectEvaluator.java:109)
-	at org.gradle.api.internal.project.DefaultProjectState.lambda$applyToMutableState$0(DefaultProjectState.java:222)
-	at org.gradle.api.internal.project.DefaultProjectState.lambda$fromMutableState$0(DefaultProjectState.java:229)
-	at org.gradle.api.internal.project.DefaultProjectState.runWithModelLock(DefaultProjectState.java:252)
-	at org.gradle.api.internal.project.DefaultProjectState.fromMutableState(DefaultProjectState.java:229)
-	at org.gradle.api.internal.project.DefaultProjectState.applyToMutableState(DefaultProjectState.java:221)
-	at org.gradle.configuration.project.LifecycleProjectEvaluator$EvaluateProject.run(LifecycleProjectEvaluator.java:100)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-	at org.gradle.configuration.project.LifecycleProjectEvaluator.evaluate(LifecycleProjectEvaluator.java:72)
-	at org.gradle.api.internal.project.DefaultProject.evaluateUnchecked(DefaultProject.java:773)
-	at org.gradle.api.internal.project.ProjectLifecycleController.lambda$ensureSelfConfigured$1(ProjectLifecycleController.java:96)
-	at org.gradle.api.internal.project.DefaultProjectState.lambda$withProjectLock$0(DefaultProjectState.java:234)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$runAndReleaseLocks$0(DefaultWorkerLeaseService.java:296)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAndReleaseLocks(DefaultWorkerLeaseService.java:294)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:290)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withReplacedLocks$0(DefaultWorkerLeaseService.java:446)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:368)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withReplacedLocks(DefaultWorkerLeaseService.java:445)
-	at org.gradle.api.internal.project.DefaultProjectState.runWithModelLock(DefaultProjectState.java:257)
-	at org.gradle.api.internal.project.DefaultProjectState.withProjectLock(DefaultProjectState.java:233)
-	at org.gradle.api.internal.project.ProjectLifecycleController.lambda$ensureSelfConfigured$0(ProjectLifecycleController.java:96)
-	at org.gradle.internal.model.StateTransitionController.lambda$doTransition$0(StateTransitionController.java:313)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:324)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:312)
-	at org.gradle.internal.model.StateTransitionController.lambda$maybeTransitionIfNotCurrentlyTransitioning$0(StateTransitionController.java:257)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:35)
-	at org.gradle.internal.model.StateTransitionController.maybeTransitionIfNotCurrentlyTransitioning(StateTransitionController.java:253)
-	at org.gradle.api.internal.project.ProjectLifecycleController.ensureSelfConfigured(ProjectLifecycleController.java:96)
-	at org.gradle.api.internal.project.DefaultProjectState.ensureConfigured(DefaultProjectState.java:190)
-	at org.gradle.execution.TaskPathProjectEvaluator.configureHierarchy(TaskPathProjectEvaluator.java:79)
-	at org.gradle.configuration.DefaultProjectsPreparer.prepareProjects(DefaultProjectsPreparer.java:52)
-	at org.gradle.configuration.BuildTreePreparingProjectsPreparer.prepareProjects(BuildTreePreparingProjectsPreparer.java:65)
-	at org.gradle.configuration.BuildOperationFiringProjectsPreparer$ConfigureBuild.run(BuildOperationFiringProjectsPreparer.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-	at org.gradle.configuration.BuildOperationFiringProjectsPreparer.prepareProjects(BuildOperationFiringProjectsPreparer.java:40)
-	at org.gradle.initialization.VintageBuildModelController.lambda$prepareProjects$0(VintageBuildModelController.java:83)
-	at org.gradle.internal.model.StateTransitionController.lambda$doTransition$0(StateTransitionController.java:313)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:324)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:312)
-	at org.gradle.internal.model.StateTransitionController.lambda$transitionIfNotPreviously$0(StateTransitionController.java:271)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:35)
-	at org.gradle.internal.model.StateTransitionController.transitionIfNotPreviously(StateTransitionController.java:267)
-	at org.gradle.initialization.VintageBuildModelController.prepareProjects(VintageBuildModelController.java:83)
-	at org.gradle.initialization.VintageBuildModelController.prepareToScheduleTasks(VintageBuildModelController.java:70)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$prepareToScheduleTasks$0(DefaultBuildLifecycleController.java:185)
-	at org.gradle.internal.model.StateTransitionController.lambda$doTransition$0(StateTransitionController.java:313)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:324)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:312)
-	at org.gradle.internal.model.StateTransitionController.lambda$maybeTransition$0(StateTransitionController.java:248)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:35)
-	at org.gradle.internal.model.StateTransitionController.maybeTransition(StateTransitionController.java:244)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.prepareToScheduleTasks(DefaultBuildLifecycleController.java:183)
-	at org.gradle.internal.buildtree.DefaultBuildTreeWorkPreparer.scheduleRequestedTasks(DefaultBuildTreeWorkPreparer.java:35)
-	at org.gradle.internal.cc.impl.barrier.BarrierAwareBuildTreeWorkPreparer.scheduleRequestedTasks$lambda$0(BarrierAwareBuildTreeWorkPreparer.kt:34)
-	at org.gradle.internal.cc.impl.barrier.VintageConfigurationTimeActionRunner.runConfigurationTimeAction(VintageConfigurationTimeActionRunner.kt:48)
-	at org.gradle.internal.cc.impl.barrier.BarrierAwareBuildTreeWorkPreparer.scheduleRequestedTasks(BarrierAwareBuildTreeWorkPreparer.kt:33)
-	at org.gradle.internal.cc.impl.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1$finalizedGraph$1.call(VintageBuildTreeWorkController.kt:37)
-	at org.gradle.internal.cc.impl.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1$finalizedGraph$1.call(VintageBuildTreeWorkController.kt:37)
-	at org.gradle.internal.Try.ofFailable(Try.java:46)
-	at org.gradle.internal.cc.impl.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1.apply(VintageBuildTreeWorkController.kt:37)
-	at org.gradle.internal.cc.impl.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1.apply(VintageBuildTreeWorkController.kt:36)
-	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph.withNewWorkGraph(DefaultIncludedBuildTaskGraph.java:115)
-	at org.gradle.internal.cc.impl.VintageBuildTreeWorkController.scheduleAndRunRequestedTasks(VintageBuildTreeWorkController.kt:36)
-	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$scheduleAndRunTasks$0(DefaultBuildTreeLifecycleController.java:79)
-	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$runBuild$0(DefaultBuildTreeLifecycleController.java:159)
-	at org.gradle.internal.model.StateTransitionController.lambda$transition$2(StateTransitionController.java:227)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:324)
-	at org.gradle.internal.model.StateTransitionController.lambda$transition$1(StateTransitionController.java:227)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
-	at org.gradle.internal.model.StateTransitionController.transition(StateTransitionController.java:227)
-	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.runBuild(DefaultBuildTreeLifecycleController.java:156)
-	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.scheduleAndRunTasks(DefaultBuildTreeLifecycleController.java:79)
-	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.scheduleAndRunTasks(DefaultBuildTreeLifecycleController.java:74)
-	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:31)
-	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)
-	at org.gradle.internal.buildtree.ProblemReportingBuildActionRunner.run(ProblemReportingBuildActionRunner.java:55)
-	at org.gradle.launcher.exec.BuildOutcomeReportingBuildActionRunner.run(BuildOutcomeReportingBuildActionRunner.java:83)
-	at org.gradle.tooling.internal.provider.FileSystemWatchingBuildActionRunner.run(FileSystemWatchingBuildActionRunner.java:118)
-	at org.gradle.launcher.exec.BuildCompletionNotifyingBuildActionRunner.run(BuildCompletionNotifyingBuildActionRunner.java:64)
-	at org.gradle.launcher.exec.RootBuildLifecycleBuildActionExecutor.lambda$execute$0(RootBuildLifecycleBuildActionExecutor.java:99)
-	at org.gradle.composite.internal.DefaultRootBuildState.run(DefaultRootBuildState.java:119)
-	at org.gradle.launcher.exec.RootBuildLifecycleBuildActionExecutor.execute(RootBuildLifecycleBuildActionExecutor.java:99)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor.runBuildTreeLifecycle(DefaultBuildTreeActionExecutor.java:132)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor.access$200(DefaultBuildTreeActionExecutor.java:54)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor$2.call(DefaultBuildTreeActionExecutor.java:104)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor$2.call(DefaultBuildTreeActionExecutor.java:99)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor.runAsBuildOperation(DefaultBuildTreeActionExecutor.java:99)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor.lambda$runBuildTreeAction$0(DefaultBuildTreeActionExecutor.java:93)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$runAndReleaseLocks$0(DefaultWorkerLeaseService.java:296)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAndReleaseLocks(DefaultWorkerLeaseService.java:294)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:290)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:282)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
-	at org.gradle.launcher.exec.DefaultBuildTreeActionExecutor.runBuildTreeAction(DefaultBuildTreeActionExecutor.java:93)
-	at org.gradle.tooling.internal.provider.continuous.ContinuousBuildActionExecutor.execute(ContinuousBuildActionExecutor.java:111)
-	at org.gradle.tooling.internal.provider.SubscribableBuildActionExecutor.execute(SubscribableBuildActionExecutor.java:64)
-	at org.gradle.internal.session.DefaultBuildSessionContext.execute(DefaultBuildSessionContext.java:46)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor$ActionImpl.apply(BuildSessionLifecycleBuildActionExecutor.java:106)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor$ActionImpl.apply(BuildSessionLifecycleBuildActionExecutor.java:94)
-	at org.gradle.internal.session.BuildSessionState.run(BuildSessionState.java:73)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor.execute(BuildSessionLifecycleBuildActionExecutor.java:67)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor.execute(BuildSessionLifecycleBuildActionExecutor.java:45)
-	at org.gradle.internal.buildprocess.execution.StartParamsValidatingActionExecutor.execute(StartParamsValidatingActionExecutor.java:57)
-	at org.gradle.internal.buildprocess.execution.StartParamsValidatingActionExecutor.execute(StartParamsValidatingActionExecutor.java:32)
-	at org.gradle.internal.buildprocess.execution.SessionFailureReportingActionExecutor.execute(SessionFailureReportingActionExecutor.java:51)
-	at org.gradle.internal.buildprocess.execution.SessionFailureReportingActionExecutor.execute(SessionFailureReportingActionExecutor.java:39)
-	at org.gradle.internal.buildprocess.execution.SetupLoggingActionExecutor.execute(SetupLoggingActionExecutor.java:47)
-	at org.gradle.internal.buildprocess.execution.SetupLoggingActionExecutor.execute(SetupLoggingActionExecutor.java:31)
-	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:70)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:39)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:29)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:35)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.lambda$execute$0(ForwardClientInput.java:40)
-	at org.gradle.internal.daemon.clientinput.ClientInputForwarder.forwardInput(ClientInputForwarder.java:80)
-	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.LogAndCheckHealth.execute(LogAndCheckHealth.java:53)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.ApplyClientEnvironmentVariables.doBuild(ApplyClientEnvironmentVariables.java:82)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:63)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:74)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:52)
-	at org.gradle.launcher.daemon.server.DaemonStateCoordinator.lambda$runCommand$0(DaemonStateCoordinator.java:321)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:65)
-	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at org.gradle.api.internal.tasks.execution.DefaultTaskNodeExecutor.doExecute(DefaultTaskNodeExecutor.java:364)
+	... 25 more
 
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
@@ -360,5 +401,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 51s
+BUILD FAILED in 4m 19s
+36 actionable tasks: 36 executed
 ```
