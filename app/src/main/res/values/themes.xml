@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Thème « enveloppe » de l'application.
+
+  L'interface réelle est écrite en Compose : ce thème sert uniquement à définir
+  la fenêtre système (fond, absence de barre d'action) et à éviter un flash
+  blanc au démarrage, en particulier sur Android TV.
+-->
+<resources>
+
+    <style name="Theme.MissaTv" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/missa_background</item>
+        <item name="android:colorBackground">@color/missa_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
+</resources>

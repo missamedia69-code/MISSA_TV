@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MISSA TV — calque avant de l'icône adaptative.
+  Un triangle « lecture » stylisé, centré dans la zone sûre (66 x 66 sur 108).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Cadre d'écran suggérant un téléviseur. -->
+    <path
+        android:fillColor="#FF1E1E28"
+        android:pathData="M24,32 h60 a4,4 0 0 1 4,4 v36 a4,4 0 0 1 -4,4 h-60 a4,4 0 0 1 -4,-4 v-36 a4,4 0 0 1 4,-4 z" />
+
+    <!-- Triangle de lecture. -->
+    <path
+        android:fillColor="#FFE23A2E"
+        android:pathData="M47,43 L47,65 L67,54 Z" />
+
+    <!-- Pied du téléviseur. -->
+    <path
+        android:fillColor="#FFE23A2E"
+        android:pathData="M42,78 h24 v3 h-24 z" />
+</vector>

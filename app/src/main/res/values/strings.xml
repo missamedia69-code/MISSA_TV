@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MISSA TV — chaînes de caractères (français, langue par défaut).
+
+  Toute chaîne affichée à l'utilisateur doit être déclarée ici et traduite
+  dans values-en/strings.xml.
+-->
+<resources>
+    <string name="app_name">MISSA TV</string>
+
+    <!-- Navigation -->
+    <string name="nav_channels">Chaînes</string>
+    <string name="nav_favorites">Favoris</string>
+    <string name="nav_search">Recherche</string>
+    <string name="nav_settings">Réglages</string>
+
+    <!-- Démarrage et connexion -->
+    <string name="startup_title">MISSA TV</string>
+    <string name="startup_loading_config">Récupération de la configuration…</string>
+    <string name="startup_connecting_portal">Connexion au portail…</string>
+    <string name="startup_loading_channels">Chargement des chaînes…</string>
+
+    <!-- Qualité et débit -->
+    <string name="quality_title">Qualité</string>
+    <string name="quality_auto_economy">Auto économie (720p max)</string>
+    <string name="quality_economy_480">Économie 480p</string>
+    <string name="quality_ultra_economy">Ultra économie (360p)</string>
+    <string name="quality_max">Qualité maximale</string>
+    <string name="quality_audio_only">Audio seul</string>
+    <string name="quality_locked">Qualité verrouillée</string>
+    <string name="quality_slow_connection">Connexion lente : qualité réduite</string>
+    <string name="quality_single_variant">Cette chaîne n\'est diffusée qu\'en une seule qualité</string>
+    <string name="quality_badge">%1$s - %2$s</string>
+
+    <!-- Erreurs -->
+    <string name="error_portal_unreachable">Portail injoignable. Vérifiez la connexion puis réessayez.</string>
+    <string name="error_mac_unauthorized">Cet appareil n\'est pas autorisé par le portail.</string>
+    <string name="error_subscription_expired">Abonnement expiré ou inactif.</string>
+    <string name="error_stream_unavailable">Flux momentanément indisponible.</string>
+    <string name="error_network_lost">Réseau perdu. Reconnexion…</string>
+    <string name="error_config_invalid">Configuration invalide : la dernière configuration valide est conservée.</string>
+    <string name="action_retry">Réessayer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_close">Fermer</string>
+    <string name="action_save">Enregistrer</string>
+    <string name="reconnecting">Reconnexion…</string>
+
+    <!-- État vide -->
+    <string name="empty_channels">Aucune chaîne. Vérifiez la configuration du portail.</string>
+    <string name="empty_favorites">Aucun favori pour l\'instant.</string>
+    <string name="empty_search">Aucun résultat.</string>
+
+    <!-- Diagnostic appareil -->
+    <string name="device_diagnostic_title">Adaptation à l\'appareil</string>
+    <string name="device_type">Type d\'appareil détecté</string>
+    <string name="device_window">Classe de fenêtre</string>
+    <string name="device_touch">Écran tactile</string>
+    <string name="device_pip">Picture-in-Picture</string>
+    <string name="device_font_scale">Échelle de police</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+</resources>

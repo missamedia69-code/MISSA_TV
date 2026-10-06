@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MISSA TV — chaînes de caractères (anglais).
+
+  Le français est la langue par défaut (values/strings.xml) ; ce fichier fournit
+  la traduction anglaise. Toute nouvelle chaîne ajoutée côté français doit être
+  ajoutée ici.
+-->
+<resources>
+    <string name="app_name">MISSA TV</string>
+
+    <!-- Navigation -->
+    <string name="nav_channels">Channels</string>
+    <string name="nav_favorites">Favourites</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Startup -->
+    <string name="startup_title">MISSA TV</string>
+    <string name="startup_loading_config">Loading configuration…</string>
+    <string name="startup_connecting_portal">Connecting to portal…</string>
+    <string name="startup_loading_channels">Loading channels…</string>
+
+    <!-- Quality and bandwidth -->
+    <string name="quality_title">Quality</string>
+    <string name="quality_auto_economy">Auto economy (720p max)</string>
+    <string name="quality_economy_480">Economy 480p</string>
+    <string name="quality_ultra_economy">Ultra economy (360p)</string>
+    <string name="quality_max">Maximum quality</string>
+    <string name="quality_audio_only">Audio only</string>
+    <string name="quality_locked">Quality locked</string>
+    <string name="quality_slow_connection">Slow connection: quality reduced</string>
+    <string name="quality_single_variant">This channel is broadcast in a single quality</string>
+    <string name="quality_badge">%1$s - %2$s</string>
+
+    <!-- Errors -->
+    <string name="error_portal_unreachable">Portal unreachable. Check your connection and try again.</string>
+    <string name="error_mac_unauthorized">This device is not authorised by the portal.</string>
+    <string name="error_subscription_expired">Subscription expired or inactive.</string>
+    <string name="error_stream_unavailable">Stream temporarily unavailable.</string>
+    <string name="error_network_lost">Network lost. Reconnecting…</string>
+    <string name="error_config_invalid">Invalid configuration: the last valid configuration is kept.</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="reconnecting">Reconnecting…</string>
+
+    <!-- Empty states -->
+    <string name="empty_channels">No channels. Check the portal configuration.</string>
+    <string name="empty_favorites">No favourites yet.</string>
+    <string name="empty_search">No results.</string>
+
+    <!-- Device diagnostic -->
+    <string name="device_diagnostic_title">Device adaptation</string>
+    <string name="device_type">Detected device type</string>
+    <string name="device_window">Window size class</string>
+    <string name="device_touch">Touchscreen</string>
+    <string name="device_pip">Picture-in-Picture</string>
+    <string name="device_font_scale">Font scale</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+</resources>
