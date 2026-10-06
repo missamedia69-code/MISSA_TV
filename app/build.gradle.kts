@@ -5,6 +5,7 @@
 // « org.jetbrains.kotlin.android » n'est donc PAS appliqué ici.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -125,7 +126,7 @@ android {
  * compilation.
  */
 fun configValue(key: String, default: String, secret: Boolean = false): String {
-    val localProperties = java.util.Properties().apply {
+    val localProperties = Properties().apply {
         val fichier = rootProject.file("local.properties")
         if (fichier.exists()) fichier.inputStream().use { load(it) }
     }
