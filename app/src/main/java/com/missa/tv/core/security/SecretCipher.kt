@@ -4,6 +4,8 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import com.missa.tv.core.log.MissaLog
 import java.security.KeyStore
+import javax.inject.Inject
+import javax.inject.Singleton
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -38,7 +40,8 @@ interface SecretCipher {
  * tête du message : chiffrer deux fois le même texte donne deux résultats
  * différents, ce qui empêche de déduire une valeur en comparant deux fichiers.
  */
-class AndroidKeystoreCipher : SecretCipher {
+@Singleton
+class AndroidKeystoreCipher @Inject constructor() : SecretCipher {
 
     private val keyStore: KeyStore? by lazy {
         runCatching {

@@ -4,6 +4,7 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
+import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.ConfigStore
 import com.missa.tv.data.remote.config.ConfigFetchResult
 import com.missa.tv.data.remote.config.ConfigRemoteDataSource
@@ -37,7 +38,7 @@ class RemoteConfigRepositoryImpl @Inject constructor(
     private val parser: PortalConfigParser,
     private val profileSource: PortalProfileSource,
     private val dispatchers: DispatcherProvider,
-    private val clockMs: () -> Long = { System.currentTimeMillis() },
+    private val time: TimeSource,
 ) : RemoteConfigRepository {
 
     override val config: Flow<RemoteConfig> = store.observe()
@@ -54,7 +55,7 @@ class RemoteConfigRepositoryImpl @Inject constructor(
                 // Le fichier n'a pas changé : l'empreinte reste valable et le
                 // document conservé reste la référence. Seule la date de
                 // vérification est rafraîchie.
-                store.touch(clockMs())
+                store.touch(time.nowMs())
                 MissaLog.d("Configuration distante inchangée")
                 AppResult.success(actuel.config)
             }
@@ -89,7 +90,7 @@ class RemoteConfigRepositoryImpl @Inject constructor(
         store.save(
             document = resultat.document,
             etag = resultat.etag,
-            syncedAtMs = clockMs(),
+            syncedAtMs = time.nowMs(),
         )
 
         if (nouvelle.profiles.isNotEmpty()) {

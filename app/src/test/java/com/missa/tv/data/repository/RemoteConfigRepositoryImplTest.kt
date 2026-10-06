@@ -7,6 +7,7 @@ import com.missa.tv.data.local.ConfigStore
 import com.missa.tv.data.local.StoredConfig
 import com.missa.tv.data.remote.config.ConfigFetchResult
 import com.missa.tv.data.remote.config.ConfigRemoteDataSource
+import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.remote.config.PortalConfigParser
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.RemoteConfig
@@ -117,18 +118,23 @@ class RemoteConfigRepositoryImplTest {
         {"schemaVersion":$schemaVersion,"configVersion":$configVersion,"profiles":[]}
     """.trimIndent()
 
+    /** Horloge factice : les tests fixent la date, aucun temps réel n'est attendu. */
+    private class FakeTime(private val valeur: Long) : TimeSource {
+        override fun nowMs(): Long = valeur
+    }
+
     private fun depot(
         remote: FakeRemote,
         store: FakeStore,
         profiles: FakeProfiles = FakeProfiles(),
-        horloge: () -> Long = { 1_000L },
+        horloge: Long = 1_000L,
     ) = RemoteConfigRepositoryImpl(
         remote = remote,
         store = store,
         parser = PortalConfigParser(),
         profileSource = profiles,
         dispatchers = dispatchers,
-        clockMs = horloge,
+        time = FakeTime(horloge),
     )
 
     private fun storeInitial(configVersion: Int = 1, etag: String? = "\"v1\"") = FakeStore(
@@ -194,7 +200,7 @@ class RemoteConfigRepositoryImplTest {
             val store = storeInitial()
             val remote = FakeRemote(ConfigFetchResult.Fetched(document(2), "\"v2\""))
 
-            depot(remote, store, horloge = { 42_000L }).refresh()
+            depot(remote, store, horloge = 42_000L).refresh()
 
             assertThat(store.stocke.syncedAtMs).isEqualTo(42_000L)
         }
@@ -254,7 +260,7 @@ class RemoteConfigRepositoryImplTest {
             val store = storeInitial(configVersion = 3)
             val remote = FakeRemote(ConfigFetchResult.NotModified)
 
-            val resultat = depot(remote, store, horloge = { 7_000L }).refresh()
+            val resultat = depot(remote, store, horloge = 7_000L).refresh()
 
             assertThat(resultat.valueOrNull()?.configVersion).isEqualTo(3)
             assertThat(store.sauvegardes).isEqualTo(0)

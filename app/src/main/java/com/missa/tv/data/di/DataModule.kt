@@ -2,6 +2,8 @@ package com.missa.tv.data.di
 
 import com.missa.tv.core.dispatchers.DefaultDispatcherProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
+import com.missa.tv.core.time.SystemTimeSource
+import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.EncryptedPortalProfileSource
 import com.missa.tv.data.repository.PortalRepositoryImpl
 import com.missa.tv.domain.repository.PortalProfileSource
@@ -31,6 +33,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindPortalProfileSource(impl: EncryptedPortalProfileSource): PortalProfileSource
+
+    @Binds
+    @Singleton
+    abstract fun bindTimeSource(impl: SystemTimeSource): TimeSource
 
     companion object {
 
