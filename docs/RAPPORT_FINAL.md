@@ -99,23 +99,32 @@ explicite.
 
 ## 4. Étapes manuelles restantes
 
-1. **Publier une version** : `git tag v1.0.0 && git push origin v1.0.0`.
+1. **Récupérer l'APK de développement** produit par la CI : chaque exécution verte
+   du job « Build / lint / tests » publie l'artefact **`missa-tv-debug-apk`**
+   (onglet *Actions* → l'exécution → section *Artifacts*, en bas de page).
+   Il s'agit d'un APK signé par la clé de débogage, installable directement sur
+   un téléphone, une tablette, un téléviseur ou un émulateur, et portant
+   l'identifiant `com.missa.tv.debug` — il ne remplace donc pas une version
+   publiée. Le résumé de l'exécution en donne la taille et l'empreinte SHA-256.
+   Depuis un poste connecté à GitHub : `gh run download <id-exécution> -n missa-tv-debug-apk`.
+   L'artefact est conservé 30 jours.
+2. **Publier une version** : `git tag v1.0.0 && git push origin v1.0.0`.
    Le workflow `release.yml` produit l'APK et l'AAB signés, vérifie la signature
    et crée la version GitHub avec l'empreinte SHA-256.
-2. **Configurer le portail** sur l'appareil : écran de réglages → profil (nom,
+3. **Configurer le portail** sur l'appareil : écran de réglages → profil (nom,
    URL, adresse MAC fournie par le fournisseur). Plusieurs profils sont
    possibles, la bascule est automatique.
-3. **Recette sur un portail réel** : rejouer la séquence du protocole et reporter
+4. **Recette sur un portail réel** : rejouer la séquence du protocole et reporter
    les valeurs observées dans [`PROTOCOLE_PORTAIL.md`](PROTOCOLE_PORTAIL.md#6-vérifier-le-protocole-sur-un-portail-réel).
    **Aucun portail n'était accessible depuis l'environnement de développement** :
    c'est la vérification la plus importante qui reste à faire.
-4. **Recette faible débit** : dérouler les dix scénarios de
+5. **Recette faible débit** : dérouler les dix scénarios de
    [`TESTS_FAIBLE_DEBIT.md`](TESTS_FAIBLE_DEBIT.md#42-scénarios-à-dérouler) et
    remplir le tableau de résultats.
-5. **Tests instrumentés** : `./gradlew connectedDebugAndroidTest` sur un
+6. **Tests instrumentés** : `./gradlew connectedDebugAndroidTest` sur un
    téléviseur ou un émulateur Android TV (la CI ne fait que les compiler).
-6. **Réglages du dépôt** (voir § 5) : visibilité, sujets, protection de `main`.
-7. **Fusion vers `main`** : la livraison est sur
+7. **Réglages du dépôt** (voir § 5) : visibilité, sujets, protection de `main`.
+8. **Fusion vers `main`** : la livraison est sur
    `arena/a245dda8-missa-tv` — une demande de fusion est ouverte vers `main`.
 
 ---

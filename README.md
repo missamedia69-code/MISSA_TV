@@ -71,6 +71,23 @@ Pré-requis : **JDK 17**, SDK Android avec la plateforme **37**, et un
 | `debug` | `com.missa.tv.debug` | installable à côté de la version publiée |
 | `release` | `com.missa.tv` | minification et réduction des ressources activées |
 
+### APK sans rien compiler
+
+Chaque exécution verte de la CI publie un APK de développement prêt à installer :
+onglet **Actions** → l'exécution la plus récente → section **Artifacts** →
+`missa-tv-debug-apk`. Il est signé par la clé de débogage (donc installable
+directement), conserve l'identifiant `com.missa.tv.debug` et reste disponible
+30 jours. En ligne de commande :
+
+```bash
+gh run download --repo missamedia69-code/MISSA_TV -n missa-tv-debug-apk
+```
+
+Pour un APK **signé de publication**, il faut d'abord configurer les secrets de
+signature, puis pousser une étiquette `vX.Y.Z` : le workflow
+`release.yml` produit alors l'APK et l'AAB signés et les attache à la version
+GitHub (voir [`docs/RAPPORT_FINAL.md`](docs/RAPPORT_FINAL.md#3-secrets-à-configurer)).
+
 ### Configuration du build
 
 Ces valeurs se règlent dans `local.properties` (non versionné), par propriété
