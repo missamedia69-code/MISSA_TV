@@ -1,80 +1,78 @@
 package com.missa.tv.data.local
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.log.MissaLog
+import com.missa.tv.core.security.SecretCipher
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.repository.PortalProfileSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * Profils de portail chiffrés sur l'appareil.
+ * Profils de portail conservés chiffrés sur l'appareil.
  *
- * L'URL du portail et l'adresse MAC sont des identifiants : ils sont stockés
- * dans un fichier chiffré par une clé conservée dans le magasin de clés
- * matériel d'Android (Keystore), inaccessible aux autres applications et non
- * extractible de l'appareil.
+ * L'URL du portail et l'adresse MAC sont des identifiants : ils ne sont jamais
+ * écrits en clair sur le disque. Le fichier de DataStore ne contient que du
+ * texte chiffré en AES-GCM, avec une clé détenue par le magasin de clés
+ * d'Android — une clé qui ne quitte jamais l'appareil et qu'aucune autre
+ * application ne peut lire.
  *
- * Le reste de la configuration (préférences d'affichage, cache) reste dans
- * DataStore ; seuls les identifiants justifient ce traitement particulier.
+ * Le chiffrement s'appuie sur le même composant que la configuration distante
+ * ([SecretCipher]) : une seule implémentation à auditer, un seul endroit où la
+ * clé est gérée.
  */
 @Singleton
 class EncryptedPortalProfileSource @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val cipher: SecretCipher,
+    private val json: Json,
     private val dispatchers: DispatcherProvider,
 ) : PortalProfileSource {
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val dataStore: DataStore<Preferences> get() = context.missaProfilesStore
 
-    private val prefs by lazy {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
+    override suspend fun profiles(): List<PortalProfile> =
+        lire()?.profiles?.map { it.toModel() }.orEmpty()
 
-        EncryptedSharedPreferences.create(
-            context,
-            FILE_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
-    }
-
-    override suspend fun profiles(): List<PortalProfile> = withContext(dispatchers.io) {
-        val brut = prefs.getString(KEY_PROFILES, null) ?: return@withContext emptyList()
-        runCatching {
-            json.decodeFromString<List<PortalProfileDto>>(brut).map { it.toModel() }
-        }.getOrElse { erreur ->
-            // Un contenu illisible (mise à jour de format, fichier corrompu) ne
-            // doit pas empêcher l'application de démarrer : on repart d'une
-            // liste vide et l'utilisateur resaisit ses identifiants.
-            MissaLog.e("Profils enregistrés illisibles, liste réinitialisée", erreur)
-            emptyList()
-        }
-    }
-
-    override suspend fun activeProfileId(): String? = withContext(dispatchers.io) {
-        prefs.getString(KEY_ACTIVE, null)
-    }
+    override suspend fun activeProfileId(): String? = prefs()[KEY_ACTIVE]
 
     override suspend fun setActiveProfileId(id: String) = withContext(dispatchers.io) {
-        prefs.edit().putString(KEY_ACTIVE, id).apply()
-        Unit
+        dataStore.edit { preferences -> preferences[KEY_ACTIVE] = id }
     }
 
     override suspend fun save(profile: PortalProfile) = withContext(dispatchers.io) {
         val existants = profiles().filterNot { it.id == profile.id }
-        val nouveaux = (existants + profile).sortedBy { it.id }
-        ecrire(nouveaux)
+        ecrire(existants + profile)
         if (activeProfileId() == null) {
-            prefs.edit().putString(KEY_ACTIVE, profile.id).apply()
+            dataStore.edit { preferences -> preferences[KEY_ACTIVE] = profile.id }
+        }
+    }
+
+    override suspend fun delete(id: String) = withContext(dispatchers.io) {
+        val restants = profiles().filterNot { it.id == id }
+        ecrire(restants)
+
+        if (activeProfileId() == id) {
+            val remplacant = restants.firstOrNull { it.enabled && it.isComplete }?.id
+            dataStore.edit { preferences ->
+                if (remplacant == null) {
+                    preferences.remove(KEY_ACTIVE)
+                } else {
+                    preferences[KEY_ACTIVE] = remplacant
+                }
+            }
         }
     }
 
@@ -85,35 +83,51 @@ class EncryptedPortalProfileSource @Inject constructor(
         if (remoteProfiles.isEmpty()) return@withContext
 
         // Les profils distants font autorité sur ceux de même identifiant : ils
-        // sont publiés par l'administrateur du déploiement.
+        // sont publiés par l'administrateur du déploiement. Les profils saisis à
+        // la main et non concernés sont conservés.
         val distants = remoteProfiles.associateBy { it.id }
         val manuels = profiles().filterNot { distants.containsKey(it.id) }
-        ecrire((manuels + remoteProfiles).sortedBy { it.id })
+        ecrire(manuels + remoteProfiles)
 
         val choisi = defaultProfileId?.takeIf { id -> remoteProfiles.any { it.id == id } }
         if (choisi != null && activeProfileId() != choisi) {
-            prefs.edit().putString(KEY_ACTIVE, choisi).apply()
+            dataStore.edit { preferences -> preferences[KEY_ACTIVE] = choisi }
             MissaLog.i("Profil par défaut défini par la configuration distante")
         }
     }
 
-    override suspend fun delete(id: String) = withContext(dispatchers.io) {
-        val restants = profiles().filterNot { it.id == id }
-        ecrire(restants)
-        if (activeProfileId() == id) {
-            val remplacant = restants.firstOrNull { it.enabled && it.isComplete }?.id
-            prefs.edit().apply {
-                if (remplacant == null) remove(KEY_ACTIVE) else putString(KEY_ACTIVE, remplacant)
-            }.apply()
+    /** Contenu déchiffré et analysé, ou `null` s'il est absent ou illisible. */
+    private suspend fun lire(): ProfilsDto? {
+        val chiffre = prefs()[KEY_PROFILES] ?: return null
+        val document = cipher.decrypt(chiffre) ?: return null
+
+        return runCatching { json.decodeFromString<ProfilsDto>(document) }.getOrElse { erreur ->
+            // Contenu illisible (changement de clé, fichier altéré) : on repart
+            // d'une liste vide plutôt que d'empêcher l'application de démarrer.
+            MissaLog.e("Profils enregistrés illisibles, liste réinitialisée", erreur)
+            null
         }
     }
 
-    private fun ecrire(profiles: List<PortalProfile>) {
-        val dto = profiles.map { it.toDto() }
-        prefs.edit().putString(KEY_PROFILES, json.encodeToString(dto)).apply()
+    private suspend fun ecrire(profiles: List<PortalProfile>) {
+        val document = json.encodeToString(
+            ProfilsDto(profiles.sortedBy { it.id }.map { it.toDto() }),
+        )
+        val chiffre = cipher.encrypt(document)
+        if (chiffre == null) {
+            // Sans chiffrement, rien n'est écrit : jamais d'identifiant en clair.
+            MissaLog.w("Profils non enregistrés : chiffrement impossible")
+            return
+        }
+        dataStore.edit { preferences -> preferences[KEY_PROFILES] = chiffre }
     }
 
-    /** Représentation sérialisée d'un profil. */
+    private suspend fun prefs(): Preferences = dataStore.data.first()
+
+    /** Liste de profils telle qu'elle est sérialisée avant chiffrement. */
+    @Serializable
+    private data class ProfilsDto(val profiles: List<PortalProfileDto> = emptyList())
+
     @Serializable
     private data class PortalProfileDto(
         val id: String,
@@ -140,12 +154,20 @@ class EncryptedPortalProfileSource @Inject constructor(
     )
 
     private companion object {
-        const val FILE_NAME = "missa_portal_profiles"
+        /** Contenu chiffré des profils. */
+        val KEY_PROFILES = stringPreferencesKey("profiles_payload")
 
-        /** Clé des profils ; la valeur est chiffrée par le fichier lui-même. */
-        const val KEY_PROFILES = "profiles"
-
-        /** Profil utilisé en priorité. */
-        const val KEY_ACTIVE = "active_profile"
+        /**
+         * Identifiant du profil utilisé en priorité.
+         *
+         * Conservé en clair : c'est un simple libellé technique, sans valeur
+         * d'authentification (l'URL et la MAC, elles, sont chiffrées).
+         */
+        val KEY_ACTIVE = stringPreferencesKey("active_profile")
     }
 }
+
+/** Un seul DataStore pour les profils de connexion, partagé par l'application. */
+private val Context.missaProfilesStore: DataStore<Preferences> by preferencesDataStore(
+    name = "missa_profiles",
+)

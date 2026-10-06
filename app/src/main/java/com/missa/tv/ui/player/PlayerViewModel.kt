@@ -1,5 +1,6 @@
 package com.missa.tv.ui.player
 
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
@@ -7,6 +8,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import com.missa.tv.core.dispatchers.DispatcherProvider
@@ -82,6 +84,7 @@ data class PlayerUiState(
  *  3. corrigé par l'état réel de la connexion : une connexion lente au démarrage
  *     fait partir d'un cran plus bas, jamais d'un cran plus haut.
  */
+@OptIn(UnstableApi::class)
 class PlayerViewModel @Inject constructor(
     private val channel: Channel,
     private val portalRepository: PortalRepository,

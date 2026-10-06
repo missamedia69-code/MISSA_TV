@@ -1,5 +1,6 @@
 package com.missa.tv.data.player
 
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.missa.tv.domain.model.BufferSettings
 import com.missa.tv.domain.playback.PlaybackCaps
@@ -17,6 +18,7 @@ import javax.inject.Singleton
  * l'interface le dit explicitement à l'utilisateur plutôt que de laisser croire
  * à une amélioration.
  */
+@OptIn(UnstableApi::class)
 @Singleton
 class PlaybackQualityApplier @Inject constructor(
     private val playerFactory: PlayerFactory,

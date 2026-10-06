@@ -190,8 +190,6 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.datastore.preferences)
-    implementation(libs.androidx.security.crypto)
-    implementation(libs.tink.android)
     implementation(libs.work.runtime.ktx)
 
     // --- Réseau ---------------------------------------------------------------

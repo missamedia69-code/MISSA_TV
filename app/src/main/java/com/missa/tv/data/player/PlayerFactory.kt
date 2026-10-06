@@ -1,9 +1,11 @@
 package com.missa.tv.data.player
 
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -31,6 +33,7 @@ import okhttp3.OkHttpClient
  *  3. **Reprise après coupure** — le lecteur réessaie au lieu d'abandonner, et
  *     la lecture continue quand l'écran s'éteint (utile sur un téléviseur).
  */
+@OptIn(UnstableApi::class)
 @Singleton
 class PlayerFactory @Inject constructor(
     @ApplicationContext private val context: Context,
