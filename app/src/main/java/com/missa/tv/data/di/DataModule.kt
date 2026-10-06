@@ -4,8 +4,11 @@ import com.missa.tv.core.dispatchers.DefaultDispatcherProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.time.SystemTimeSource
 import com.missa.tv.core.time.TimeSource
+import com.missa.tv.data.local.DataStoreSettingsStore
 import com.missa.tv.data.local.EncryptedPortalProfileSource
+import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.repository.PortalRepositoryImpl
+import com.missa.tv.domain.portal.PortalFailoverPolicy
 import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.PortalRepository
 import dagger.Binds
@@ -38,10 +41,25 @@ abstract class DataModule {
     @Singleton
     abstract fun bindTimeSource(impl: SystemTimeSource): TimeSource
 
+    @Binds
+    @Singleton
+    abstract fun bindSettingsStore(impl: DataStoreSettingsStore): SettingsStore
+
     companion object {
 
         @Provides
         @Singleton
         fun provideDispatcherProvider(): DispatcherProvider = DefaultDispatcherProvider()
+
+        /**
+         * Politique de bascule entre profils.
+         *
+         * Elle n'a aucun état et aucune dépendance : la fournir explicitement
+         * évite de l'annoter, ce qui permettrait à n'importe quelle classe de la
+         * construire par erreur, y compris ses doublures de test.
+         */
+        @Provides
+        @Singleton
+        fun providePortalFailoverPolicy(): PortalFailoverPolicy = PortalFailoverPolicy()
     }
 }
