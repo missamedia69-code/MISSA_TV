@@ -83,7 +83,7 @@ class PortalFailoverPolicyTest {
     @DisplayName("passe au profil suivant et n'y revient pas")
     fun `passe au suivant sans revenir`() {
         val suivant = policy.next(
-            profils = profils,
+            profiles = profils,
             failedProfileId = "a",
             attemptedIds = setOf("a"),
         )
@@ -95,7 +95,7 @@ class PortalFailoverPolicyTest {
     @DisplayName("ne propose plus rien quand tous les profils ont été essayés")
     fun `plus rien quand tout a ete essaye`() {
         val suivant = policy.next(
-            profils = profils,
+            profiles = profils,
             failedProfileId = "b",
             attemptedIds = setOf("a", "b"),
         )
@@ -103,7 +103,7 @@ class PortalFailoverPolicyTest {
         assertThat(suivant?.id).isEqualTo("c")
 
         val epuise = policy.next(
-            profils = profils,
+            profiles = profils,
             failedProfileId = "c",
             attemptedIds = setOf("a", "b", "c"),
         )
