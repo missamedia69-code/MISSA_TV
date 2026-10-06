@@ -154,7 +154,7 @@ jobs:
       # Cette étape et le fichier build-report.txt seront supprimés avant la
       # livraison.
       - name: Publication du rapport en cas d'échec
-        if: failure()
+        if: steps.gradle.outputs.code != '0'
         run: |
           set -uo pipefail
           {
@@ -172,6 +172,12 @@ jobs:
           git add -f build-report.txt
           git commit -m "chore(ci): rapport de compilation (temporaire) [skip ci]" || exit 0
           git push || true
+
+      - name: Échec du job si la compilation a échoué
+        if: steps.gradle.outputs.code != '0'
+        run: |
+          echo "::error::Compilation, analyse statique ou tests en échec (code ${{ steps.gradle.outputs.code }})."
+          exit 1
 
       - name: Publication des rapports de tests
         if: always()
