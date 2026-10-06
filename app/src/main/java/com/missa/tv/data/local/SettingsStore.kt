@@ -62,13 +62,15 @@ class DataStoreSettingsStore @Inject constructor(
 
     private val dataStore: DataStore<Preferences> get() = context.missaSettingsStore
 
-    override fun observePlayback(): Flow<PlaybackPreferences> = dataStore.data
-        .catch { erreur ->
+    override fun observePlayback(): Flow<PlaybackPreferences> {
+        val source: Flow<Preferences> = dataStore.data.catch { erreur ->
             MissaLog.e("Lecture des préférences impossible, valeurs par défaut utilisées", erreur)
             emit(emptyPreferences())
         }
-        .map { it.toPreferences() }
-        .flowOn(dispatchers.io)
+        return source
+            .map { preferences -> preferences.toPreferences() }
+            .flowOn(dispatchers.io)
+    }
 
     override suspend fun playback(): PlaybackPreferences = observePlayback().first()
 
