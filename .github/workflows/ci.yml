@@ -143,30 +143,30 @@ jobs:
             --stacktrace --no-daemon > build-output.txt 2>&1
           CODE=$?
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
-          # Extrait utile au diagnostic : la fin du journal.
-          tail -c 40000 build-output.txt > build-report.txt
+          {
+            echo "# MISSA TV — rapport de compilation"
+            echo
+            echo "- commit : ${GITHUB_SHA}"
+            echo "- branche : ${GITHUB_REF_NAME}"
+            echo "- code retour Gradle : ${CODE}"
+            echo "- SDK : ${ANDROID_HOME:-inconnu}"
+            echo
+            echo '```'
+            tail -c 60000 build-output.txt
+            echo '```'
+          } > build-report.txt
           exit "$CODE"
 
       # TEMPORAIRE — diagnostic à distance.
-      # Le journal d'exécution de la CI n'est pas accessible depuis
-      # l'environnement de développement : en cas d'échec, la fin du journal est
-      # donc publiée dans la branche pour pouvoir être lue puis corrigée.
-      # Cette étape et le fichier build-report.txt seront supprimés avant la
-      # livraison.
-      - name: Publication du rapport en cas d'échec
-        if: steps.gradle.outputs.code != '0'
+      #
+      # Le journal d'exécution de la CI n'est pas lisible depuis l'environnement
+      # de développement : la fin du journal Gradle est donc publiée dans la
+      # branche, où elle peut être lue. Cette étape et le fichier
+      # build-report.txt seront supprimés avant la livraison.
+      - name: Publication du rapport de compilation
+        if: always()
         run: |
           set -uo pipefail
-          {
-            echo "# Rapport de compilation"
-            echo
-            echo "Commit : ${{ github.sha }}"
-            echo
-            echo '```'
-            cat build-report.txt 2>/dev/null || echo "(rapport indisponible)"
-            echo '```'
-          } > build-report.txt
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f build-report.txt
@@ -174,10 +174,14 @@ jobs:
           git push || true
 
       - name: Échec du job si la compilation a échoué
-        if: steps.gradle.outputs.code != '0'
+        if: always()
         run: |
-          echo "::error::Compilation, analyse statique ou tests en échec (code ${{ steps.gradle.outputs.code }})."
-          exit 1
+          CODE="${{ steps.gradle.outputs.code }}"
+          echo "Code retour Gradle : ${CODE:-inconnu}"
+          if [ "${CODE:-1}" != "0" ]; then
+            echo "::error::Analyse statique, tests ou compilation en échec (code ${CODE})."
+            exit 1
+          fi
 
       - name: Publication des rapports de tests
         if: always()
