@@ -4,6 +4,7 @@ import com.missa.tv.core.json.array
 import com.missa.tv.core.json.asArrayOrNull
 import com.missa.tv.core.json.asObjectOrNull
 import com.missa.tv.core.json.boolean
+import com.missa.tv.core.json.booleanTolerant
 import com.missa.tv.core.json.int
 import com.missa.tv.core.json.string
 import com.missa.tv.domain.model.Category
