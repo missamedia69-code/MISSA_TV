@@ -61,13 +61,13 @@ class StalkerResponseParser(
             if (js === JsonNull) {
                 throw PortalProtocolException(PortalFailure.MALFORMED, "Réponse vide")
             }
-            val contenu = js.content
-            if (!js.isString || contenu.equals("error", ignoreCase = true) || contenu == "false") {
+            // Un `js` textuel est toujours un refus : littéralement `"error"`,
+            // `"false"`, ou le message du portail lui-même. Ce message est classé
+            // — jamais recopié —, car un refus qui désigne l'état du compte est
+            // un refus explicite, et l'annonce tel quel rend service.
+            if (js.isString) {
                 throw PortalProtocolException(
-                    // Un refus qui parle d'expiration est un refus explicite du
-                    // portail : il autorise le message « abonnement inactif »,
-                    // sans jamais le présumer.
-                    if (refusViseLeCompte(contenu)) {
+                    if (refusViseLeCompte(js.content)) {
                         PortalFailure.EXPIRED
                     } else {
                         PortalFailure.UNAUTHORIZED
@@ -75,6 +75,11 @@ class StalkerResponseParser(
                     "Session refusée par le portail",
                 )
             }
+            // `false` ou un nombre à la place d'un objet : refus générique.
+            throw PortalProtocolException(
+                PortalFailure.UNAUTHORIZED,
+                "Session refusée par le portail",
+            )
         }
         return js
     }

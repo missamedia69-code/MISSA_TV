@@ -154,14 +154,25 @@ class StalkerResponseParserTest {
         }
 
         @Test
-        fun `un profil sans enveloppe exploitable reste une erreur de protocole`() {
-            // Là, ce n'est pas le compte qui est en cause mais la réponse : la
-            // session n'est pas utilisable et l'erreur doit être signalée.
+        fun `un profil sans objet exploitable reste une erreur de protocole`() {
+            // Là, ce n'est pas le compte qui est en cause mais la forme de la
+            // réponse : la session n'est pas utilisable.
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.account("""{"js":[]}""")
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.MALFORMED)
+        }
+
+        @Test
+        fun `un refus exprime en texte reste une erreur de session`() {
+            // Un `js` textuel est un refus du portail : sans terme qui désigne le
+            // compte, il ne devient jamais un « abonnement inactif ».
             val erreur = assertThrows(PortalProtocolException::class.java) {
                 parser.account("""{"js":"erreur"}""")
             }
 
-            assertThat(erreur.failure).isEqualTo(PortalFailure.MALFORMED)
+            assertThat(erreur.failure).isEqualTo(PortalFailure.UNAUTHORIZED)
         }
     }
 
