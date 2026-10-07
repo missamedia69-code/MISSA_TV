@@ -1,0 +1,272 @@
+name: CI
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Intégration continue : hygiène du dépôt, validation de la configuration
+# distante, puis analyse statique / tests / compilation de l'application.
+#
+# Le runner est figé sur ubuntu-24.04 : « ubuntu-latest » bascule vers Ubuntu 26
+# à partir du 19 octobre 2026, ce qui rendrait les builds non reproductibles.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+      - "arena/**"
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: >-
+    -Dorg.gradle.jvmargs=-Xmx3g -Dorg.gradle.daemon=false -Dfile.encoding=UTF-8
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. Hygiène : aucun identifiant ne doit être versionné.
+  # ───────────────────────────────────────────────────────────────────────────
+  hygiene:
+    name: Hygiène / secrets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Détection de secrets
+        run: |
+          chmod +x scripts/check-secrets.sh
+          ./scripts/check-secrets.sh
+
+      # Les chaînes de caractères sont contrôlées avant la compilation : une
+      # apostrophe non échappée fait échouer aapt2 sur tout le fichier, et ce
+      # contrôle évite un cycle de CI complet pour une cause triviale.
+      - name: Contrôle des chaînes de caractères
+        run: python3 scripts/check-strings.py
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. Validation de la configuration distante (schéma + cohérence).
+  # ───────────────────────────────────────────────────────────────────────────
+  config:
+    name: Configuration distante
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v5
+
+      - name: Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Installation du validateur de schéma
+        run: pip install --quiet jsonschema
+
+      - name: Validation de portal-config.json
+        run: python3 scripts/validate-config.py
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. Analyse statique, tests et compilation.
+  # ───────────────────────────────────────────────────────────────────────────
+  android:
+    name: Build / lint / tests
+    runs-on: ubuntu-24.04
+    needs: [hygiene]
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v5
+
+      - name: Configuration du JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Le SDK Android est déjà présent sur les runners GitHub ; on installe
+      # seulement les composants exigés par AGP 9.4, sans dépendre d'une action
+      # tierce (android-actions/setup-android@v3 est obsolète et échoue).
+      - name: Installation des composants du SDK Android
+        run: |
+          set -uo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "SDK détecté : $SDK"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" > local.properties.tmp
+          echo "sdk.dir=$SDK" >> local.properties.tmp
+          mv local.properties.tmp local.properties
+
+          SDKMANAGER="$(find "$SDK" -path '*/cmdline-tools/*/bin/sdkmanager' 2>/dev/null | head -1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager introuvable dans $SDK"
+            find "$SDK" -maxdepth 3 -type d | head -30
+            exit 1
+          fi
+          echo "sdkmanager : $SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --install \
+            "platform-tools" \
+            "platforms;android-37" \
+            "build-tools;36.0.0" \
+            2>&1 | tail -5 || true
+
+          echo "--- Plateformes disponibles ---"
+          ls "$SDK/platforms" 2>/dev/null || echo "(aucune)"
+          echo "--- Build-tools disponibles ---"
+          ls "$SDK/build-tools" 2>/dev/null || echo "(aucun)"
+
+      - name: Configuration de Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Permissions du wrapper
+        run: chmod +x ./gradlew
+
+      - name: Analyse statique, tests, lint et compilation
+        id: gradle
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          ./gradlew ktlintCheck testDebugUnitTest lintDebug assembleDebug \
+            --stacktrace --no-daemon > build-output.txt 2>&1
+          echo "$?" > gradle-exit-code.txt
+          echo "Code retour Gradle : $(cat gradle-exit-code.txt)"
+          tail -c 2000 build-output.txt
+
+      # Les journaux complets d'une exécution ne sont pas toujours accessibles
+      # (ils sont stockés hors du dépôt) : les dernières lignes de la sortie
+      # Gradle sont donc republiées en annotations, qui restent lisibles depuis
+      # l'interface comme depuis l'API. Seules les exécutions en échec publient
+      # quelque chose.
+      - name: Dernières lignes de Gradle en annotations
+        if: steps.gradle.outcome == 'failure'
+        run: |
+          set -uo pipefail
+          [ -f build-output.txt ] || exit 0
+          python3 - <<'PYTHON'
+          import pathlib
+
+          import re
+
+          sortie = pathlib.Path("build-output.txt").read_text(errors="replace")
+
+          # Les messages d'erreur d'abord : ce sont eux qui permettent d'agir.
+          # Les publier séparément évite qu'ils soient noyés dans les piles
+          # d'exécution Gradle qui suivent, comme cela s'est produit.
+          motifs = (
+              r"^e: ",
+              r"error:", r"^FAILURE:", r"^Caused by:",
+              r"^> Task .*FAILED", r"^Execution failed for task",
+              r"^\s*\* What went wrong", r"^Cannot|^Unresolved",
+          )
+          lignes = sortie.splitlines()
+          erreurs = [
+              f"{numero}: {ligne.strip()}"
+              for numero, ligne in enumerate(lignes, start=1)
+              if any(re.search(motif, ligne) for motif in motifs)
+          ]
+          # Les tests unitaires écrivent un rapport XML par classe : c'est la
+          # seule source qui donne le NOM du test en échec et son message. Sans
+          # cela, un échec de test n'était visible que par « There were failing
+          # tests », sans indication exploitable.
+          import glob
+          import xml.etree.ElementTree as ElementTree
+
+          echecs = []
+          for fichier in glob.glob("app/build/test-results/**/*.xml", recursive=True):
+              try:
+                  racine = ElementTree.parse(fichier).getroot()
+              except Exception:
+                  continue
+              for cas in racine.iter("testcase"):
+                  for probleme in list(cas.findall("failure")) + list(cas.findall("error")):
+                      message = " ".join((probleme.get("message") or "").split())[:400]
+                      echecs.append(f"{cas.get('classname')} :: {cas.get('name')} :: {message}")
+
+          resume = "\n".join(erreurs[:60]) or "(aucune ligne d'erreur reconnue)"
+          if echecs:
+              resume = "TESTS EN ÉCHEC ({}) :\n".format(len(echecs)) + "\n".join(echecs[:40]) + \
+                  "\n\n" + resume
+
+          # 12 000 derniers caractères : assez pour les erreurs de compilation et
+          # de lint, sans dépasser la taille acceptée par une annotation.
+          queue = (resume + "\n\n--- fin du journal ---\n" + sortie[-8_000:])
+          queue = queue.replace("%", "%25").replace("\r", "")
+          for index, debut in enumerate(range(0, len(queue), 6_000)):
+              bloc = queue[debut:debut + 6_000].replace("\n", "%0A")
+              print(f"::error title=gradle-{index}::{bloc}")
+          PYTHON
+
+      - name: Échec du job si la compilation a échoué
+        if: always()
+        run: |
+          CODE="$(cat gradle-exit-code.txt 2>/dev/null || echo inconnu)"
+          echo "Code retour Gradle : ${CODE}"
+          if [ "${CODE}" != "0" ]; then
+            echo "::error title=compilation::Analyse statique, tests ou compilation en échec (code ${CODE})."
+            exit 1
+          fi
+
+      # L'APK de développement est publié comme artefact : il s'installe
+      # directement sur un appareil ou un émulateur (il est signé par la clé de
+      # débogage, ce qui suffit pour essayer l'application).
+      #
+      # En revanche il n'est PAS publiable sur un magasin, et il porte
+      # l'identifiant `com.missa.tv.debug` : il cohabite donc avec une version
+      # publiée, sans la remplacer.
+      - name: Publication de l'APK de développement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: missa-tv-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Résumé de l'APK
+        if: always()
+        run: |
+          set -uo pipefail
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' 2>/dev/null | head -1)"
+          {
+            echo "## APK de développement"
+            echo
+            if [ -z "${APK}" ]; then
+              echo "Aucun APK produit (la compilation a échoué avant cette étape)."
+            else
+              echo "| | |"
+              echo "| --- | --- |"
+              echo "| Fichier | $(basename "${APK}") |"
+              echo "| Taille | $(du -h "${APK}" | cut -f1) |"
+              echo "| Commit | ${GITHUB_SHA} |"
+              echo
+              echo '```'
+              sha256sum "${APK}"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publication des rapports de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-tests
+          path: |
+            **/build/reports/tests/**
+            **/build/reports/ktlint/**
+            **/build/reports/lint-results-*.html
+          if-no-files-found: ignore
+          retention-days: 7

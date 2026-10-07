@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/missamedia69-code/MISSA_TV/main/remote-config/portal-config.schema.json",
+  "title": "MISSA TV — configuration du portail",
+  "description": "Configuration distante lue par l'application MISSA TV. Ce fichier ne contient aucun flux : uniquement les paramètres de connexion au portail choisi par l'utilisateur, et les réglages d'adaptation au débit.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "configVersion",
+    "profiles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "description": "Version du format du fichier. Doit valoir 1.",
+      "type": "integer",
+      "const": 1
+    },
+    "configVersion": {
+      "description": "Version de la configuration. Doit être strictement supérieure à la version locale pour être appliquée.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "updatedAt": {
+      "description": "Date de dernière modification, au format ISO 8601 UTC.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "minAppVersion": {
+      "description": "VersionCode minimal de l'application requise par cette configuration. Une application plus ancienne doit inviter l'utilisateur à se mettre à jour.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "defaultProfileId": {
+      "description": "Identifiant du profil utilisé par défaut. Doit exister dans « profiles », ou être null.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profiles": {
+      "description": "Liste des profils de connexion. Vide dans le dépôt (aucun identifiant versionné) : les valeurs réelles sont fournies par le propriétaire.",
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "portalUrl",
+          "mac"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Identifiant technique stable du profil.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "name": {
+            "description": "Nom affiché à l'utilisateur.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "portalUrl": {
+            "description": "URL du portail (terminée par /c/ en général).",
+            "type": "string",
+            "maxLength": 512,
+            "pattern": "^https?://[^\\s]+$"
+          },
+          "mac": {
+            "description": "Adresse MAC du profil, au format XX:XX:XX:XX:XX:XX.",
+            "type": "string",
+            "pattern": "^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"
+          },
+          "enabled": {
+            "description": "Profil actif ou non.",
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "bandwidth": {
+      "description": "Réglages d'adaptation au débit. Bloc optionnel : s'il est absent ou invalide, l'application utilise ses valeurs par défaut.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lowBandwidthThresholdKbps": {
+          "description": "Seuil sous lequel la connexion est considérée comme faible (profil Économie automatique).",
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "default": 1000
+        },
+        "defaultMode": {
+          "description": "Mode de qualité appliqué par défaut.",
+          "type": "string",
+          "enum": [
+            "AUTO_ECONOMY",
+            "ECONOMY_480",
+            "ULTRA_ECONOMY",
+            "MAX_QUALITY",
+            "AUDIO_ONLY"
+          ],
+          "default": "AUTO_ECONOMY"
+        },
+        "maxVideoHeightByMode": {
+          "description": "Hauteur vidéo maximale (en pixels) par mode. 0 signifie « pas de piste vidéo » (audio seul).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4320
+          }
+        },
+        "maxVideoBitrateByMode": {
+          "description": "Débit vidéo maximal (en bits par seconde) par mode. 0 signifie « pas de plafond ».",
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "buffer": {
+          "description": "Réglages du tampon de lecture pour le direct.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000,
+              "default": 15000
+            },
+            "maxMs": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 300000,
+              "default": 40000
+            },
+            "playbackMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60000,
+              "default": 3000
+            },
+            "afterRebufferMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120000,
+              "default": 6000
+            }
+          }
+        }
+      }
+    }
+  }
+}

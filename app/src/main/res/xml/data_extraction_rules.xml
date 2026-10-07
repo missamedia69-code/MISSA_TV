@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MISSA TV — sauvegarde et transfert d'appareil.
+
+  La configuration de connexion (URL du portail, adresses MAC, éventuel jeton)
+  est chiffrée localement et ne doit jamais quitter l'appareil : rien n'est
+  sauvegardé dans le cloud ni transféré automatiquement vers un nouvel
+  appareil. L'utilisateur reconfigurera l'application ou saisira à nouveau les
+  valeurs.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude
+            domain="root"
+            path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude
+            domain="root"
+            path="." />
+    </device-transfer>
+</data-extraction-rules>

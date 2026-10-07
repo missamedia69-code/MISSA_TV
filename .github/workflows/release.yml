@@ -1,0 +1,181 @@
+name: Release
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Publication d'une version signée.
+#
+# Déclenchement : un tag `vX.Y.Z` (par exemple `v1.0.0`), ou manuellement.
+#
+# Le keystore n'existe nulle part dans le dépôt : il est fourni en base64 par les
+# secrets du dépôt et écrit dans le dossier temporaire du runner, qui disparaît
+# à la fin du job. Un dépôt sans ces secrets ne peut donc pas produire de version
+# signée, même si quelqu'un y pousse un tag.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Étiquette à publier (par exemple v1.0.0)"
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  GRADLE_OPTS: >-
+    -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dfile.encoding=UTF-8
+
+jobs:
+  release:
+    name: APK / AAB signés
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v5
+        with:
+          # Un tag peut être publié sur un commit ancien : l'historique complet
+          # évite un clone superficiel qui masquerait la version réelle.
+          fetch-depth: 0
+
+      - name: Configuration du JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Installation des composants du SDK Android
+        run: |
+          set -uo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "SDK détecté : $SDK"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK" > local.properties
+
+          SDKMANAGER="$(find "$SDK" -path '*/cmdline-tools/*/bin/sdkmanager' 2>/dev/null | head -1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager introuvable dans $SDK"
+            exit 1
+          fi
+
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --install \
+            "platform-tools" \
+            "platforms;android-37" \
+            "build-tools;36.0.0" \
+            2>&1 | tail -5 || true
+
+      - name: Restauration du keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MISSA_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64}" ]; then
+            echo "::error::Secret MISSA_KEYSTORE_BASE64 absent : aucune version signée ne peut être produite."
+            echo "Voir docs/RAPPORT_FINAL.md (secrets à configurer)."
+            exit 1
+          fi
+          KEYSTORE="$(mktemp -d)/missa-release.keystore"
+          echo "${KEYSTORE_BASE64}" | base64 --decode > "${KEYSTORE}"
+          chmod 600 "${KEYSTORE}"
+          echo "MISSA_KEYSTORE_FILE=${KEYSTORE}" >> "$GITHUB_ENV"
+          echo "Keystore restauré (contenu non affiché)."
+
+      - name: Version et nom de fichier
+        run: |
+          set -uo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "MISSA_VERSION_NAME=${VERSION}" >> "$GITHUB_ENV"
+          echo "MISSA_TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "Version publiée : ${VERSION} (étiquette ${TAG})"
+
+      - name: Configuration de Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Permissions du wrapper
+        run: chmod +x ./gradlew
+
+      - name: Compilation de la variante release (R8 activé)
+        env:
+          MISSA_KEYSTORE_PASSWORD: ${{ secrets.MISSA_KEYSTORE_PASSWORD }}
+          MISSA_KEY_ALIAS: ${{ secrets.MISSA_KEY_ALIAS }}
+          MISSA_KEY_PASSWORD: ${{ secrets.MISSA_KEY_PASSWORD }}
+          # Configuration distante : facultative, le dépôt public n'exige pas de jeton.
+          MISSA_CONFIG_TOKEN: ${{ secrets.MISSA_CONFIG_TOKEN }}
+        run: |
+          ./gradlew clean assembleRelease bundleRelease \
+            -Pmissa.versionName="${MISSA_VERSION_NAME}" \
+            --stacktrace --no-daemon
+
+      - name: Vérification de la signature
+        run: |
+          set -uo pipefail
+          APK="$(find app/build/outputs/apk/release -name '*.apk' | head -1)"
+          if [ -z "${APK}" ]; then
+            echo "::error::Aucun APK produit."
+            exit 1
+          fi
+          echo "APK : ${APK}"
+          BUILD_TOOLS="$(ls -d "${ANDROID_HOME}/build-tools/"* | sort -V | tail -1)"
+          "${BUILD_TOOLS}/apksigner" verify --verbose "${APK}" || {
+            echo "::error::L'APK n'est pas signé correctement."
+            exit 1
+          }
+
+      - name: Résumé
+        run: |
+          {
+            echo "## MISSA TV ${MISSA_TAG}"
+            echo
+            echo "| Fichier | Taille |"
+            echo "| --- | --- |"
+            find app/build/outputs -name '*.apk' -o -name '*.aab' | while read -r fichier; do
+              echo "| $(basename "$fichier") | $(du -h "$fichier" | cut -f1) |"
+            done
+            echo
+            echo "Empreinte SHA-256 de l'APK :"
+            echo '```'
+            find app/build/outputs/apk -name '*.apk' -exec sha256sum {} \;
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publication des fichiers
+        uses: actions/upload-artifact@v4
+        with:
+          name: missa-tv-${{ env.MISSA_VERSION_NAME }}
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publication de la version GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          NOTES="$(mktemp)"
+          {
+            echo "Version ${MISSA_VERSION_NAME} de MISSA TV."
+            echo
+            echo "MISSA TV est un lecteur : l'application ne contient aucune chaîne et"
+            echo "aucun flux. Elle se connecte uniquement au portail configuré par"
+            echo "l'utilisateur, qui reste responsable des contenus qu'il regarde."
+            echo
+            echo "APK signé et AAB joints à cette version."
+          } > "${NOTES}"
+
+          gh release create "${MISSA_TAG}" \
+            app/build/outputs/apk/release/*.apk \
+            app/build/outputs/bundle/release/*.aab \
+            --title "MISSA TV ${MISSA_VERSION_NAME}" \
+            --notes-file "${NOTES}" \
+            --verify-tag

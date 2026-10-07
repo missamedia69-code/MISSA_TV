@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MISSA TV — politique de sécurité réseau.
+
+  Le portail IPTV est choisi par l'utilisateur au moment de l'exécution : il
+  n'est donc pas connu à la compilation et ne peut pas figurer dans une liste
+  blanche. Or le protocole Stalker/Ministra fonctionne très souvent en HTTP sur
+  un port non standard.
+
+  Conséquence assumée et documentée : le trafic en clair est autorisé pour les
+  hôtes inconnus (sinon l'application serait inutilisable avec la majorité des
+  portails), mais il est explicitement INTERDIT pour les domaines que nous
+  connaissons, qui doivent rester en TLS. Le manifeste ne positionne PAS
+  android:usesCleartextTraffic="true" : cette autorisation est donc bien
+  encadrée par ce fichier.
+
+  L'application privilégie HTTPS lorsqu'un portail le propose et prévient
+  l'utilisateur que l'URL de son portail transite alors en clair.
+-->
+<network-security-config>
+
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Domaines applicatifs connus : jamais en clair. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.github.com</domain>
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">raw.githubusercontent.com</domain>
+    </domain-config>
+
+</network-security-config>

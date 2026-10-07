@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Gradle / Android
+# ─────────────────────────────────────────────────────────────────────────────
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+release/
+output.json
+lint-results*.html
+lint-results*.xml
+
+# Wrapper JAR ne doit PAS être ignoré : il garantit une version de Gradle
+# reproductible pour toute l'équipe et la CI.
+!gradle/wrapper/gradle-wrapper.jar
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Secrets — NE JAMAIS COMMITTER
+# ─────────────────────────────────────────────────────────────────────────────
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pepk
+secrets/
+.env
+.env.*
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IDE
+# ─────────────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.navigation/
+AndroidStudioProjects/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Système d'exploitation
+# ─────────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rapports de tests / couverture
+# ─────────────────────────────────────────────────────────────────────────────
+reports/
+test-results/
+*.hprof
