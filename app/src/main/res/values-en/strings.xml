@@ -127,4 +127,5 @@
     <string name="error_config_not_found">Configuration file not found: check the path and branch read from the repository.</string>
     <string name="settings_test_connection">Test connection</string>
     <string name="settings_connection_ok">Connection successful: %1$d channels received from the portal.</string>
+    <string name="error_session_expired">Session expired: go back to the home screen to reconnect to the portal.</string>
 </resources>

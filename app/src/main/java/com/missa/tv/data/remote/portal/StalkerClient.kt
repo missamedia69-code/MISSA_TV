@@ -53,15 +53,11 @@ class StalkerClient(
         // obtenu sert directement de jeton de session, comme le fait le décodeur.
         val (endpoint, token) = resolveEndpoint(profile, timezone)
 
-        val session = PortalSession(
-            profileId = profile.id,
-            endpoint = endpoint,
-            token = token,
-            timezone = timezone,
-        )
-
-        // `get_profile` confirme l'état de l'abonnement : une session peut être
-        // ouverte alors que l'abonnement est expiré.
+        // `get_profile` est demandé comme le fait le décodeur : certains portails
+        // refusent les appels suivants tant qu'il n'a pas été effectué.
+        //
+        // Le résultat n'est **pas** un filtre : il est conservé pour expliquer,
+        // plus tard, un refus du portail (voir [PortalAccount]).
         val profileBody = request(
             endpoint = endpoint,
             parameters = mapOf(
@@ -72,10 +68,17 @@ class StalkerClient(
             token = token,
             timezone = timezone,
         )
-        parser.account(profileBody)
+        val compte = parser.account(profileBody)
 
         MissaLog.d("Session ouverte sur ${Secrets.maskUrl(endpoint)}")
-        return session
+
+        return PortalSession(
+            profileId = profile.id,
+            endpoint = endpoint,
+            token = token,
+            timezone = timezone,
+            account = compte,
+        )
     }
 
     /** État de l'abonnement pour une session déjà ouverte. */

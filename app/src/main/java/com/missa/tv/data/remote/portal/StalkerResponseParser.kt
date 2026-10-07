@@ -85,32 +85,28 @@ class StalkerResponseParser(
     }
 
     /**
-     * État du compte.
+     * État du compte annoncé par le portail.
      *
-     * @throws PortalProtocolException de nature [PortalFailure.EXPIRED] si
-     *   l'abonnement n'est pas actif : inutile de charger les chaînes dans ce cas.
+     * Cette fonction **ne refuse jamais** : elle lit ce que le portail dit, et
+     * laisse tout champ absent ou mal formé à `null` (*inconnu*). Refuser ici
+     * reviendrait à bloquer des abonnements valides sur la base de champs dont le
+     * sens varie d'un portail à l'autre (voir [PortalAccount]).
+     *
+     * Seule une réponse sans enveloppe exploitable lève une erreur : là, c'est la
+     * session elle-même qui n'est pas utilisable.
      */
     fun account(body: String): PortalAccount {
         val js = payload(body) as? JsonObject
             ?: throw PortalProtocolException(PortalFailure.MALFORMED, "Profil inattendu")
 
-        val compte = PortalAccount(
-            isActive = js.boolean("status") ?: true,
-            // Certains portails n'exposent que `status` : il sert alors de repli.
-            isSubscribed = js.boolean("subscribed") ?: js.boolean("status") ?: true,
+        return PortalAccount(
+            isActive = js.booleanTolerant("status"),
+            isSubscribed = js.booleanTolerant("subscribed"),
             expiresAtRaw = js.string("expire_billing_date")
                 ?: js.string("tariff_expired_date")
                 ?: js.string("end_date"),
-            isTrial = js.boolean("trial") ?: false,
+            isTrial = js.booleanTolerant("trial") ?: false,
         )
-
-        if (!compte.canWatch) {
-            throw PortalProtocolException(
-                PortalFailure.EXPIRED,
-                "Abonnement inactif ou expiré",
-            )
-        }
-        return compte
     }
 
     /** Liste des catégories (`get_genres`). */

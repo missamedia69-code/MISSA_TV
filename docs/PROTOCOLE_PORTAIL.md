@@ -94,14 +94,38 @@ devenu injoignable.
 
 ---
 
-## 5. Erreurs et bascule de profil
+## 5. Les champs d'abonnement ne décident de rien
+
+Les portails ne s'accordent pas sur la signification des champs rendus par
+`get_profile` :
+
+| Champ | Ce qu'on observe selon le portail |
+| --- | --- |
+| `status` | `1` pour un compte actif chez les uns, `0` chez d'autres — **le même sens n'est pas garanti** |
+| `subscribed` | tantôt `1`, tantôt `"1"`, et très souvent un **tableau** (`[1,1]`, `[0,0]`) sans aucune documentation |
+| `expire_billing_date` | date, chaîne vide, ou champ absent |
+
+**Règle appliquée : l'application ne refuse jamais l'accès sur ces valeurs.** Un
+champ absent ou mal formé vaut *inconnu*, jamais *inactif*. Ce sont les appels
+suivants (`get_genres`, `get_all_channels`, `create_link`) qui décident : si le
+portail refuse, l'erreur réelle est affichée, et si le compte s'était annoncé
+inactif, le message le précise.
+
+Conséquence observée en pratique : un portail parfaitement fonctionnel qui
+répond `status: 0` et `subscribed: [1,1]` refusait la connexion dans la première
+version de l'application (« Abonnement expiré ou inactif ») alors qu'il
+fonctionnait avec d'autres lecteurs. Le test
+`ne refuse jamais un profil exprime en champs variables` verrouille ce cas.
+
+## 6. Erreurs et bascule de profil
 
 | Réponse du portail | Interprétation | Comportement |
 | --- | --- | --- |
 | `{"js": "error"}` ou `false` | jeton refusé ou expiré | `UNAUTHORIZED` / `EXPIRED` : bascule sur le profil suivant |
-| Compte `status = 0` ou `subscribed = 0` | abonnement inactif | `ACCOUNT_INACTIVE` : bascule, puis message clair à l'utilisateur |
+| Compte explicitement signalé inactif (`status` ou `subscribed` à 0) | abonnement probablement inactif | **n'interrompt rien** : l'information sert seulement à expliquer un refus ultérieur du portail |
 | HTTP 4xx/5xx, coupure | portail injoignable | bascule sur le profil suivant après échec |
 | JSON illisible | réponse inattendue | `MALFORMED` : **pas** de bascule, l'adresse est probablement fausse |
+| Session inconnue à la lecture des chaînes | session d'un autre lancement | `SESSION_EXPIRED` : message distinct, sans accuser l'abonnement |
 
 `PortalFailoverPolicy` essaie au maximum **3 profils**, en commençant par le
 profil actif, et seulement pour les erreurs où un autre profil a une chance
@@ -110,7 +134,7 @@ réussite sur un autre profil, celui-ci devient le profil actif.
 
 ---
 
-## 6. Vérifier le protocole sur un portail réel
+## 7. Vérifier le protocole sur un portail réel
 
 À exécuter **depuis une machine dont l'adresse IP est autorisée** par le
 fournisseur, en remplaçant les valeurs entre chevrons. Les adresses MAC doivent
@@ -139,11 +163,12 @@ Ce qu'il faut relever et reporter dans ce document :
 3. le nom exact du champ de pagination (`total_items`, `max_page_items`, `p`) ;
 4. la forme du jeton (longueur, présence de caractères spéciaux) ;
 5. la forme de `cmd` renvoyée par `create_link` (préfixe, extension du fichier) ;
-6. toute erreur d'authentification rencontrée et son message exact.
+6. toute erreur d'authentification rencontrée et son message exact ;
+7. la forme exacte de `status` et `subscribed` dans `get_profile` (§ 5).
 
 ---
 
-## 7. Ce que l'application ne fait pas
+## 8. Ce que l'application ne fait pas
 
 - Elle **ne contourne aucune protection** : si le portail refuse l'accès, elle
   s'arrête et affiche l'erreur.

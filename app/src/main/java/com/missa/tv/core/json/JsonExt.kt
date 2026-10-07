@@ -36,6 +36,24 @@ fun JsonElement?.asBooleanOrNull(): Boolean? = when (val text = asStringOrNull()
     else -> null
 }
 
+/**
+ * Booléen lu de façon **très** tolérante, tableaux compris.
+ *
+ * Les portails ne s'accordent pas sur la forme des champs d'abonnement :
+ * `subscribed` arrive tantôt en `1`, tantôt en `"1"`, et très souvent sous forme
+ * de **tableau** (`[1,1]`, `[0,0]`) sans qu'aucune documentation n'existe. Un
+ * tableau vide, ou dont aucune valeur n'est exploitable, reste *inconnu* : mieux
+ * vaut ne rien savoir que de conclure à tort à un abonnement inactif.
+ */
+fun JsonElement?.asTolerantBooleanOrNull(): Boolean? = when (this) {
+    null, JsonNull -> null
+    is JsonArray -> {
+        val valeurs = mapNotNull { it.asTolerantBooleanOrNull() }
+        if (valeurs.isEmpty()) null else valeurs.any { it }
+    }
+    else -> asBooleanOrNull()
+}
+
 fun JsonElement?.asObjectOrNull(): JsonObject? = this as? JsonObject
 
 fun JsonElement?.asArrayOrNull(): JsonArray? = this as? JsonArray
@@ -48,6 +66,10 @@ fun JsonObject?.int(field: String): Int? = this?.get(field).asIntOrNull()
 
 /** Champ booléen d'un objet JSON. */
 fun JsonObject?.boolean(field: String): Boolean? = this?.get(field).asBooleanOrNull()
+
+/** Champ booléen tolérant : accepte aussi un tableau de valeurs (`[1,1]`). */
+fun JsonObject?.booleanTolerant(field: String): Boolean? =
+    this?.get(field).asTolerantBooleanOrNull()
 
 /** Objet imbriqué, ou `null` s'il est absent. */
 fun JsonObject?.obj(field: String): JsonObject? = this?.get(field).asObjectOrNull()

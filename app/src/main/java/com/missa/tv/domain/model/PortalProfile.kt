@@ -26,20 +26,36 @@ data class PortalProfile(
 }
 
 /**
- * État du compte renvoyé par le portail après le handshake.
+ * État du compte annoncé par le portail après le handshake.
  *
- * Le portail indique à la fois si la session est acceptée et si l'abonnement
- * est actif : les deux sont nécessaires pour autoriser la lecture.
+ * ⚠️ **Ces champs ne décident de rien.** Les portails ne s'accordent ni sur leur
+ * présence, ni sur leur sens : `status` vaut 1 chez les uns et 0 chez les autres
+ * pour un compte parfaitement actif, et `subscribed` arrive souvent sous forme de
+ * tableau (`[1,1]`). Conditionner l'accès à leur valeur revenait à refuser des
+ * abonnements valides — des portails qui fonctionnent très bien avec d'autres
+ * lecteurs étaient déclarés « expirés ».
+ *
+ * Ils servent donc uniquement à **expliquer** un refus : quand le portail lui-même
+ * refuse de fournir ses chaînes, un compte explicitement inactif permet de
+ * présenter le bon message. Le juge de paix reste le portail, jamais une
+ * déduction de l'application.
+ *
+ * Chaque champ vaut `null` quand le portail ne le fournit pas ou l'exprime dans
+ * un format inattendu : *inconnu* n'est pas *inactif*.
  */
 data class PortalAccount(
-    val isActive: Boolean,
-    val isSubscribed: Boolean,
+    val isActive: Boolean? = null,
+    val isSubscribed: Boolean? = null,
     /** Date de fin d'abonnement telle que fournie par le portail (non interprétée). */
     val expiresAtRaw: String? = null,
     val isTrial: Boolean = false,
 ) {
-    /** Vrai si la lecture est autorisée. */
-    val canWatch: Boolean get() = isActive && isSubscribed
+    /**
+     * Vrai **seulement** si le portail affirme explicitement que le compte est
+     * inactif. Un champ absent ou illisible ne compte jamais comme un refus.
+     */
+    val explicitlyInactive: Boolean
+        get() = isActive == false || isSubscribed == false
 }
 
 /**
@@ -54,6 +70,13 @@ data class PortalSession(
     val endpoint: String,
     val token: String,
     val timezone: String,
+    /**
+     * État de compte annoncé lors de l'ouverture de la session.
+     *
+     * Il voyage avec la session pour que les erreurs survenues plus tard puissent
+     * être expliquées correctement, sans requête supplémentaire.
+     */
+    val account: PortalAccount = PortalAccount(),
 )
 
 /**

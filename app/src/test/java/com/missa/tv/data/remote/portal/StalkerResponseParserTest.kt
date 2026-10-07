@@ -73,20 +73,59 @@ class StalkerResponseParserTest {
 
             val compte = parser.account(corps)
 
-            assertThat(compte.canWatch).isTrue()
+            assertThat(compte.explicitlyInactive).isFalse()
             assertThat(compte.expiresAtRaw).isEqualTo("2027-01-31")
             assertThat(compte.isTrial).isFalse()
         }
 
         @Test
-        fun `refuse un abonnement inactif`() {
+        fun `ne refuse jamais un profil exprime en champs variables`() {
+            // Cas réel : un portail parfaitement fonctionnel (il fonctionne avec
+            // d'autres lecteurs) qui annonce son abonnement sous forme de tableau
+            // et un `status` à zéro. Conclure « abonnement expiré » sur ces seules
+            // valeurs rendait l'application inutilisable : c'est le portail qui
+            // décide, pas une déduction de l'application.
+            val corps = """{"js":{"id":"42","status":0,"subscribed":[1,1],"phone":"000"}}"""
+
+            val compte = parser.account(corps)
+
+            assertThat(compte.explicitlyInactive).isFalse()
+        }
+
+        @Test
+        fun `marque comme inactif un abonnement explicitement refuse`() {
             val corps = """{"js":{"id":"42","status":0,"subscribed":0}}"""
 
-            val erreur = assertThrows(PortalProtocolException::class.java) {
-                parser.account(corps)
-            }
+            val compte = parser.account(corps)
 
-            assertThat(erreur.failure).isEqualTo(PortalFailure.EXPIRED)
+            // L'information est conservée pour expliquer un refus du portail,
+            // mais elle ne lève aucune erreur à elle seule.
+            assertThat(compte.explicitlyInactive).isTrue()
+        }
+
+        @Test
+        fun `laisse les champs absents inconnus plutot que faussement inactifs`() {
+            val corps = """{"js":{"id":"42"}}"""
+
+            val compte = parser.account(corps)
+
+            assertThat(compte.isActive).isNull()
+            assertThat(compte.isSubscribed).isNull()
+            assertThat(compte.explicitlyInactive).isFalse()
+        }
+
+        @Test
+        fun `lit subscribed en tableau avec une seule entree`() {
+            val corps = """{"js":{"status":1,"subscribed":["1"]}}"""
+
+            assertThat(parser.account(corps).isSubscribed).isTrue()
+        }
+
+        @Test
+        fun `un tableau d_abonnements tous inactifs est lu comme tel`() {
+            val corps = """{"js":{"subscribed":[0,0,0]}}"""
+
+            assertThat(parser.account(corps).explicitlyInactive).isTrue()
         }
 
         @Test
@@ -94,7 +133,18 @@ class StalkerResponseParserTest {
             // Certains portails n'exposent que « status ».
             val corps = """{"js":{"status":1}}"""
 
-            assertThat(parser.account(corps).canWatch).isTrue()
+            assertThat(parser.account(corps).isActive).isTrue()
+        }
+
+        @Test
+        fun `un profil sans enveloppe exploitable reste une erreur de protocole`() {
+            // Là, ce n'est pas le compte qui est en cause mais la réponse : la
+            // session n'est pas utilisable et l'erreur doit être signalée.
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.account("""{"js":"erreur"}""")
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.MALFORMED)
         }
     }
 

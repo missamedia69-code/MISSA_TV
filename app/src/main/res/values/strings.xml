@@ -126,4 +126,5 @@
     <string name="error_config_not_found">Fichier de configuration introuvable : vérifiez le chemin et la branche lus dans le dépôt.</string>
     <string name="settings_test_connection">Tester la connexion</string>
     <string name="settings_connection_ok">Connexion réussie : %1$d chaînes reçues du portail.</string>
+    <string name="error_session_expired">Session expirée : revenez à l\'accueil pour vous reconnecter au portail.</string>
 </resources>

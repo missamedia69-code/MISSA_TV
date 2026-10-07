@@ -3,9 +3,11 @@ package com.missa.tv.data.repository
 import com.google.common.truth.Truth.assertThat
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
+import com.missa.tv.core.result.AppResult
 import com.missa.tv.data.remote.portal.PortalFailure
 import com.missa.tv.data.remote.portal.PortalProtocolException
 import com.missa.tv.data.remote.portal.StalkerClient
+import com.missa.tv.domain.model.PortalAccount
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.PortalSession
 import com.missa.tv.domain.portal.PortalFailoverPolicy
@@ -85,11 +87,16 @@ class PortalRepositoryImplTest {
         enabled = enabled,
     )
 
-    private fun session(profil: PortalProfile, jeton: String = "jeton-${profil.id}") = PortalSession(
+    private fun session(
+        profil: PortalProfile,
+        jeton: String = "jeton-${profil.id}",
+        compte: PortalAccount = PortalAccount(),
+    ) = PortalSession(
         profileId = profil.id,
         endpoint = "http://example.invalid/server/load.php",
         token = jeton,
         timezone = "Europe/Paris",
+        account = compte,
     )
 
     @Test
@@ -158,6 +165,69 @@ class PortalRepositoryImplTest {
         val resultat = PortalRepositoryImpl(client, source, dispatchers).connect()
 
         assertThat(resultat.isSuccess).isTrue()
+    }
+
+    @Test
+    @DisplayName("explique un refus du portail par l'état du compte, sans jamais le présumer")
+    fun `erreur de catalogue expliquee par un compte inactif`() = runTest {
+        val a = profil("a", 1)
+        val source = FakeProfileSource(listOf(a), actif = "a")
+        val client = mockk<StalkerClient>()
+        // Le compte s'est annoncé inactif à l'ouverture de la session…
+        coEvery { client.connect(a) } returns session(
+            a,
+            compte = PortalAccount(isActive = false, isSubscribed = false),
+        )
+        // …et le portail refuse effectivement de fournir ses chaînes.
+        coEvery { client.catalog(any(), a) } throws PortalProtocolException(
+            PortalFailure.UNAUTHORIZED,
+            "action refusée",
+        )
+
+        val depot = PortalRepositoryImpl(client, source, dispatchers)
+        val session = (depot.connect() as AppResult.Success).value
+        val resultat = depot.catalog(session)
+
+        // Le message désigne alors la vraie cause : l'abonnement.
+        assertThat(resultat.errorOrNull()).isEqualTo(AppError.SubscriptionExpired)
+    }
+
+    @Test
+    @DisplayName("un compte inconnu ne devient jamais un abonnement expiré")
+    fun `compte inconnu conserve l_erreur du portail`() = runTest {
+        val a = profil("a", 1)
+        val source = FakeProfileSource(listOf(a), actif = "a")
+        val client = mockk<StalkerClient>()
+        // Aucun champ d'abonnement exploitable : l'état du compte est inconnu.
+        coEvery { client.connect(a) } returns session(a, compte = PortalAccount())
+        coEvery { client.catalog(any(), a) } throws PortalProtocolException(
+            PortalFailure.UNAUTHORIZED,
+            "action refusée",
+        )
+
+        val depot = PortalRepositoryImpl(client, source, dispatchers)
+        val session = (depot.connect() as AppResult.Success).value
+        val resultat = depot.catalog(session)
+
+        // Le refus est rapporté tel quel : l'application n'invente pas de cause.
+        assertThat(resultat.errorOrNull()).isEqualTo(AppError.MacUnauthorized)
+    }
+
+    @Test
+    @DisplayName("une session inconnue est signalée comme telle, pas comme un abonnement expiré")
+    fun `session inconnue`() = runTest {
+        val source = FakeProfileSource(listOf(profil("a", 1)), actif = "a")
+        val depot = PortalRepositoryImpl(mockk(), source, dispatchers)
+
+        val session = PortalSession(
+            profileId = "a",
+            endpoint = "http://example.invalid/server/load.php",
+            token = "jeton-jamais-ouvert",
+            timezone = "Europe/Paris",
+        )
+        val resultat = depot.catalog(session)
+
+        assertThat(resultat.errorOrNull()).isEqualTo(AppError.SessionExpired)
     }
 
     @Test

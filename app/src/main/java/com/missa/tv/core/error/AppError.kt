@@ -25,6 +25,15 @@ sealed class AppError(
     /** Abonnement expiré ou désactivé côté portail. */
     data object SubscriptionExpired : AppError(R.string.error_subscription_expired, retryable = false)
 
+    /**
+     * Session ouverte devenue inutilisable : elle appartient à un autre lancement,
+     * ou le portail ne la reconnaît plus.
+     *
+     * Distinct d'[SubscriptionExpired] : le problème vient de la session, pas du
+     * compte de l'utilisateur.
+     */
+    data object SessionExpired : AppError(R.string.error_session_expired)
+
     /** Le portail répond mais ne fournit aucun flux pour cette chaîne. */
     data object StreamUnavailable : AppError(R.string.error_stream_unavailable)
 

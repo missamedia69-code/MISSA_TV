@@ -96,13 +96,23 @@ class PortalRepositoryImpl @Inject constructor(
         withContext(dispatchers.io) {
             val profil = profilsParSession[session.token]
             if (profil == null) {
-                // Session inconnue : elle provient d'un autre lancement.
-                return@withContext AppResult.failure(AppError.SubscriptionExpired)
+                // Session inconnue : elle provient d'un autre lancement, ou bien
+                // elle a expiré côté portail. Le dire ainsi est plus juste qu'un
+                // « abonnement expiré », qui désigne tout autre chose.
+                return@withContext AppResult.failure(AppError.SessionExpired)
             }
             try {
                 AppResult.success(client.catalog(session, profil))
             } catch (erreur: PortalProtocolException) {
-                AppResult.failure(erreur.toAppError())
+                // C'est le portail qui a refusé : si le compte s'est annoncé
+                // inactif, ce refus s'explique, et le message le dit.
+                AppResult.failure(
+                    if (session.account.explicitlyInactive) {
+                        AppError.SubscriptionExpired
+                    } else {
+                        erreur.toAppError()
+                    },
+                )
             } catch (erreur: IOException) {
                 AppResult.failure(AppError.PortalUnreachable)
             }
@@ -113,7 +123,7 @@ class PortalRepositoryImpl @Inject constructor(
         channel: Channel,
     ): AppResult<StreamLink> = withContext(dispatchers.io) {
         val profil = profilsParSession[session.token]
-            ?: return@withContext AppResult.failure(AppError.SubscriptionExpired)
+            ?: return@withContext AppResult.failure(AppError.SessionExpired)
         try {
             AppResult.success(client.createLink(session, profil, channel))
         } catch (erreur: PortalProtocolException) {
