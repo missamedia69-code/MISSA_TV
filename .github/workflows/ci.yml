@@ -178,7 +178,28 @@ jobs:
               for numero, ligne in enumerate(lignes, start=1)
               if any(re.search(motif, ligne) for motif in motifs)
           ]
+          # Les tests unitaires écrivent un rapport XML par classe : c'est la
+          # seule source qui donne le NOM du test en échec et son message. Sans
+          # cela, un échec de test n'était visible que par « There were failing
+          # tests », sans indication exploitable.
+          import glob
+          import xml.etree.ElementTree as ElementTree
+
+          echecs = []
+          for fichier in glob.glob("app/build/test-results/**/*.xml", recursive=True):
+              try:
+                  racine = ElementTree.parse(fichier).getroot()
+              except Exception:
+                  continue
+              for cas in racine.iter("testcase"):
+                  for probleme in list(cas.findall("failure")) + list(cas.findall("error")):
+                      message = " ".join((probleme.get("message") or "").split())[:400]
+                      echecs.append(f"{cas.get('classname')} :: {cas.get('name')} :: {message}")
+
           resume = "\n".join(erreurs[:60]) or "(aucune ligne d'erreur reconnue)"
+          if echecs:
+              resume = "TESTS EN ÉCHEC ({}) :\n".format(len(echecs)) + "\n".join(echecs[:40]) + \
+                  "\n\n" + resume
 
           # 12 000 derniers caractères : assez pour les erreurs de compilation et
           # de lint, sans dépasser la taille acceptée par une annotation.
