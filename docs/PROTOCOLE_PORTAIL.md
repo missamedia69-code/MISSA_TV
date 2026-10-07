@@ -17,6 +17,8 @@ qui est vérifié et ce qui ne l'est pas**.
 | Analyse des réponses (`js`, `token`, `data`, erreur `error`) | **Couverte par des tests** : `StalkerResponseParserTest` |
 | Découverte de l'endpoint parmi quatre chemins | **Couverte** : `PortalEndpointResolverTest` |
 | Bascule entre profils | **Couverte** : `PortalFailoverPolicyTest`, `PortalRepositoryImplTest` |
+| Refus explicite du portail rapporté comme tel | **En place** (`EXPIRED`) : seuls les messages qui désignent l'état du compte sont classés ainsi, ceux qui parlent de session ne le sont pas |
+| Tolérance aux champs d'abonnement (`status`, `subscribed`) | **Vérifiée en conditions réelles** : un portail fonctionnel était refusé à cause d'une interprétation trop stricte de ces champs ; corrigé, voir § 5 |
 | **Valeurs exactes attendues par un portail réel** | ⚠️ **NON vérifiées** : aucun portail n'était accessible depuis l'environnement de développement. Aucune valeur n'a été inventée pour autant : ce qui n'était pas certain est soit absent, soit déclaré ici comme hypothèse à confirmer. |
 | Pagination de `get_all_channels` (nombre de pages) | **Hypothèse** : la pagination s'arrête quand `total_items` est absent ou atteint, avec un garde-fou de 200 pages. |
 
@@ -108,8 +110,22 @@ Les portails ne s'accordent pas sur la signification des champs rendus par
 **Règle appliquée : l'application ne refuse jamais l'accès sur ces valeurs.** Un
 champ absent ou mal formé vaut *inconnu*, jamais *inactif*. Ce sont les appels
 suivants (`get_genres`, `get_all_channels`, `create_link`) qui décident : si le
-portail refuse, l'erreur réelle est affichée, et si le compte s'était annoncé
-inactif, le message le précise.
+portail refuse, l'erreur réelle est affichée telle quelle.
+
+Le message « abonnement expiré ou inactif » ne vient donc que de deux sources,
+jamais d'une déduction sur un champ isolé :
+
+1. **un refus explicite du portail** — sa réponse porte un message qui désigne
+   l'état du compte (`… expired`, `… inactive`, `not subscribed`, `disabled`) ;
+   dans ce cas seulement, le message est affiché comme tel ;
+2. une **concordance** : le portail a déjà refusé par ailleurs **et** ses deux
+   champs se lisent et valent zéro. Deux signaux indépendants, jamais un seul.
+
+Un message qui parle de session, de jeton ou d'authentification n'est **jamais**
+classé comme un problème d'abonnement : il se répare en rouvrant une session, et
+le dire évite d'envoyer l'utilisateur au mauvais endroit. Le texte du portail
+n'est jamais recopié — il peut contenir une adresse ou une MAC —, il sert
+uniquement de classement.
 
 Conséquence observée en pratique : un portail parfaitement fonctionnel qui
 répond `status: 0` et `subscribed: [1,1]` refusait la connexion dans la première
@@ -121,11 +137,13 @@ fonctionnait avec d'autres lecteurs. Le test
 
 | Réponse du portail | Interprétation | Comportement |
 | --- | --- | --- |
-| `{"js": "error"}` ou `false` | jeton refusé ou expiré | `UNAUTHORIZED` / `EXPIRED` : bascule sur le profil suivant |
+| `{"js": "error"}` ou `false` | jeton refusé ou expiré | `UNAUTHORIZED` (ou `EXPIRED` si le texte vise explicitement le compte) : bascule sur le profil suivant |
+| `{"js": {"error": "… expired"}}` sur `get_all_channels` sans `data` | refus explicite du compte | `EXPIRED` : message affiché tel quel, sans passer par « aucune chaîne » |
 | Compte explicitement signalé inactif (`status` ou `subscribed` à 0) | abonnement probablement inactif | **n'interrompt rien** : l'information sert seulement à expliquer un refus ultérieur du portail |
 | HTTP 4xx/5xx, coupure | portail injoignable | bascule sur le profil suivant après échec |
 | JSON illisible | réponse inattendue | `MALFORMED` : **pas** de bascule, l'adresse est probablement fausse |
 | Session inconnue à la lecture des chaînes | session d'un autre lancement | `SESSION_EXPIRED` : message distinct, sans accuser l'abonnement |
+| Enveloppe contenant un message d'expiration | refus explicite du compte | `EXPIRED`, uniquement lorsque le portail le dit lui-même (jamais déduit d'un champ) |
 
 `PortalFailoverPolicy` essaie au maximum **3 profils**, en commençant par le
 profil actif, et seulement pour les erreurs où un autre profil a une chance
@@ -164,7 +182,9 @@ Ce qu'il faut relever et reporter dans ce document :
 4. la forme du jeton (longueur, présence de caractères spéciaux) ;
 5. la forme de `cmd` renvoyée par `create_link` (préfixe, extension du fichier) ;
 6. toute erreur d'authentification rencontrée et son message exact ;
-7. la forme exacte de `status` et `subscribed` dans `get_profile` (§ 5).
+7. la forme exacte de `status` et `subscribed` dans `get_profile` (§ 5) ;
+8. le texte exact du refus lorsque l'abonnement est réellement inactif, pour
+   vérifier qu'il est bien reconnu par la classification décrite en § 5.
 
 ---
 

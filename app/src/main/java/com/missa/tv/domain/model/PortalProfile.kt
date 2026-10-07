@@ -51,11 +51,21 @@ data class PortalAccount(
     val isTrial: Boolean = false,
 ) {
     /**
-     * Vrai **seulement** si le portail affirme explicitement que le compte est
-     * inactif. Un champ absent ou illisible ne compte jamais comme un refus.
+     * Vrai **seulement** si le portail affirme deux fois que le compte est
+     * inactif : les deux champs lisibles et à zéro.
+     *
+     * Un champ unique ne conclut rien, car leur sens varie d'un portail à
+     * l'autre : `status` vaut 0 pour un abonnement parfaitement actif chez
+     * certains, et `subscribed` n'a pas la même forme partout. En exigeant la
+     * concordance de deux signaux indépendants, l'application ne présume jamais :
+     * un champ absent ou illisible laisse l'état *inconnu*, et c'est le refus du
+     * portail qui décide de l'affichage.
+     *
+     * Cette information n'interrompt rien par elle-même : elle sert uniquement à
+     * expliquer un refus survenu ailleurs, déjà constaté.
      */
     val explicitlyInactive: Boolean
-        get() = isActive == false || isSubscribed == false
+        get() = isActive == false && isSubscribed == false
 }
 
 /**

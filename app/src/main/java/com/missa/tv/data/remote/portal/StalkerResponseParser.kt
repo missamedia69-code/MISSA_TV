@@ -64,7 +64,14 @@ class StalkerResponseParser(
             val contenu = js.content
             if (!js.isString || contenu.equals("error", ignoreCase = true) || contenu == "false") {
                 throw PortalProtocolException(
-                    PortalFailure.UNAUTHORIZED,
+                    // Un refus qui parle d'expiration est un refus explicite du
+                    // portail : il autorise le message « abonnement inactif »,
+                    // sans jamais le présumer.
+                    if (refusViseLeCompte(contenu)) {
+                        PortalFailure.EXPIRED
+                    } else {
+                        PortalFailure.UNAUTHORIZED
+                    },
                     "Session refusée par le portail",
                 )
             }
@@ -140,7 +147,19 @@ class StalkerResponseParser(
         val js = payload(body)
         val elements = when (js) {
             is JsonArray -> js
-            is JsonObject -> js.array("data")
+            is JsonObject -> {
+                val donnees = js.array("data")
+                // Sans données, un message d'erreur qui vise le compte est un
+                // refus explicite : le dire vaut mieux qu'afficher « aucune
+                // chaîne », qui accuserait le portail à tort.
+                if (donnees.isEmpty() && refusViseLeCompte(js.string("error"))) {
+                    throw PortalProtocolException(
+                        PortalFailure.EXPIRED,
+                        "Abonnement refusé par le portail",
+                    )
+                }
+                donnees
+            }
             else -> throw PortalProtocolException(PortalFailure.MALFORMED, "Chaînes inattendues")
         }
 
@@ -159,7 +178,11 @@ class StalkerResponseParser(
 
         val brut = js.string("cmd")
             ?: throw PortalProtocolException(
-                PortalFailure.STREAM_UNAVAILABLE,
+                if (refusViseLeCompte(js.string("error"))) {
+                    PortalFailure.EXPIRED
+                } else {
+                    PortalFailure.STREAM_UNAVAILABLE
+                },
                 "Aucun lien de lecture pour cette chaîne",
             )
 
@@ -176,6 +199,63 @@ class StalkerResponseParser(
             url = url,
             isHls = url.contains(".m3u8", ignoreCase = true),
             createdAtMs = nowMs,
+        )
+    }
+
+    /**
+     * Le portail refuse-t-il en désignant l'état du compte ?
+     *
+     * Le texte du portail n'est **jamais** recopié : ni dans les messages, ni
+     * dans les journaux (il peut contenir une adresse ou une MAC). Il sert
+     * uniquement de classement. Les termes retenus désignent sans ambiguïté un
+     * abonnement, jamais un incident technique : un portail qui parle d'expiration
+     * ou d'inactivité dit exactement ce que l'utilisateur doit lire.
+     */
+    private fun refusViseLeCompte(texte: String?): Boolean {
+        val normalise = texte
+            ?.lowercase()
+            ?.replace('é', 'e')
+            ?.replace('è', 'e')
+            ?.replace('ê', 'e')
+            ?: return false
+        // Un refus qui parle de session, de jeton ou d'authentification ne vise
+        // pas le compte : il se répare en rouvrant une session, et l'annoncer
+        // comme un abonnement inactif enverrait l'utilisateur au mauvais endroit.
+        if (MARQUEURS_TECHNIQUES.any { marqueur -> normalise.contains(marqueur) }) return false
+        return MARQUEURS_COMPTE_INACTIF.any { marqueur -> normalise.contains(marqueur) }
+    }
+
+    private companion object {
+        /**
+         * Termes qui, dans un message d'erreur de portail, désignent l'état du
+         * compte. Volontairement courts et sans ambiguïté : « expire » couvre
+         * *expired*, *expiré*, *expiration*.
+         */
+        val MARQUEURS_COMPTE_INACTIF = listOf(
+            "expire",
+            "inactive",
+            "inactif",
+            "not active",
+            "not_active",
+            "disabled",
+            "deactivated",
+            "no subscription",
+            "not subscribed",
+            "unsubscribed",
+        )
+
+        /**
+         * Termes qui rattachent un refus à la session ou à l'appareil plutôt
+         * qu'à l'abonnement. Ils disqualifient la classification précédente.
+         */
+        val MARQUEURS_TECHNIQUES = listOf(
+            "session",
+            "token",
+            "jeton",
+            "login",
+            "authentif",
+            "unauthor",
+            "forbidden",
         )
     }
 

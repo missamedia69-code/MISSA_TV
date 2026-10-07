@@ -122,10 +122,27 @@ class StalkerResponseParserTest {
         }
 
         @Test
-        fun `un tableau d_abonnements tous inactifs est lu comme tel`() {
+        fun `un tableau d_abonnements tous nuls est lu, sans conclure seul`() {
             val corps = """{"js":{"subscribed":[0,0,0]}}"""
 
-            assertThat(parser.account(corps).explicitlyInactive).isTrue()
+            val compte = parser.account(corps)
+
+            // Le tableau est bien compris…
+            assertThat(compte.isSubscribed).isFalse()
+            // …mais un seul champ ne suffit jamais à conclure à un abonnement
+            // inactif : il faut que les deux champs concordent.
+            assertThat(compte.explicitlyInactive).isFalse()
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+            strings = [
+                """{"js":{"id":"42","status":0}}""",
+                """{"js":{"id":"42","subscribed":0}}""",
+            ],
+        )
+        fun `un seul champ a zero ne conclut pas a un abonnement inactif`(corps: String) {
+            assertThat(parser.account(corps).explicitlyInactive).isFalse()
         }
 
         @Test
@@ -246,6 +263,76 @@ class StalkerResponseParserTest {
         fun `refuse une commande qui n_est pas une URL`() {
             val erreur = assertThrows(PortalProtocolException::class.java) {
                 parser.streamLink("""{"js":{"cmd":"ffmpeg /dev/null"}}""", channelId = "1", nowMs = 0L)
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.STREAM_UNAVAILABLE)
+        }
+    }
+
+    @Nested
+    @DisplayName("Refus explicite du portail")
+    inner class Refus {
+
+        @Test
+        fun `un refus qui parle d_expiration est reconnu comme tel`() {
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.token("""{"js":"Subscription expired"}""")
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.EXPIRED)
+        }
+
+        @Test
+        fun `un refus qui parle d_inactivite est reconnu comme tel`() {
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.channels("""{"js":{"error":"Account is inactive"}}""")
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.EXPIRED)
+        }
+
+        @Test
+        fun `un refus technique reste une erreur de session`() {
+            // « Session expirée » se répare en rouvrant une session : l'annoncer
+            // comme un abonnement inactif enverrait l'utilisateur au mauvais
+            // endroit. Ici, la réponse ne contient aucune chaîne, sans pour
+            // autant accuser le compte.
+            val chaines = parser.channels("""{"js":{"error":"Session expired, please login again"}}""")
+
+            assertThat(chaines).isEmpty()
+        }
+
+        @Test
+        fun `une liste valide n_est jamais transformee en refus`() {
+            // Garde-fou : le message d'erreur n'est examiné que lorsque la liste
+            // est vide. Un portail qui renvoie des chaînes ET un champ d'erreur
+            // résiduel doit continuer de fonctionner.
+            val corps = """
+                {"js":{"error":"expired","data":[
+                  {"id":"101","number":"1","name":"Chaine Une","cmd":"ffmpeg http://example.invalid/a"}
+                ]}}
+            """.trimIndent()
+
+            assertThat(parser.channels(corps).map { it.id }).containsExactly("101")
+        }
+
+        @Test
+        fun `un lien absent pour cause d_abonnement est signale comme tel`() {
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.streamLink(
+                    """{"js":{"error":"no subscription for this device"}}""",
+                    channelId = "101",
+                    nowMs = 0L,
+                )
+            }
+
+            assertThat(erreur.failure).isEqualTo(PortalFailure.EXPIRED)
+        }
+
+        @Test
+        fun `un lien absent sans message reste une indisponibilite de flux`() {
+            val erreur = assertThrows(PortalProtocolException::class.java) {
+                parser.streamLink("""{"js":{"error":"unknown channel"}}""", channelId = "101", nowMs = 0L)
             }
 
             assertThat(erreur.failure).isEqualTo(PortalFailure.STREAM_UNAVAILABLE)
