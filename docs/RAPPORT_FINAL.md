@@ -1,9 +1,10 @@
 # Rapport de livraison — MISSA TV 1.0.0
 
-**Date** : 6 octobre 2026
+**Date** : 7 octobre 2026
 **Dépôt** : <https://github.com/missamedia69-code/MISSA_TV>
-**Branche de travail** : `arena/a245dda8-missa-tv` (62 commits)
-**Dernier commit validé** : `7003ac3` — intégration continue **verte**
+**Livraison** : `main` — 77 commits, fusion de la demande de fusion #1 (commit de fusion `163cf82`)
+**Branche de travail de la session** : `arena/a245dda8-missa-tv` (`dac3610`)
+**Dernières exécutions vertes** : `37696844806` (sur `main`, après fusion) et `37557069884` (sur la branche)
 
 ---
 
@@ -24,12 +25,12 @@ contient aucune chaîne et aucun flux.**
 | 6 | Mode faible débit : 5 modes, mesure et classification, plafonds `TrackSelectionParameters`, `DefaultLoadControl` ajusté, dégradation et remontée automatiques, sélecteur TV et mobile | livré | `domain/bandwidth`, `domain/playback`, `data/player` |
 | 7 | Regroupement SD / HD des variantes persistant, requêtes SQL, repli hors ligne | livré | `data/local/db`, `domain/channel` |
 | 8 | Interface d'accueil, de lecture et de réglages, saisie manuelle du portail | livré | `ui/` |
-| 9 | Tests : 158 cas (JUnit 5, MockK, Truth, Turbine, Compose UI Test) | livré | `app/src/test`, `app/src/androidTest` |
+| 9 | Tests : 173 méthodes, dont 11 paramétrées (JUnit 5, MockK, Truth, Turbine, Compose UI Test) | livré | `app/src/test`, `app/src/androidTest` |
 | 10 | CI (`ci.yml`) : hygiène/secrets, validation de la configuration distante, ktlint, lint, tests, APK debug, tests instrumentés compilés | livré | `.github/workflows/ci.yml` |
 | 11 | Publication (`release.yml`) : keystore par secrets, R8, APK + AAB signés, vérification de signature, empreinte SHA-256, version GitHub | livré | `.github/workflows/release.yml` |
 | 12 | Documentation et rapport | livré | `README.md`, `docs/`, `CONTRIBUTING.md` |
 
-**Volume** : 63 fichiers Kotlin (≈ 7 300 lignes) côté application, 158 cas de test,
+**Volume** : 64 fichiers Kotlin (7 870 lignes) côté application, 16 fichiers de test (3 320 lignes) et 173 méthodes de test,
 800 lignes de documentation.
 
 ### Phase 2 — architecture préparée, non implémentée
@@ -46,17 +47,19 @@ présent, drapeau `isCensored` déjà dans le modèle de chaîne).
 
 | Contrôle | Résultat | Preuve |
 | --- | --- | --- |
-| Compilation debug | ✅ | exécution `37516414430` (commit `7003ac3`) |
-| Tests unitaires et d'acceptation | ✅ **158 cas**, 0 échec | même exécution |
+| Compilation debug | ✅ | exécution `37696844806` (`main`, commit `163cf82`) |
+| Tests unitaires et d'acceptation | ✅ **173 méthodes** (dont 11 paramétrées), 0 échec | même exécution |
 | Tests instrumentés (compilation) | ✅ | `assembleDebugAndroidTest` |
 | ktlint | ✅ | `ktlintCheck` |
 | Lint Android | ✅ (`abortOnError = true`) | `lintDebug` |
 | Détection de secrets | ✅ aucun secret détecté | job « Hygiène / secrets » |
 | Validation de `portal-config.json` | ✅ schéma respecté | job « Configuration distante » |
-| Contrôle des chaînes français / anglais | ✅ 95 clés, parité exacte | `scripts/check-strings.py` |
+| Contrôle des chaînes français / anglais | ✅ 100 clés, parité exacte | `scripts/check-strings.py` |
+| Lecture de la configuration distante depuis `main` | ✅ `200` avec ETag, puis `304` au second appel | requête identique à celle de l'application, depuis `GitHubConfigDataSource` |
 | Compilation des ressources (`aapt2`) | ✅ 12 fichiers | contrôle local |
 
-Exécutions vertes successives : `37516414430`, `37514566087`, `37510504896`.
+Exécutions vertes successives : `37696844806` (sur `main`), `37557069884`,
+`37545397589`, `37542564171`, `37535055087`.
 
 > Les journaux complets d'exécution restent consultables dans l'onglet *Actions*
 > du dépôt ; les échecs éventuels y sont aussi republiés en annotations.
@@ -124,8 +127,9 @@ explicite.
 6. **Tests instrumentés** : `./gradlew connectedDebugAndroidTest` sur un
    téléviseur ou un émulateur Android TV (la CI ne fait que les compiler).
 7. **Réglages du dépôt** (voir § 5) : visibilité, sujets, protection de `main`.
-8. **Fusion vers `main`** : la livraison est sur
-   `arena/a245dda8-missa-tv` — une demande de fusion est ouverte vers `main`.
+8. ~~Fusion vers `main`~~ : **faite** le 7 octobre 2026. La demande de fusion #1 a
+   été fusionnée (`163cf82`) ; la livraison est donc sur `main`, où l'intégration
+   continue est passée au vert (`37696844806`).
 
 ---
 
@@ -153,10 +157,15 @@ Deux options, au choix :
 
 La méthode souhaitée (`develop` + branches `feature/*`, puis `main` à la
 livraison) n'a pas pu être appliquée : cette session est liée à une seule branche,
-`arena/a245dda8-missa-tv`. Le travail y est complet et **une demande de fusion
-vers `main` est ouverte** ; l'historique est découpé en 62 commits atomiques en
-français, ce qui permet de créer `develop` depuis `main` après fusion si vous
-souhaitez conserver ce fonctionnement.
+`arena/a245dda8-missa-tv`. Le travail y a été mené, puis **fusionné dans `main`**
+(demande #1, commit de fusion `163cf82`) : la livraison est donc sur la branche
+attendue, avec 77 commits atomiques en français.
+
+`main` reste en revanche **non protégée** : les réglages de protection de branche
+ne sont pas accessibles avec les droits de cette session (`403` sur l'interface de
+protection). La commande équivalente est fournie au § 5.3. Si vous souhaitez
+retrouver le fonctionnement `develop` + `feature/*`, créez `develop` depuis `main`
+et activez la protection correspondante.
 
 ### 5.3 Sujets et protection de branche
 
@@ -212,6 +221,12 @@ contiennent aucun identifiant.
   puis abandonnée, bridait le mode « qualité maximale ».
 - **Honnêteté de l'interface** : mono-qualité annoncée, dégradations et remontées
   annoncées, catalogue mémorisé signalé.
+- **L'état d'un abonnement n'est jamais déduit** : `status` et `subscribed` changent
+  de sens d'un portail à l'autre. Ces champs ne servent qu'à expliquer un refus que
+  le portail a lui-même prononcé ; un seul champ à zéro ne conclut rien. Un portail
+  actif qui répond `status: 0` avec `subscribed: [1,1]` — cas réel rencontré —
+  fonctionne désormais, et un refus technique de session n'est jamais présenté comme
+  un abonnement inactif.
 - **Démarrage à froid** : catalogue local affiché avant la réponse du portail.
 - **Thème et navigation par `remember`** : les changements de configuration sont
   déclarés dans le manifeste, l'écran de lecture n'est pas interrompu par une
