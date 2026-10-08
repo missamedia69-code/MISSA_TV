@@ -95,7 +95,7 @@ connexion.
 | 7 | Couper le Wi-Fi 20 s puis le rétablir | La lecture reprend, sans remonter de palier immédiatement |
 | 8 | Verrouiller le mode puis saturer la connexion | Aucune dégradation automatique ; le verrou reste affiché |
 | 9 | Quitter l'écran de lecture | Le lecteur est libéré : aucune donnée ne continue de descendre (vérifier dans les statistiques réseau de l'appareil) |
-| 10 | Lancer l'application, portail injoignable | La liste mémorisée s'affiche, avec le bandeau « catalogue mémorisé » |
+| 10 | Lancer l'application, playlists injoignables | La liste mémorisée s'affiche, avec le bandeau « catalogue mémorisé » |
 
 ### 4.3 Mesures à relever
 
@@ -110,7 +110,7 @@ connexion.
 
 ## 5. Résultats
 
-À compléter lors de la recette, sur l'appareil et le portail réels :
+À compléter lors de la recette, sur l'appareil et les playlists réelles :
 
 | Date | Appareil | Version | Débit | Scénarios réussis | Observations |
 | --- | --- | --- | --- | --- | --- |
@@ -120,10 +120,9 @@ connexion.
 
 ## 6. Limites connues
 
-- **Aucun test sur un portail réel** n'a été possible depuis l'environnement de
-  développement : le protocole est implémenté d'après le comportement documenté
-  des décodeurs MAG250 et couvert par des réponses simulées. La recette sur un
-  portail réel reste à faire (procédure : [`PROTOCOLE_PORTAIL.md`](PROTOCOLE_PORTAIL.md)).
+- **Aucun test sur une playlist réelle** n'a été possible depuis l'environnement
+  de développement : le téléchargement et l'analyse M3U sont couverts par des
+  flux simulés. La recette sur une playlist réelle reste à faire.
 - Le débit mesuré par l'application est une **estimation** issue de la lecture en
   cours (taille des segments, cadence réelle). Elle sert à décider d'un palier,
   pas à facturer quoi que ce soit.

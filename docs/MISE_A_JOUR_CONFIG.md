@@ -1,9 +1,12 @@
 # Configuration distante
 
-L'application lit périodiquement un fichier JSON publié dans un dépôt GitHub.
-Ce fichier permet de corriger un réglage — seuil de faible débit, mode par
-défaut, plafonds, tampon, ou une adresse de portail pour un déploiement familial
-— **sans publier une nouvelle version de l'application**.
+L'application lit périodiquement un fichier JSON publié dans un dépôt GitHub
+**privé**. Ce fichier permet de corriger un réglage — seuil de faible débit,
+mode par défaut, plafonds, tampon — et surtout de déclarer les **sources de
+playlists M3U** — **sans publier une nouvelle version de l'application**.
+
+La configuration est gérée **exclusivement en ligne** : l'application n'offre
+aucune saisie. Les sources déclarées ici sont les seules utilisées.
 
 ---
 
@@ -11,15 +14,15 @@ défaut, plafonds, tampon, ou une adresse de portail pour un déploiement famili
 
 | Élément | Valeur par défaut |
 | --- | --- |
-| Dépôt | `missamedia69-code/MISSA_TV` |
-| Chemin | `remote-config/portal-config.json` |
+| Dépôt | `missamedia69-code/missa-tv-config` (privé) |
+| Chemin | `portal-config.json` (à la racine du dépôt) |
 | Branche lue | **branche par défaut du dépôt** (`main`), sauf si `missa.config.ref` est renseigné |
 | API | `GET https://api.github.com/repos/{owner}/{repo}/contents/{path}[?ref=<branche>]` |
-| En-têtes | `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `If-None-Match: <etag>` |
-| Jetons | `X-GitHub-Api-Version`, et `Authorization: Bearer <jeton>` **si** un jeton est fourni |
+| En-têtes | `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `If-None-Match: <etag>`, `Authorization: Bearer <jeton>` |
 
-Le dépôt étant public et le fichier **volontairement vide d'identifiants**, le
-jeton est **facultatif**. Il n'est nécessaire que pour un dépôt privé.
+Le dépôt étant **privé**, un **jeton GitHub en lecture seule est requis** pour
+lire le fichier. Sans jeton, GitHub répond `401`/`403` et l'application
+conserve la configuration déjà mémorisée.
 
 ### Où ces valeurs sont-elles définies ?
 
@@ -35,14 +38,12 @@ lues dans cet ordre :
 
 ```properties
 # local.properties — NE JAMAIS COMMITER
-missa.config.owner=mon-compte
-missa.config.repo=mon-depot
-missa.config.path=remote-config/portal-config.json
 missa.config.token=github_pat_xxx
 ```
 
-Le jeton n'est **jamais** affiché dans le journal de compilation : seuls le nom
-de la variable et le fait qu'elle est fournie apparaissent.
+Seul le jeton est à fournir : le dépôt et le chemin ont leurs valeurs par
+défaut. Le jeton n'est **jamais** affiché dans le journal de compilation : seuls
+le nom de la variable et le fait qu'elle est fournie apparaissent.
 
 ---
 
@@ -51,8 +52,8 @@ de la variable et le fait qu'elle est fournie apparaissent.
 L'API Contents lit la **branche par défaut** (`main`) quand aucun `ref` n'est
 demandé. Un fichier publié uniquement sur une branche de travail est donc
 **invisible pour les appareils** : la requête répond `404`, et l'application
-affiche « Fichier de configuration introuvable : vérifiez le chemin et la branche
-lus dans le dépôt. »
+affiche « Fichier de configuration introuvable : vérifiez le chemin et la
+branche lus dans le dépôt. »
 
 Deux façons de régler cela :
 
@@ -63,16 +64,25 @@ Deux façons de régler cela :
 
 ## 2. Format du fichier
 
-Le schéma complet est dans [`remote-config/portal-config.schema.json`](../remote-config/portal-config.schema.json).
+Le schéma complet est dans
+[`remote-config/portal-config.schema.json`](../remote-config/portal-config.schema.json)
+(un gabarit vide est fourni dans `remote-config/portal-config.json`).
 
 ```json
 {
-  "schemaVersion": 1,
-  "configVersion": 1,
-  "updatedAt": "2026-10-06T00:00:00Z",
+  "schemaVersion": 2,
+  "updatedAt": "2026-10-08T00:00:00Z",
   "minAppVersion": 1,
-  "profiles": [],
-  "defaultProfileId": null,
+  "defaultPlaylistId": null,
+  "playlists": [
+    {
+      "id": "principale",
+      "name": "Ma sélection",
+      "url": "https://exemple.invalid/liste.m3u8",
+      "epgUrl": "https://exemple.invalid/guide.xml",
+      "enabled": true
+    }
+  ],
   "bandwidth": {
     "lowBandwidthThresholdKbps": 1000,
     "defaultMode": "AUTO_ECONOMY",
@@ -83,21 +93,22 @@ Le schéma complet est dans [`remote-config/portal-config.schema.json`](../remot
 }
 ```
 
+Une adresse de playlist est un **identifiant sensible** : elle ne doit figurer
+que dans le dépôt privé de configuration, jamais dans le code, les journaux ou
+un commit du dépôt applicatif.
+
 ### Règles appliquées à la lecture
 
 | Règle | Conséquence |
 | --- | --- |
-| `schemaVersion` doit valoir `1` | sinon le fichier entier est ignoré |
-| `configVersion` strictement supérieure à celle mémorisée | sinon l'application **conserve** sa configuration |
-| Profil invalide (URL ou MAC manquante) | le profil est écarté **seul**, les autres sont conservés |
+| `schemaVersion` doit valoir `2` | sinon le fichier entier est ignoré |
+| Le rafraîchissement est conditionnel (empreinte **ETag**) | un fichier inchangé répond `304` et n'est ni retéléchargé ni réanalysé ; il n'y a **pas de numéro de version à incrémenter** |
+| Playlist invalide (`id` mal formé, `name` vide, `url` absente ou non `http`) | la playlist est écartée **seule**, les autres sont conservées |
+| `epgUrl` présent mais non `http` | il est ignoré, la playlist reste utilisable |
 | Entier hors bornes | la valeur est ignorée, la valeur par défaut s'applique |
 | `buffer.maxMs < buffer.minMs` | le bloc `buffer` entier est remplacé par les valeurs par défaut |
 | `0` dans `maxVideoBitrateByMode` | signifie « pas de limite », et non « zéro bit » |
 | `minAppVersion` supérieure au `versionCode` installé | l'accueil affiche qu'une mise à jour est disponible (l'application reste utilisable) |
-
-Aucun identifiant n'est présent dans le fichier livré : `profiles` est vide et
-l'utilisateur saisit son portail dans l'application (ou publie ses propres
-valeurs dans **son** dépôt).
 
 ---
 
@@ -124,34 +135,34 @@ parce qu'un rafraîchissement a échoué.
 | `config_etag` | `ETag` du dernier document lu, pour les requêtes conditionnelles |
 | `config_synced_at` | date de la dernière vérification réussie |
 
-Le document est conservé **tel quel**, chiffré : l'analyse se refait à la
-lecture, ce qui évite de figer une interprétation erronée et permet de corriger
-l'analyseur sans invalider les données déjà reçues.
+Les sources de playlists déclarées sont recopiées dans le magasin chiffré des
+sources (`missa_playlist_sources`), distinct de la configuration. Le document est
+conservé **tel quel**, chiffré : l'analyse se refait à la lecture, ce qui évite
+de figer une interprétation erronée et permet de corriger l'analyseur sans
+invalider les données déjà reçues.
 
 ---
 
 ## 5. Publier une mise à jour
 
-1. Modifier `remote-config/portal-config.json` en **incrémentant `configVersion`**
-   (sans quoi l'application ignorera le fichier) et en mettant `updatedAt` à jour.
-2. Valider localement :
+1. Modifier `portal-config.json` **dans le dépôt privé `missa-tv-config`** et
+   mettre `updatedAt` à jour. Aucun numéro de version n'est à incrémenter :
+   c'est le changement de contenu (et donc d'empreinte ETag) qui déclenche
+   l'application.
+2. Valider localement le gabarit du schéma :
 
    ```bash
    python3 scripts/validate-config.py remote-config/portal-config.json
    ```
-3. Committer et pousser le fichier.
-4. Vérifier le contenu publié :
+3. Committer et pousser le fichier dans `missa-tv-config`.
+4. Vérifier le contenu publié (avec un jeton en lecture seule) :
 
    ```bash
-   curl -s "https://api.github.com/repos/missamedia69-code/MISSA_TV/contents/remote-config/portal-config.json" \
-     -H "Accept: application/vnd.github+json" | head -20
+   curl -s "https://api.github.com/repos/missamedia69-code/missa-tv-config/contents/portal-config.json" \
+     -H "Accept: application/vnd.github+json" -H "Authorization: Bearer <jeton>" | head -20
    ```
 5. Sur l'appareil : écran de réglages → **Vérifier maintenant**, ou attendre le
    prochain cycle de 6 heures.
-
-> La CI valide aussi le fichier (schéma + cohérence) à chaque modification :
-> une configuration invalide ne peut pas atteindre la branche `main` sans que le
-> contrôle soit rouge.
 
 ---
 
@@ -159,11 +170,11 @@ l'analyseur sans invalider les données déjà reçues.
 
 | Symptôme | Cause probable | Que faire |
 | --- | --- | --- |
-| « Jamais vérifiée » reste affiché | aucune connexion réseau, ou jeton invalide | vérifier la connexion, puis le jeton si le dépôt est privé |
-| La configuration ne change pas | `configVersion` non incrémentée | incrémenter la version, pousser, revérifier |
+| « Jamais vérifiée » reste affiché | aucune connexion réseau, ou jeton manquant/invalide | vérifier la connexion, puis le jeton (requis pour le dépôt privé) |
+| La configuration ne change pas | le fichier n'a pas changé sur la branche lue | modifier le fichier dans `missa-tv-config` et pousser |
 | « Fichier de configuration introuvable » | fichier absent de la branche lue (souvent : publié sur une branche de travail, pas encore dans `main`) | fusionner dans `main`, ou renseigner `missa.config.ref` |
-| `401` / `403` | jeton expiré ou sans portée `contents:read` | régénérer un jeton en lecture seule sur le dépôt |
-| Les réglages distants sont ignorés | `schemaVersion` différente de 1 | corriger le fichier ; l'application refuse les formats qu'elle ne connaît pas |
+| `401` / `403` | jeton expiré ou sans portée `contents:read` | régénérer un jeton en lecture seule sur le dépôt de configuration |
+| Les réglages distants sont ignorés | `schemaVersion` différente de 2 | corriger le fichier ; l'application refuse les formats qu'elle ne connaît pas |
 
-L'URL du portail et les adresses MAC ne sont **jamais** journalisées : en cas de
-doute, la trace se limite à des codes d'erreur et à des types d'exception.
+Les adresses de playlist ne sont **jamais** journalisées : en cas de doute, la
+trace se limite à des codes d'erreur et à des types d'exception.

@@ -11,21 +11,21 @@ et les décisions qui ont des conséquences visibles pour l'utilisateur.
 com.missa.tv
 ├── core/        socle sans logique métier (erreurs, logs, sécurité, temps, UI)
 ├── domain/      règles métier et modèles — ne dépend d'aucune bibliothèque Android
-├── data/        implémentations : portail Stalker, configuration distante, stockage, lecteur
+├── data/        implémentations : playlists M3U, configuration distante, stockage, lecteur
 └── ui/          écrans Compose, ViewModels, navigation, thème adaptatif
 ```
 
 La règle de dépendance est stricte : `ui → domain ← data`. Le domaine ne connaît
 ni Retrofit, ni Room, ni ExoPlayer ; il expose des interfaces
-(`PortalRepository`, `PortalProfileSource`, `RemoteConfigRepository`, `SettingsStore`)
+(`CatalogRepository`, `PlaylistSourceStore`, `RemoteConfigRepository`, `SettingsStore`)
 que `data` implémente. C'est ce qui permet de tester les règles d'adaptation au
-débit sans appareil, sans réseau et sans portail.
+débit sans appareil, sans réseau et sans source de chaînes.
 
 | Couche | Contenu principal |
 | --- | --- |
 | `core` | `AppResult`, `AppError`, `MissaLog`, `Secrets` (masquage), `SecretCipher`, `TimeSource`, `DispatcherProvider`, `ViewModelFactories` |
-| `domain` | `QualityMode`, `BandwidthSettings`, `PlaybackCaps`, `QualityController`, `Channel`/`ChannelGroup`, `ChannelVariantGrouper`, `PortalCatalog`, `PortalProfile`, `RemoteConfig`, `PortalFailoverPolicy` |
-| `data` | `StalkerClient` + `StalkerApi` + `StalkerResponseParser`, `EncryptedPortalProfileSource`, `DataStoreSettingsStore`, `CatalogCache` (Room), `GitHubConfigDataSource`, `RemoteConfigRepositoryImpl`, `PlayerFactory`, `PlaybackQualityApplier`, `ConfigRefreshWorker` |
+| `domain` | `QualityMode`, `BandwidthSettings`, `PlaybackCaps`, `QualityController`, `Channel`/`ChannelGroup`, `ChannelVariantGrouper`, `Catalog`, `PlaylistSource`, `RemoteConfig`, `PlaylistFailoverPolicy` |
+| `data` | `M3uPlaylistDownloader` + `M3uParser` + `M3uPlaylistReader`, `PlaylistRepository`, `M3uCatalogRepository`, `EncryptedPlaylistSourceStore`, `DataStoreSettingsStore`, `CatalogCache` (Room), `GitHubConfigDataSource`, `RemoteConfigRepositoryImpl`, `PlayerFactory`, `PlaybackQualityApplier`, `ConfigRefreshWorker` |
 | `ui` | `AppRoot`, `HomeScreen`, `PlayerScreen` + `QualitySelector`, `SettingsScreen`, `DeviceDiagnosticScreen`, thème adaptatif, navigation écrite à la main |
 
 ---
@@ -45,7 +45,7 @@ ConnectionClass┘            ▲                                    │
 | Composant | Rôle |
 | --- | --- |
 | `PlaybackCaps` | Traduit un mode en contraintes concrètes : hauteur maximale, débit maximal, vidéo désactivée. **Aucun plafond de débit n'est déduit de la résolution** : une chaîne 480p peut consommer plus qu'une 720p mieux encodée, et brider à partir de la hauteur empêcherait le mode « qualité maximale » de tenir sa promesse. |
-| `PlayerFactory` | Construit l'`ExoPlayer` : `TrackSelectionParameters` (plafonds), `DefaultLoadControl` (les quatre durées de `BufferSettings`), `WAKE_MODE_NETWORK`, source de données OkHttp partagée, `User-Agent` générique **sans adresse MAC**. |
+| `PlayerFactory` | Construit l'`ExoPlayer` : `TrackSelectionParameters` (plafonds), `DefaultLoadControl` (les quatre durées de `BufferSettings`), `WAKE_MODE_NETWORK`, source de données OkHttp partagée, `User-Agent` générique **sans identifiant sensible**. |
 | `PlaybackQualityApplier` | Change les plafonds **à chaud**, sans recréer le lecteur. Signale seulement quand le tampon doit être recréé. |
 | `QualityController` | Décide dégradation et remontée à partir de la télémétrie : 2 remises en mémoire tampon en 60 s ⇒ un palier vers le bas ; remontée si le débit mesuré dépasse 2,0 × le débit requis pendant 90 s, toute coupure annulant la remontée. |
 
@@ -68,7 +68,7 @@ ConnectionClass┘            ▲                                    │
 
 ### Honnêteté de l'interface
 
-Quand le portail ne publie qu'une seule diffusion d'une chaîne, l'application
+Quand la playlist ne publie qu'une seule diffusion d'une chaîne, l'application
 **ne prétend pas réduire la résolution** : elle affiche « Cette chaîne n'est
 diffusée qu'en une seule qualité » et applique les optimisations de tampon. Une
 amélioration possible (`ChannelGroup.bestFor`) est de choisir la diffusion la plus
@@ -78,12 +78,12 @@ légère parmi celles disponibles.
 
 ## 3. Regroupement SD / HD des variantes
 
-Les portails Stalker publient souvent la même chaîne plusieurs fois — « TF1 »,
+Les playlists publient souvent la même chaîne plusieurs fois — « TF1 »,
 « TF1 HD », « TF1 FHD ». Ces flux sont **sans variantes** : réduire la qualité
 impose donc de choisir une autre diffusion.
 
 `ChannelVariantGrouper` analyse le libellé (aucune information de définition
-fiable n'est fournie par `get_all_channels`) : marqueurs `UHD/4K`, `FHD/1080`,
+fiable n'est fournie par les playlists) : marqueurs `UHD/4K`, `FHD/1080`,
 `HD/720`, `SD/480`, `LQ/360`, puis le nom de base est débarrassé de ces mentions.
 La clé de groupe combine la catégorie et le nom de base, pour ne pas fusionner
 deux chaînes homonymes de genres différents.
@@ -106,13 +106,13 @@ lourde, de sorte que le mode économie parte toujours de la bonne diffusion.
 
 | Donnée | Support | Chiffrement |
 | --- | --- | --- |
-| Profils de portail (URL + MAC) | DataStore `missa_profiles` | AES-GCM, clé dans l'Android Keystore (`SecretCipher`) ; l'identifiant du profil actif reste en clair |
+| Sources de playlists (URL M3U) | DataStore `missa_playlist_sources` | AES-GCM, clé dans l'Android Keystore (`SecretCipher`) : une URL de playlist est un identifiant sensible |
 | Configuration distante | DataStore `missa_config` | AES-GCM, même mécanisme (`config_payload`) ; `config_etag` et `config_synced_at` en clair |
 | Préférences de lecture (mode, verrou) | DataStore `missa_settings` | en clair : aucune donnée sensible |
-| Catalogue (catégories, diffusions) | Room `missa_tv.db` | en clair **assumé** : la base ne contient aucun identifiant, seulement des noms de chaînes publics du portail, et elle est effaçable sans perte de configuration |
+| Catalogue (catégories, diffusions) | Room `missa_tv.db` | en clair **assumé** : la base ne contient aucun identifiant de source, seulement des noms de chaînes et l'URL de leur flux, et elle est effaçable sans perte de configuration |
 
 **Aucune écriture n'a lieu si le chiffrement échoue** : mieux vaut ne rien
-enregistrer que d'écrire une adresse MAC en clair.
+enregistrer que d'écrire une adresse de playlist en clair.
 
 ---
 
@@ -120,25 +120,27 @@ enregistrer que d'écrire une adresse MAC en clair.
 
 1. `MainActivity` ne fait que composer l'arbre d'interface (`AppRoot`).
 2. `HomeViewModel` publie **immédiatement** les groupes du catalogue local
-   (Room), puis interroge le portail en tâche de fond.
-3. Si le portail répond, la liste est remplacée par la version fraîche et le
-   catalogue est réenregistré (écriture après affichage : l'utilisateur n'attend
-   jamais la base).
-4. Si le portail ne répond pas, la liste mémorisée **reste affichée** avec un
-   bandeau « catalogue mémorisé » — une liste légèrement en retard vaut mieux
+   (Room), puis télécharge les playlists en tâche de fond.
+3. Si le téléchargement aboutit, la liste est remplacée par la version fraîche
+   et le catalogue est réenregistré (écriture après affichage : l'utilisateur
+   n'attend jamais la base).
+4. Si toutes les playlists échouent, la liste mémorisée **reste affichée** avec
+   un bandeau « catalogue mémorisé » — une liste légèrement en retard vaut mieux
    qu'un écran d'erreur.
 
 ---
 
 ## 6. Configuration distante
 
-`GitHubConfigDataSource` lit `remote-config/portal-config.json` par l'API
-Contents (`GET /repos/{owner}/{repo}/contents/{path}`) avec `If-None-Match` et
-`X-GitHub-Api-Version: 2022-11-28`. Un `304` ne coûte rien ; un `200` est
-déchiffré, analysé (`schemaVersion = 1` exigé), validé champ par champ, puis
-enregistré **uniquement si `configVersion` est strictement supérieure**. Les
-profils invalides sont écartés **un par un** : une entrée fautive ne doit pas
-annuler toute une mise à jour.
+`GitHubConfigDataSource` lit `portal-config.json` dans le dépôt privé de
+configuration (`missa-tv-config`) par l'API Contents
+(`GET /repos/{owner}/{repo}/contents/{path}`) avec un jeton en lecture seule,
+`If-None-Match` et `X-GitHub-Api-Version: 2022-11-28`. Un `304` ne coûte rien ;
+un `200` est déchiffré, analysé (`schemaVersion = 2` exigé), validé champ par
+champ, puis enregistré : c'est l'empreinte ETag qui fait foi, il n'y a pas de
+numéro de version à incrémenter à la main. Les playlists déclarées remplacent
+les sources mémorisées ; une entrée invalide est écartée **une par une** sans
+annuler toute la mise à jour.
 
 `ConfigRefreshWorker` (WorkManager, toutes les **6 heures**, réseau exigé) applique
 la même logique en arrière-plan. Une panne réseau **conserve** la configuration
@@ -185,8 +187,8 @@ interrompu par une rotation.
   destruction de l'activité : sans cela, un lecteur oublié continue de
   télécharger et consomme le forfait de l'utilisateur.
 - Les flux sont collectés avec `collectAsStateWithLifecycle`.
-- Le client HTTP est partagé (OkHttp) ; les liens de lecture sont demandés au
-  portail au dernier moment, jamais conservés.
+- Le client HTTP de lecture est partagé (OkHttp) ; l'adresse du flux
+  (`Channel.streamUrl`) est lue directement, sans lien temporaire.
 
 ---
 
@@ -194,7 +196,7 @@ interrompu par une rotation.
 
 | Niveau | Outils | Ce qui est couvert |
 | --- | --- | --- |
-| Unitaire (JVM) | JUnit 5, Truth, MockK, Turbine | règles de qualité, tampon, regroupement, analyse des réponses du portail, configuration distante, chiffrement, cache |
+| Unitaire (JVM) | JUnit 5, Truth, MockK, Turbine | règles de qualité, tampon, regroupement, analyse des playlists M3U, configuration distante, chiffrement, cache |
 | Acceptation bas débit (JVM) | JUnit 5, horloge simulée | dégradation progressive, remontée, mode mono-qualité |
 | Instrumenté (appareil) | Compose UI Test | sélecteur de qualité (les cinq modes, verrou, annonce mono-qualité) |
 
@@ -211,38 +213,20 @@ leur exécution relève de la recette manuelle décrite dans
 
 ## 10. Guide électronique des programmes (EPG)
 
-Le portail publie un guide par chaîne, en deux granularités : le **guide
-court** (`get_short_epg`, le programme en cours et les suivants) et le **guide
-complet** (`get_events`, paginé sur une fenêtre de dates). L'application affiche
-les deux, toujours depuis le cache d'abord.
-
-```
-StalkerClient.shortEpg / events ──► StalkerResponseParser (formes tolérées)
-        │                                    │
-        ▼                                    ▼
-PortalRepository.shortEpg / epg      EpgEvent (domaine : startMs, endMs, titre)
-        │                                    │
-        ▼                                    ▼
-EpgLoader (politique de rafraîchissement) ──► EpgCache (Room, table epg_events)
-        │                                    │
-        ▼                                    ▼
-HomeViewModel / EpgViewModel /         ChannelEpg.of (sélection : en cours,
-ChannelGuideViewModel /                suivant, à venir — le périmé est
-PlayerViewModel                        filtré par le temps)
-```
+L'infrastructure du guide est en place — modèle du domaine, stockage Room et
+écrans — mais sa **source de données a été retirée** avec le protocole qui la
+fournissait. Les écrans affichent donc la liste des chaînes sans programme tant
+qu'une source XMLTV (déclarée par `epgUrl` dans la configuration) n'est pas
+branchée ; c'est l'objet de l'étape suivante.
 
 | Composant | Rôle |
 | --- | --- |
-| `EpgEvent` / `ChannelEpg` | Modèle du domaine. `ChannelEpg.of` ne retient que ce qui chevauche l'instant présent : un guide périmé ne peut pas afficher un programme terminé comme en cours. |
-| `StalkerResponseParser.shortEpg` / `events` | Analyse tolérante : tableau d'événements, tableau de chaînes imbriquées, réponse paginée (`js.data.data`), horodatages en secondes ou en millisecondes. Les heures « HH:MM » seules sont ignorées (la date du jour manque). |
-| `StalkerClient.events` | Pagination identique à celle des chaînes, avec `date_from` / `date_to` au format `yyyy-MM-dd` dans le fuseau de la session. |
-| `EpgCache` | Table `epg_events`, fusion par identifiant (guide court et guide complet coexistent), suppression des programmes terminés à chaque écriture : la table reste bornée sans migration. |
-| `EpgLoader` | Politique partagée par tous les écrans : guides mémorisés d'abord, puis rafraîchissement des chaînes périmées (30 min), borné à 40 requêtes, interrompu au premier échec. |
-| `EpgRefreshWorker` | Rafraîchissement périodique (3 h) des guides **déjà mémorisés** (30 chaînes max) : jamais le catalogue entier. |
-| Écrans | Accueil (programme en cours sous chaque chaîne), grille « Programme TV » (en cours + suivant par chaîne, rafraîchie au défilement), programme d'une chaîne (24 h, bouton « Regarder »), lecteur (programme en cours + suivant). |
+| `EpgEvent` / `ChannelEpg` | Modèle du domaine, indépendant de la source. `ChannelEpg.of` ne retient que ce qui chevauche l'instant présent : un guide périmé ne peut pas afficher un programme terminé comme en cours. |
+| `EpgCache` | Table `epg_events`, suppression des programmes terminés à chaque écriture : la table reste bornée sans migration. |
+| Écrans | Grille « Programme TV » et programme d'une chaîne (24 h, bouton « Regarder ») ; les cellules de programme restent vides tant qu'aucune source XMLTV n'est branchée. |
 
-La base passe en version 2 (ajout de `epg_events`) ; la migration destructive
-reste acceptable, le guide se reconstruit au prochain chargement.
+La base inclut `epg_events` (version 2) ; la migration destructive reste
+acceptable, le guide se reconstruit au prochain chargement.
 
 ---
 
