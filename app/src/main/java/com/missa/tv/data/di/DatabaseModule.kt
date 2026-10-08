@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.missa.tv.data.local.db.CatalogDao
 import com.missa.tv.data.local.db.EpgDao
+import com.missa.tv.data.local.db.FavoriteDao
 import com.missa.tv.data.local.db.MissaDatabase
 import dagger.Module
 import dagger.Provides
@@ -38,4 +39,7 @@ object DatabaseModule {
 
     @Provides
     fun epgDao(database: MissaDatabase): EpgDao = database.epgDao()
+
+    @Provides
+    fun favoriteDao(database: MissaDatabase): FavoriteDao = database.favoriteDao()
 }
