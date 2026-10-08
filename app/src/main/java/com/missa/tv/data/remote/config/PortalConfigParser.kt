@@ -10,7 +10,7 @@ import com.missa.tv.core.json.string
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.domain.model.BandwidthSettings
 import com.missa.tv.domain.model.BufferSettings
-import com.missa.tv.domain.model.PortalProfile
+import com.missa.tv.domain.model.PlaylistSource
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.model.RemoteConfig
 import kotlinx.serialization.SerializationException
@@ -18,7 +18,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Lecture du fichier `remote-config/portal-config.json`.
+ * Lecture du fichier `portal-config.json` publié dans le dépôt privé de
+ * configuration (schéma v2).
  *
  * Un document reçu du réseau n'est jamais digne de confiance : chaque champ est
  * relu avec les mêmes règles que le schéma JSON du dépôt, et les valeurs
@@ -55,34 +56,32 @@ class PortalConfigParser(
 
         return RemoteConfig(
             schemaVersion = schemaVersion,
-            configVersion = racine.int("configVersion") ?: 0,
             updatedAt = racine.string("updatedAt"),
             minAppVersion = racine.int("minAppVersion") ?: 0,
-            defaultProfileId = racine.string("defaultProfileId"),
-            profiles = lireProfils(racine),
+            defaultPlaylistId = racine.string("defaultPlaylistId"),
+            playlists = lirePlaylists(racine),
             bandwidth = lireDebit(racine.obj("bandwidth")),
         )
     }
 
-    /** Profils de connexion ; les entrées incomplètes sont écartées. */
-    private fun lireProfils(racine: JsonObject): List<PortalProfile> =
-        racine.array("profiles").mapNotNull { element ->
+    /** Sources de playlists ; les entrées incomplètes sont écartées. */
+    private fun lirePlaylists(racine: JsonObject): List<PlaylistSource> =
+        racine.array("playlists").mapNotNull { element ->
             val objet = element.asObjectOrNull() ?: return@mapNotNull null
             val id = objet.string("id")?.takeIf { ID_VALIDE.matches(it) } ?: return@mapNotNull null
             val nom = objet.string("name")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val url = objet.string("portalUrl")?.takeIf { it.startsWith("http") }
+            val url = objet.string("url")?.takeIf { it.startsWith("http") }
                 ?: return@mapNotNull null
-            val mac = objet.string("mac")?.takeIf { MAC_VALIDE.matches(it) }
-                ?: return@mapNotNull null
+            val epgUrl = objet.string("epgUrl")?.takeIf { it.startsWith("http") }
 
-            PortalProfile(
+            PlaylistSource(
                 id = id,
                 name = nom,
-                portalUrl = url,
-                mac = mac,
+                url = url,
+                epgUrl = epgUrl,
                 enabled = objet.boolean("enabled") ?: true,
             )
-        }.take(MAX_PROFILES)
+        }.take(MAX_PLAYLISTS)
 
     /** Réglages de débit, avec contrôle des bornes. */
     private fun lireDebit(bloc: JsonObject?): BandwidthSettings {
@@ -161,10 +160,7 @@ class PortalConfigParser(
         /** Doit correspondre au schéma : `^[A-Za-z0-9_-]+$`. */
         val ID_VALIDE = Regex("^[A-Za-z0-9_-]+$")
 
-        /** Doit correspondre au schéma : six octets séparés par des deux-points. */
-        val MAC_VALIDE = Regex("^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$")
-
-        const val MAX_PROFILES = 16
+        const val MAX_PLAYLISTS = 16
         const val MIN_THRESHOLD_KBPS = 64
         const val MAX_THRESHOLD_KBPS = 100_000
         const val MIN_HEIGHT = 144

@@ -78,8 +78,8 @@ interface ConfigRemoteDataSource {
  * réanalyser la configuration à chaque vérification — utile sur une connexion
  * limitée.
  *
- * Le dépôt est public : aucun jeton n'est nécessaire pour lire le fichier. Un
- * jeton reste possible pour relever la limite de requêtes de GitHub.
+ * Le dépôt de configuration est PRIVÉ : un jeton en lecture seule est requis et
+ * transmis dans l'en-tête `Authorization`. Sans jeton, GitHub refuse la lecture.
  */
 @Singleton
 class GitHubConfigDataSource @Inject constructor(
@@ -155,7 +155,8 @@ class GitHubConfigDataSource @Inject constructor(
  *
  * Les valeurs sont injectées à la compilation depuis `local.properties` (voir
  * `app/build.gradle.kts`) : aucun identifiant n'est écrit dans le code source.
- * Le dépôt et le chemin sont publics, seul le jeton — facultatif — est secret.
+ * Le dépôt de configuration est privé : le jeton en lecture seule est donc
+ * requis pour lire le fichier, et il ne doit jamais être journalisé en clair.
  */
 object RemoteConfigSource {
 

@@ -5,10 +5,12 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.time.SystemTimeSource
 import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.DataStoreSettingsStore
+import com.missa.tv.data.local.EncryptedPlaylistSourceStore
 import com.missa.tv.data.local.EncryptedPortalProfileSource
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.repository.PortalRepositoryImpl
 import com.missa.tv.domain.portal.PortalFailoverPolicy
+import com.missa.tv.domain.repository.PlaylistSourceStore
 import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.PortalRepository
 import dagger.Binds
@@ -36,6 +38,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindPortalProfileSource(impl: EncryptedPortalProfileSource): PortalProfileSource
+
+    @Binds
+    @Singleton
+    abstract fun bindPlaylistSourceStore(impl: EncryptedPlaylistSourceStore): PlaylistSourceStore
 
     @Binds
     @Singleton

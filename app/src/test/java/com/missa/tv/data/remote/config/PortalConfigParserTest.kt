@@ -8,29 +8,27 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
- * Lecture du fichier de configuration distante.
+ * Lecture du fichier de configuration distante (schéma v2).
  *
- * Les documents utilisés reproduisent ceux publiés dans le dépôt. Aucune adresse
- * réelle n'y figure : les hôtes sont en `.invalid` et les MAC sont assemblées à
- * l'exécution.
+ * Les documents utilisés reproduisent ceux publiés dans le dépôt privé de
+ * configuration. Aucune adresse réelle n'y figure : les hôtes sont en
+ * `.invalid`.
  */
 @DisplayName("Lecture de la configuration distante")
 class PortalConfigParserTest {
 
     private val parser = PortalConfigParser()
 
-    private val macValide = listOf("00", "1A", "79", "00", "00", "01").joinToString(":")
-
     private fun document(
-        schemaVersion: Int = 1,
-        configVersion: Int = 2,
-        profils: String = "[]",
+        schemaVersion: Int = 2,
+        playlists: String = "[]",
         bandwidth: String = "",
-    ): String = """
-        {"schemaVersion":$schemaVersion,"configVersion":$configVersion,
+    ): String =
+        """
+        {"schemaVersion":$schemaVersion,
         "updatedAt":"2026-10-06T00:00:00Z","minAppVersion":1,
-        "defaultProfileId":null,"profiles":$profils$bandwidth}
-    """.trimIndent()
+        "defaultPlaylistId":null,"playlists":$playlists$bandwidth}
+        """.trimIndent()
 
     @Nested
     @DisplayName("Document conforme")
@@ -40,28 +38,40 @@ class PortalConfigParserTest {
         fun `lit les champs principaux`() {
             val config = parser.parse(document())!!
 
-            assertThat(config.schemaVersion).isEqualTo(1)
-            assertThat(config.configVersion).isEqualTo(2)
+            assertThat(config.schemaVersion).isEqualTo(2)
             assertThat(config.minAppVersion).isEqualTo(1)
-            assertThat(config.profiles).isEmpty()
+            assertThat(config.playlists).isEmpty()
         }
 
         @Test
-        fun `lit un profil complet`() {
-            val profils = """[{"id":"principal","name":"Salon","portalUrl":"http://example.invalid/c/",
-                "mac":"$macValide","enabled":true}]"""
+        fun `lit une playlist complete`() {
+            val playlists =
+                """[{"id":"principale","name":"Salon","url":"http://exemple.invalid/liste.m3u8",
+                "epgUrl":"http://exemple.invalid/guide.xml","enabled":true}]"""
 
-            val config = parser.parse(document(profils = profils))!!
+            val config = parser.parse(document(playlists = playlists))!!
 
-            val profil = config.profiles.single()
-            assertThat(profil.id).isEqualTo("principal")
-            assertThat(profil.name).isEqualTo("Salon")
-            assertThat(profil.enabled).isTrue()
+            val playlist = config.playlists.single()
+            assertThat(playlist.id).isEqualTo("principale")
+            assertThat(playlist.name).isEqualTo("Salon")
+            assertThat(playlist.url).isEqualTo("http://exemple.invalid/liste.m3u8")
+            assertThat(playlist.epgUrl).isEqualTo("http://exemple.invalid/guide.xml")
+            assertThat(playlist.enabled).isTrue()
+        }
+
+        @Test
+        fun `une playlist sans guide a un epgUrl nul`() {
+            val playlists = """[{"id":"p","name":"P","url":"http://exemple.invalid/l.m3u8"}]"""
+
+            val playlist = parser.parse(document(playlists = playlists))!!.playlists.single()
+
+            assertThat(playlist.epgUrl).isNull()
         }
 
         @Test
         fun `applique les réglages de débit`() {
-            val bandwidth = ""","bandwidth":{"lowBandwidthThresholdKbps":1500,
+            val bandwidth =
+                ""","bandwidth":{"lowBandwidthThresholdKbps":1500,
                 "defaultMode":"ECONOMY_480",
                 "maxVideoHeightByMode":{"AUTO_ECONOMY":576},
                 "maxVideoBitrateByMode":{"AUTO_ECONOMY":600000},
@@ -106,11 +116,17 @@ class PortalConfigParserTest {
     inner class Refus {
 
         @Test
+        @DisplayName("l'ancien schéma v1 est refusé")
+        fun `schema v1 refuse`() {
+            // Le schéma a changé : appliquer l'ancien format à l'aveugle
+            // produirait des réglages absurdes.
+            assertThat(parser.parse(document(schemaVersion = 1))).isNull()
+        }
+
+        @Test
         @DisplayName("version de schéma inconnue")
         fun `schema inconnu`() {
-            // Une version inconnue annonce un changement de format : l'appliquer
-            // à l'aveugle produirait des réglages absurdes.
-            assertThat(parser.parse(document(schemaVersion = 2))).isNull()
+            assertThat(parser.parse(document(schemaVersion = 3))).isNull()
         }
 
         @Test
@@ -120,7 +136,7 @@ class PortalConfigParserTest {
 
         @Test
         fun `document sans version de schéma`() {
-            assertThat(parser.parse("""{"configVersion":3,"profiles":[]}""")).isNull()
+            assertThat(parser.parse("""{"playlists":[]}""")).isNull()
         }
     }
 
@@ -129,38 +145,39 @@ class PortalConfigParserTest {
     inner class EntreesInvalides {
 
         @Test
-        @DisplayName("les profils incomplets sont écartés un par un")
-        fun `profils invalides ecartes`() {
-            val macInvalide = "00:1A:79:00:00"
-            val profils = """[
-                {"id":"bon","name":"Valide","portalUrl":"http://example.invalid/c/","mac":"$macValide"},
-                {"id":"mauvaise-mac","name":"MAC trop courte","portalUrl":"http://example.invalid/","mac":"$macInvalide"},
-                {"id":"id invalide !","name":"Identifiant","portalUrl":"http://example.invalid/","mac":"$macValide"},
-                {"id":"sans-url","name":"Sans URL","mac":"$macValide"}
+        @DisplayName("les playlists incomplètes sont écartées une par une")
+        fun `playlists invalides ecartees`() {
+            val playlists =
+                """[
+                {"id":"bonne","name":"Valide","url":"http://exemple.invalid/liste.m3u8"},
+                {"id":"id invalide !","name":"Identifiant","url":"http://exemple.invalid/x.m3u8"},
+                {"id":"sans-url","name":"Sans URL"},
+                {"id":"url-ftp","name":"URL non http","url":"ftp://exemple.invalid/x.m3u8"}
             ]"""
 
-            val config = parser.parse(document(profils = profils))!!
+            val config = parser.parse(document(playlists = playlists))!!
 
-            // Un profil inexploitable ne fait pas perdre les autres.
-            assertThat(config.profiles.map { it.id }).containsExactly("bon")
+            // Une source inexploitable ne fait pas perdre les autres.
+            assertThat(config.playlists.map { it.id }).containsExactly("bonne")
         }
 
         @Test
-        @DisplayName("au plus seize profils sont retenus")
-        fun `profils limites`() {
-            val profils = (1..20).joinToString(",", prefix = "[", postfix = "]") { index ->
-                """{"id":"p$index","name":"Profil $index","portalUrl":"http://example.invalid/","mac":"$macValide"}"""
+        @DisplayName("au plus seize playlists sont retenues")
+        fun `playlists limitees`() {
+            val playlists = (1..20).joinToString(",", prefix = "[", postfix = "]") { index ->
+                """{"id":"p$index","name":"Playlist $index","url":"http://exemple.invalid/$index.m3u8"}"""
             }
 
-            val config = parser.parse(document(profils = profils))!!
+            val config = parser.parse(document(playlists = playlists))!!
 
-            assertThat(config.profiles).hasSize(16)
+            assertThat(config.playlists).hasSize(16)
         }
 
         @Test
         @DisplayName("les modes inconnus et les valeurs aberrantes sont ignorés")
         fun `modes et valeurs aberrants`() {
-            val bandwidth = ""","bandwidth":{
+            val bandwidth =
+                ""","bandwidth":{
                 "defaultMode":"MODE_INVENTE",
                 "lowBandwidthThresholdKbps":1,
                 "maxVideoHeightByMode":{"AUTO_ECONOMY":99,"MODE_INVENTE":480},
@@ -180,7 +197,8 @@ class PortalConfigParserTest {
         @Test
         @DisplayName("un tampon incohérent est remplacé par les valeurs par défaut")
         fun `tampon incoherent`() {
-            val bandwidth = ""","bandwidth":{"buffer":{"minMs":40000,"maxMs":5000,
+            val bandwidth =
+                ""","bandwidth":{"buffer":{"minMs":40000,"maxMs":5000,
                 "playbackMs":3000,"afterRebufferMs":6000}}"""
 
             val config = parser.parse(document(bandwidth = bandwidth))!!
@@ -215,10 +233,9 @@ class PortalConfigParserTest {
         fun `champs inconnus toleres`() {
             // Les versions futures ajouteront des champs : refuser tout le
             // document à cause d'un champ inconnu serait une régression.
-            val document = """{"schemaVersion":1,"configVersion":5,"profiles":[],
-                "nouveauReglage":{"x":1}}"""
+            val document = """{"schemaVersion":2,"playlists":[],"nouveauReglage":{"x":1}}"""
 
-            assertThat(parser.parse(document)?.configVersion).isEqualTo(5)
+            assertThat(parser.parse(document)).isNotNull()
         }
     }
 }

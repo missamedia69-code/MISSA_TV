@@ -10,7 +10,7 @@ import com.missa.tv.data.remote.config.ConfigFetchResult
 import com.missa.tv.data.remote.config.ConfigRemoteDataSource
 import com.missa.tv.data.remote.config.PortalConfigParser
 import com.missa.tv.domain.model.RemoteConfig
-import com.missa.tv.domain.repository.PortalProfileSource
+import com.missa.tv.domain.repository.PlaylistSourceStore
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,20 +23,19 @@ import kotlinx.coroutines.withContext
  * Règles de prudence appliquées, dans cet ordre :
  *  1. le document reçu est analysé avant d'être enregistré : une configuration
  *     illisible ou de schéma inconnu est refusée en bloc ;
- *  2. une configuration plus ancienne que celle déjà appliquée est ignorée, ce
- *     qui empêche un retour en arrière de réglages ;
+ *  2. la requête est conditionnelle (empreinte ETag) : un document n'est
+ *     téléchargé et appliqué que s'il a changé ;
  *  3. en cas d'échec réseau, la configuration en place reste utilisée.
  *
- * Après une configuration acceptée, les profils de connexion qu'elle déclare
- * sont transmis à la source de profils, qui les fusionne avec ceux saisis à la
- * main.
+ * Après une configuration acceptée, les sources de playlists qu'elle déclare
+ * sont enregistrées dans le magasin chiffré des sources.
  */
 @Singleton
 class RemoteConfigRepositoryImpl @Inject constructor(
     private val remote: ConfigRemoteDataSource,
     private val store: ConfigStore,
     private val parser: PortalConfigParser,
-    private val profileSource: PortalProfileSource,
+    private val sourceStore: PlaylistSourceStore,
     private val dispatchers: DispatcherProvider,
     private val time: TimeSource,
 ) : RemoteConfigRepository {
@@ -79,25 +78,20 @@ class RemoteConfigRepositoryImpl @Inject constructor(
             return AppResult.failure(AppError.InvalidConfig)
         }
 
-        if (!nouvelle.isNewerThan(actuelle)) {
-            MissaLog.d(
-                "Configuration distante version ${nouvelle.configVersion} " +
-                    "non appliquée (déjà en version ${actuelle.configVersion})",
-            )
-            return AppResult.success(actuelle)
-        }
-
+        // Le rafraîchissement est conditionnel : ce document n'est reçu que si
+        // son empreinte a changé ; il fait donc autorité et remplace la version
+        // en place, sans numéro de version à comparer.
         store.save(
             document = resultat.document,
             etag = resultat.etag,
             syncedAtMs = time.nowMs(),
         )
 
-        if (nouvelle.profiles.isNotEmpty()) {
-            profileSource.syncRemote(nouvelle.profiles, nouvelle.defaultProfileId)
+        if (nouvelle.playlists.isNotEmpty()) {
+            sourceStore.saveAll(nouvelle.playlists)
         }
 
-        MissaLog.i("Configuration distante appliquée (version ${nouvelle.configVersion})")
+        MissaLog.i("Configuration distante appliquée (${nouvelle.playlists.size} playlist(s))")
         return AppResult.success(nouvelle)
     }
 }

@@ -45,16 +45,16 @@ android {
         }
 
         // ── Configuration distante ────────────────────────────────────────────
-        // L'emplacement du fichier de configuration publié dans le dépôt est
-        // injecté ici : aucune adresse n'est écrite dans le code source, et
-        // l'emplacement peut changer sans toucher au code.
+        // L'emplacement du fichier de configuration publié dans le dépôt privé
+        // `missa-tv-config` est injecté ici : aucune adresse n'est écrite dans le
+        // code source, et l'emplacement peut changer sans toucher au code.
         //
-        // Le jeton GitHub est FACULTATIF (le dépôt est public). S'il est fourni,
-        // il ne doit jamais être versionné : il se déclare dans local.properties
-        // (fichier non suivi par Git) ou dans les secrets de la CI.
+        // Le dépôt étant PRIVÉ, un jeton GitHub en lecture seule est requis pour
+        // lire le fichier. Il ne doit jamais être versionné : il se déclare dans
+        // local.properties (fichier non suivi par Git) ou dans les secrets de la CI.
         val configOwner = configValue("missa.config.owner", "missamedia69-code")
-        val configRepo = configValue("missa.config.repo", "MISSA_TV")
-        val configPath = configValue("missa.config.path", "remote-config/portal-config.json")
+        val configRepo = configValue("missa.config.repo", "missa-tv-config")
+        val configPath = configValue("missa.config.path", "portal-config.json")
         // Branche ou étiquette lue. Vide = branche par défaut du dépôt (`main`).
         // Renseigner cette valeur permet de tester une configuration publiée sur
         // une autre branche, sans la fusionner dans `main`.

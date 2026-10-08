@@ -3,15 +3,15 @@ package com.missa.tv.data.repository
 import com.google.common.truth.Truth.assertThat
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
+import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.ConfigStore
 import com.missa.tv.data.local.StoredConfig
 import com.missa.tv.data.remote.config.ConfigFetchResult
 import com.missa.tv.data.remote.config.ConfigRemoteDataSource
-import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.remote.config.PortalConfigParser
-import com.missa.tv.domain.model.PortalProfile
+import com.missa.tv.domain.model.PlaylistSource
 import com.missa.tv.domain.model.RemoteConfig
-import com.missa.tv.domain.repository.PortalProfileSource
+import com.missa.tv.domain.repository.PlaylistSourceStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -23,11 +23,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
- * Synchronisation de la configuration distante.
+ * Synchronisation de la configuration distante (schéma v2).
  *
  * Les règles de prudence sont vérifiées une à une : refus d'un schéma inconnu,
- * pas de retour en arrière de version, conservation de la configuration en place
- * en cas d'échec réseau.
+ * application conditionnelle guidée par l'empreinte, conservation de la
+ * configuration en place en cas d'échec réseau, enregistrement des sources de
+ * playlists déclarées par la configuration acceptée.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @DisplayName("Dépôt de configuration distante")
@@ -45,10 +46,6 @@ class RemoteConfigRepositoryImplTest {
     private class FakeRemote(private var resultat: ConfigFetchResult) : ConfigRemoteDataSource {
         var derniereEmpreinte: String? = null
             private set
-
-        fun repondre(resultat: ConfigFetchResult) {
-            this.resultat = resultat
-        }
 
         override suspend fun fetch(etag: String?): ConfigFetchResult {
             derniereEmpreinte = etag
@@ -84,39 +81,29 @@ class RemoteConfigRepositoryImplTest {
         }
     }
 
-    /** Source de profils en mémoire. */
-    private class FakeProfiles : PortalProfileSource {
-        var recus: List<PortalProfile> = emptyList()
+    /** Magasin des sources de playlists en mémoire, avec trace des écritures. */
+    private class FakePlaylistSourceStore : PlaylistSourceStore {
+        var recues: List<PlaylistSource> = emptyList()
             private set
-        var defautRecu: String? = null
+        var sauvegardes = 0
             private set
 
-        override suspend fun profiles(): List<PortalProfile> = recus
-
-        override suspend fun activeProfileId(): String? = defautRecu
-
-        override suspend fun setActiveProfileId(id: String) {
-            defautRecu = id
+        fun recevoir(sources: List<PlaylistSource>) {
+            recues = sources
         }
 
-        override suspend fun save(profile: PortalProfile) = Unit
+        override suspend fun sources(): List<PlaylistSource> = recues
 
-        override suspend fun delete(id: String) = Unit
-
-        override suspend fun syncRemote(
-            remoteProfiles: List<PortalProfile>,
-            defaultProfileId: String?,
-        ) {
-            recus = remoteProfiles
-            defautRecu = defaultProfileId
+        override suspend fun saveAll(sources: List<PlaylistSource>) {
+            sauvegardes++
+            recues = sources
         }
     }
 
-    private val mac = listOf("00", "1A", "79", "00", "00", "01").joinToString(":")
-
-    private fun document(configVersion: Int, schemaVersion: Int = 1): String = """
-        {"schemaVersion":$schemaVersion,"configVersion":$configVersion,"profiles":[]}
-    """.trimIndent()
+    private fun document(playlists: String = "[]"): String =
+        """
+        {"schemaVersion":2,"defaultPlaylistId":null,"playlists":$playlists}
+        """.trimIndent()
 
     /** Horloge factice : les tests fixent la date, aucun temps réel n'est attendu. */
     private class FakeTime(private val valeur: Long) : TimeSource {
@@ -126,20 +113,20 @@ class RemoteConfigRepositoryImplTest {
     private fun depot(
         remote: FakeRemote,
         store: FakeStore,
-        profiles: FakeProfiles = FakeProfiles(),
+        sources: FakePlaylistSourceStore = FakePlaylistSourceStore(),
         horloge: Long = 1_000L,
     ) = RemoteConfigRepositoryImpl(
         remote = remote,
         store = store,
         parser = PortalConfigParser(),
-        profileSource = profiles,
+        sourceStore = sources,
         dispatchers = dispatchers,
         time = FakeTime(horloge),
     )
 
-    private fun storeInitial(configVersion: Int = 1, etag: String? = "\"v1\"") = FakeStore(
+    private fun storeInitial(etag: String? = "\"v1\"") = FakeStore(
         StoredConfig(
-            config = RemoteConfig(configVersion = configVersion),
+            config = RemoteConfig.DEFAULTS,
             etag = etag,
             syncedAtMs = 0L,
         ),
@@ -152,14 +139,12 @@ class RemoteConfigRepositoryImplTest {
         @Test
         @DisplayName("est enregistrée puis appliquée")
         fun `nouvelle configuration appliquee`() = runTest {
-            val store = storeInitial(configVersion = 1)
-            val remote = FakeRemote(
-                ConfigFetchResult.Fetched(document(2), etag = "\"v2\""),
-            )
+            val store = storeInitial()
+            val remote = FakeRemote(ConfigFetchResult.Fetched(document(), etag = "\"v2\""))
 
             val resultat = depot(remote, store).refresh()
 
-            assertThat(resultat.valueOrNull()?.configVersion).isEqualTo(2)
+            assertThat(resultat.errorOrNull()).isNull()
             assertThat(store.sauvegardes).isEqualTo(1)
             assertThat(store.stocke.etag).isEqualTo("\"v2\"")
         }
@@ -167,8 +152,8 @@ class RemoteConfigRepositoryImplTest {
         @Test
         @DisplayName("l'empreinte de la version en place est envoyée à GitHub")
         fun `empreinte transmise`() = runTest {
-            val store = storeInitial(configVersion = 1, etag = "\"v1\"")
-            val remote = FakeRemote(ConfigFetchResult.Fetched(document(2), "\"v2\""))
+            val store = storeInitial(etag = "\"v1\"")
+            val remote = FakeRemote(ConfigFetchResult.Fetched(document(), "\"v2\""))
 
             depot(remote, store).refresh()
 
@@ -177,28 +162,30 @@ class RemoteConfigRepositoryImplTest {
         }
 
         @Test
-        @DisplayName("les profils distants sont fusionnés")
-        fun `profils fusionnes`() = runTest {
+        @DisplayName("les playlists distantes remplacent le magasin des sources")
+        fun `playlists enregistrees`() = runTest {
             val store = storeInitial()
-            val profils = FakeProfiles()
-            val document = """
-                {"schemaVersion":1,"configVersion":2,"defaultProfileId":"salon",
-                "profiles":[{"id":"salon","name":"Salon",
-                "portalUrl":"http://example.invalid/c/","mac":"$mac"}]}
-            """.trimIndent()
+            val sources = FakePlaylistSourceStore()
+            val playlists =
+                """[{"id":"principale","name":"Salon",
+                "url":"http://exemple.invalid/liste.m3u8"}]"""
+            val document =
+                """
+                {"schemaVersion":2,"defaultPlaylistId":"principale","playlists":$playlists}
+                """.trimIndent()
             val remote = FakeRemote(ConfigFetchResult.Fetched(document, "\"v2\""))
 
-            depot(remote, store, profils).refresh()
+            depot(remote, store, sources).refresh()
 
-            assertThat(profils.recus.map { it.id }).containsExactly("salon")
-            assertThat(profils.defautRecu).isEqualTo("salon")
+            assertThat(sources.sauvegardes).isEqualTo(1)
+            assertThat(sources.recues.map { it.id }).containsExactly("principale")
         }
 
         @Test
         @DisplayName("la date de synchronisation est enregistrée")
         fun `date enregistree`() = runTest {
             val store = storeInitial()
-            val remote = FakeRemote(ConfigFetchResult.Fetched(document(2), "\"v2\""))
+            val remote = FakeRemote(ConfigFetchResult.Fetched(document(), "\"v2\""))
 
             depot(remote, store, horloge = 42_000L).refresh()
 
@@ -214,9 +201,8 @@ class RemoteConfigRepositoryImplTest {
         @DisplayName("un schéma inconnu est refusé et rien n'est écrit")
         fun `schema inconnu refuse`() = runTest {
             val store = storeInitial()
-            val remote = FakeRemote(
-                ConfigFetchResult.Fetched(document(2, schemaVersion = 99), "\"v2\""),
-            )
+            val document = """{"schemaVersion":99,"playlists":[]}"""
+            val remote = FakeRemote(ConfigFetchResult.Fetched(document, "\"v2\""))
 
             val resultat = depot(remote, store).refresh()
 
@@ -225,28 +211,22 @@ class RemoteConfigRepositoryImplTest {
         }
 
         @Test
-        @DisplayName("une version plus ancienne n'est pas appliquée")
-        fun `pas de retour en arriere`() = runTest {
-            // Un retour en arrière de réglages est indésirable, même si le
-            // document reçu est valide.
-            val store = storeInitial(configVersion = 5)
-            val remote = FakeRemote(ConfigFetchResult.Fetched(document(3), "\"v3\""))
+        @DisplayName("un document sans playlist ne vide pas le magasin des sources")
+        fun `playlists vides conservent les sources`() = runTest {
+            val store = storeInitial()
+            val sources = FakePlaylistSourceStore()
+            sources.recevoir(
+                listOf(PlaylistSource(id = "existante", name = "Existante", url = "http://exemple.invalid/x.m3u8")),
+            )
+            val remote = FakeRemote(ConfigFetchResult.Fetched(document(), "\"v2\""))
 
-            val resultat = depot(remote, store).refresh()
+            depot(remote, store, sources).refresh()
 
-            assertThat(resultat.valueOrNull()?.configVersion).isEqualTo(5)
-            assertThat(store.sauvegardes).isEqualTo(0)
-        }
-
-        @Test
-        @DisplayName("une version identique n'est pas réappliquée")
-        fun `version identique ignoree`() = runTest {
-            val store = storeInitial(configVersion = 4)
-            val remote = FakeRemote(ConfigFetchResult.Fetched(document(4), "\"v4\""))
-
-            depot(remote, store).refresh()
-
-            assertThat(store.sauvegardes).isEqualTo(0)
+            // Aucune playlist déclarée : la configuration reste appliquée mais
+            // le magasin des sources n'est pas écrasé.
+            assertThat(store.sauvegardes).isEqualTo(1)
+            assertThat(sources.sauvegardes).isEqualTo(0)
+            assertThat(sources.recues.map { it.id }).containsExactly("existante")
         }
     }
 
@@ -257,12 +237,12 @@ class RemoteConfigRepositoryImplTest {
         @Test
         @DisplayName("un 304 ne réécrit rien et rafraîchit seulement la date")
         fun `304 sans ecriture`() = runTest {
-            val store = storeInitial(configVersion = 3)
+            val store = storeInitial()
             val remote = FakeRemote(ConfigFetchResult.NotModified)
 
             val resultat = depot(remote, store, horloge = 7_000L).refresh()
 
-            assertThat(resultat.valueOrNull()?.configVersion).isEqualTo(3)
+            assertThat(resultat.errorOrNull()).isNull()
             assertThat(store.sauvegardes).isEqualTo(0)
             assertThat(store.rafraichissementsDeDate).isEqualTo(1)
             assertThat(store.stocke.syncedAtMs).isEqualTo(7_000L)
@@ -271,24 +251,23 @@ class RemoteConfigRepositoryImplTest {
         @Test
         @DisplayName("un échec réseau conserve la configuration en place")
         fun `echec reseau`() = runTest {
-            val store = storeInitial(configVersion = 3)
+            val store = storeInitial()
             val remote = FakeRemote(ConfigFetchResult.Failed(AppError.NetworkLost))
 
             val resultat = depot(remote, store).refresh()
 
             assertThat(resultat.errorOrNull()).isEqualTo(AppError.NetworkLost)
             assertThat(store.sauvegardes).isEqualTo(0)
-            assertThat(store.stocke.config.configVersion).isEqualTo(3)
         }
 
         @Test
         @DisplayName("la configuration par défaut est toujours lisible")
         fun `defaut toujours disponible`() = runTest {
-            val store = storeInitial(configVersion = 0, etag = null)
+            val store = storeInitial(etag = null)
 
             val courante = depot(FakeRemote(ConfigFetchResult.NotModified), store).current()
 
-            assertThat(courante.configVersion).isEqualTo(0)
+            assertThat(courante.schemaVersion).isEqualTo(RemoteConfig.SUPPORTED_SCHEMA_VERSION)
             assertThat(courante.bandwidth.defaultMode)
                 .isEqualTo(com.missa.tv.domain.model.QualityMode.DEFAULT)
         }
