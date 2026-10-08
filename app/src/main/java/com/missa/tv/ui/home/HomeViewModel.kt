@@ -36,6 +36,8 @@ data class HomeUiState(
     val favoriteKeys: Set<String> = emptySet(),
     /** Vrai quand la liste n'affiche que les favoris. */
     val showFavoritesOnly: Boolean = false,
+    /** Texte de recherche saisi ; vide pour tout afficher. */
+    val query: String = "",
     /**
      * Programme en cours de chaque groupe visible, indexé par clé de groupe.
      *
@@ -55,7 +57,10 @@ data class HomeUiState(
      */
     val isFromCache: Boolean = false,
 ) {
-    /** Chaînes à afficher, filtrées par la catégorie choisie et les favoris. */
+    /**
+     * Chaînes à afficher, filtrées par la catégorie choisie, les favoris et la
+     * recherche. La recherche porte sur le nom affiché du groupe.
+     */
     val visibleGroups: List<ChannelGroup>
         get() {
             val parCategorie = selectedCategoryId?.let { identifiant ->
@@ -63,16 +68,32 @@ data class HomeUiState(
                     groupe.variants.any { variante -> variante.channel.categoryId == identifiant }
                 }
             } ?: groups
-            return if (showFavoritesOnly) {
+            val parFavoris = if (showFavoritesOnly) {
                 parCategorie.filter { groupe -> groupe.key in favoriteKeys }
             } else {
                 parCategorie
             }
+            if (query.isBlank()) return parFavoris
+            return parFavoris.filter { groupe -> correspond(groupe.displayName, query) }
         }
 
     /** Vrai si aucune chaîne n'est disponible (liste vide et aucun échec). */
     val isEmpty: Boolean get() = !isLoading && error == null && groups.isEmpty()
 }
+
+/**
+ * Vrai si [nom] correspond à la [requete], sans tenir compte de la casse ni
+ * des accents : « tele » retrouve « Télé ».
+ */
+private fun correspond(nom: String, requete: String): Boolean {
+    if (requete.isBlank()) return true
+    return sansAccents(nom).contains(sansAccents(requete), ignoreCase = true)
+}
+
+/** Décompose puis retire les marques diacritiques (é → e). */
+private fun sansAccents(texte: String): String =
+    java.text.Normalizer.normalize(texte, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{M}"), "")
 
 /**
  * Liste des chaînes, chargée depuis les playlists M3U déclarées par la
@@ -185,6 +206,11 @@ class HomeViewModel @Inject constructor(
     /** N'affiche que les favoris, ou revient à toutes les chaînes. */
     fun setShowFavoritesOnly(actif: Boolean) {
         _state.update { it.copy(showFavoritesOnly = actif) }
+    }
+
+    /** Filtre la liste sur le texte saisi ; une chaîne vide affiche tout. */
+    fun search(query: String) {
+        _state.update { it.copy(query = query) }
     }
 
     /** Ajoute un groupe aux favoris, ou l'en retire s'il y est déjà. */

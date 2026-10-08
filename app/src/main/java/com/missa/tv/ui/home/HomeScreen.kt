@@ -20,8 +20,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tv
@@ -34,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -70,6 +73,7 @@ fun HomeScreen(
     onChannelSelected: (ChannelGroup) -> Unit,
     onToggleFavorite: (ChannelGroup) -> Unit,
     onShowFavoritesOnly: (Boolean) -> Unit,
+    onSearch: (String) -> Unit,
     onOpenEpg: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -81,6 +85,8 @@ fun HomeScreen(
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         EnTete(state = state, onShowFavoritesOnly = onShowFavoritesOnly, onOpenEpg = onOpenEpg, onOpenSettings = onOpenSettings)
+
+        ChampRecherche(query = state.query, onSearch = onSearch)
 
         if (state.requiresAppUpdate) {
             BandeauInformation(texte = stringResource(R.string.home_update_required))
@@ -111,6 +117,9 @@ fun HomeScreen(
             // un message dédié est plus clair qu'une liste simplement vide.
             state.showFavoritesOnly && state.groups.isNotEmpty() && state.visibleGroups.isEmpty() ->
                 FavorisVides()
+            // Une recherche est saisie sans résultat : on le dit explicitement.
+            state.query.isNotBlank() && state.groups.isNotEmpty() && state.visibleGroups.isEmpty() ->
+                AucunResultat()
             // Une liste disponible est toujours préférée à un écran de
             // chargement : elle vient du portail ou du catalogue mémorisé.
             state.groups.isNotEmpty() -> Liste(
@@ -537,6 +546,62 @@ private fun FavorisVides() {
             )
             Text(
                 text = stringResource(R.string.home_favorites_empty),
+                modifier = Modifier.padding(top = 16.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/** Champ de recherche des chaînes, avec un bouton pour effacer la saisie. */
+@Composable
+private fun ChampRecherche(query: String, onSearch: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onSearch,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        placeholder = { Text(text = stringResource(R.string.home_search_placeholder)) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onSearch("") }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.home_search_clear),
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+    )
+}
+
+/** Message affiché quand une recherche ne correspond à aucune chaîne. */
+@Composable
+private fun AucunResultat() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.home_search_no_result),
                 modifier = Modifier.padding(top = 16.dp),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,

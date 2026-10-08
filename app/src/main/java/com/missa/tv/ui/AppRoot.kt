@@ -87,6 +87,7 @@ fun AppRoot(onExit: () -> Unit) {
                         },
                         onToggleFavorite = vm::toggleFavorite,
                         onShowFavoritesOnly = vm::setShowFavoritesOnly,
+                        onSearch = vm::search,
                         onOpenEpg = {
                             navigateur.open(Screen.Epg(groups = etat.visibleGroups))
                         },

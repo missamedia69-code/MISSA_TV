@@ -80,6 +80,9 @@
     <string name="home_add_favorite">Ajouter aux favoris</string>
     <string name="home_remove_favorite">Retirer des favoris</string>
     <string name="home_favorites_empty">Aucun favori pour l\'instant. Touchez l\'étoile d\'une chaîne pour la retrouver ici.</string>
+    <string name="home_search_placeholder">Rechercher une chaîne…</string>
+    <string name="home_search_clear">Effacer la recherche</string>
+    <string name="home_search_no_result">Aucune chaîne ne correspond à cette recherche.</string>
 
     <!-- Écran de lecture -->
     <string name="player_open">Regarder</string>
