@@ -39,6 +39,11 @@
     <string name="error_subscription_expired">Subscription expired or inactive.</string>
     <string name="error_stream_unavailable">Stream temporarily unavailable.</string>
     <string name="error_network_lost">Network lost. Reconnecting…</string>
+    <string name="error_playlist_unreachable">Playlist unreachable. Check your connection and try again.</string>
+    <string name="error_playlist_rejected">The playlist was rejected by the server. Try again later.</string>
+    <string name="error_playlist_invalid">Unreadable playlist: the content is not in M3U format.</string>
+    <string name="error_playlist_empty">The playlist contains no usable channel.</string>
+    <string name="error_playlist_too_large">Playlist too large: it exceeds the accepted limits.</string>
     <string name="error_config_invalid">Invalid configuration: the last valid configuration is kept.</string>
     <string name="action_retry">Retry</string>
     <string name="action_cancel">Cancel</string>

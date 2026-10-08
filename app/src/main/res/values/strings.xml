@@ -38,6 +38,11 @@
     <string name="error_subscription_expired">Abonnement expiré ou inactif.</string>
     <string name="error_stream_unavailable">Flux momentanément indisponible.</string>
     <string name="error_network_lost">Réseau perdu. Reconnexion…</string>
+    <string name="error_playlist_unreachable">Playlist injoignable. Vérifiez la connexion puis réessayez.</string>
+    <string name="error_playlist_rejected">La playlist a été refusée par le serveur. Réessayez plus tard.</string>
+    <string name="error_playlist_invalid">Playlist illisible : le contenu n\'est pas au format M3U.</string>
+    <string name="error_playlist_empty">La playlist ne contient aucune chaîne exploitable.</string>
+    <string name="error_playlist_too_large">Playlist trop volumineuse : elle dépasse les limites acceptées.</string>
     <string name="error_config_invalid">Configuration invalide : la dernière configuration valide est conservée.</string>
     <string name="action_retry">Réessayer</string>
     <string name="action_cancel">Annuler</string>

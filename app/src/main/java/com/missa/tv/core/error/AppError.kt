@@ -49,6 +49,21 @@ sealed class AppError(
     /** Aucune configuration disponible : saisie manuelle nécessaire. */
     data object MissingConfig : AppError(R.string.error_config_invalid, retryable = false)
 
+    /** La playlist ne répond pas (DNS, délai dépassé, connexion refusée). */
+    data object PlaylistUnreachable : AppError(R.string.error_playlist_unreachable)
+
+    /** Le serveur a refusé la playlist (erreur HTTP qui n'est pas un problème réseau). */
+    data object PlaylistRejected : AppError(R.string.error_playlist_rejected, retryable = false)
+
+    /** Le contenu téléchargé n'est pas une playlist M3U exploitable. */
+    data object PlaylistInvalid : AppError(R.string.error_playlist_invalid, retryable = false)
+
+    /** La playlist est bien formée mais ne contient aucune chaîne exploitable. */
+    data object PlaylistEmpty : AppError(R.string.error_playlist_empty, retryable = false)
+
+    /** La playlist dépasse la taille ou le nombre d'entrées acceptés. */
+    data object PlaylistTooLarge : AppError(R.string.error_playlist_too_large, retryable = false)
+
     /** Toute autre erreur ; la cause est journalisée, jamais affichée. */
     data class Unknown(val cause: Throwable? = null) : AppError(R.string.error_portal_unreachable)
 }

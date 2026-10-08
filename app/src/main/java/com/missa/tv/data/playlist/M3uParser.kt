@@ -1,5 +1,7 @@
 package com.missa.tv.data.playlist
 
+import com.missa.tv.core.error.AppError
+
 /** Nature d'un échec d'analyse d'une playlist M3U. */
 enum class M3uFailure {
     /** Le contenu n'est pas une playlist M3U exploitable. */
@@ -25,7 +27,15 @@ class M3uParseException(
     val failure: M3uFailure,
     message: String,
     cause: Throwable? = null,
-) : Exception(message, cause)
+) : Exception(message, cause) {
+
+    /** Convertit l'échec d'analyse en erreur destinée à l'utilisateur. */
+    fun toAppError(): AppError = when (failure) {
+        M3uFailure.INVALID -> AppError.PlaylistInvalid
+        M3uFailure.EMPTY -> AppError.PlaylistEmpty
+        M3uFailure.TOO_LARGE -> AppError.PlaylistTooLarge
+    }
+}
 
 /**
  * Analyseur de playlists au format M3U / M3U8.
