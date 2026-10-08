@@ -1,25 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/missamedia69-code/MISSA_TV/main/remote-config/portal-config.schema.json",
-  "title": "MISSA TV — configuration du portail",
-  "description": "Configuration distante lue par l'application MISSA TV. Ce fichier ne contient aucun flux : uniquement les paramètres de connexion au portail choisi par l'utilisateur, et les réglages d'adaptation au débit.",
+  "title": "MISSA TV — configuration des playlists",
+  "description": "Configuration distante lue par l'application MISSA TV (schéma v2). Ce fichier ne contient aucun flux : uniquement la liste des playlists M3U à charger et les réglages d'adaptation au débit. La variante peuplée (avec les URLs réelles des playlists) vit dans le dépôt privé missa-tv-config ; ce schéma décrit le format commun. Les URLs de playlist sont des identifiants sensibles : elles ne doivent jamais être journalisées.",
   "type": "object",
   "required": [
     "schemaVersion",
-    "configVersion",
-    "profiles"
+    "playlists"
   ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
-      "description": "Version du format du fichier. Doit valoir 1.",
+      "description": "Version du format du fichier. Doit valoir 2.",
       "type": "integer",
-      "const": 1
-    },
-    "configVersion": {
-      "description": "Version de la configuration. Doit être strictement supérieure à la version locale pour être appliquée.",
-      "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "updatedAt": {
       "description": "Date de dernière modification, au format ISO 8601 UTC.",
@@ -31,15 +25,15 @@
       "type": "integer",
       "minimum": 1
     },
-    "defaultProfileId": {
-      "description": "Identifiant du profil utilisé par défaut. Doit exister dans « profiles », ou être null.",
+    "defaultPlaylistId": {
+      "description": "Identifiant de la playlist utilisée par défaut. Doit exister dans « playlists », ou être null.",
       "type": [
         "string",
         "null"
       ]
     },
-    "profiles": {
-      "description": "Liste des profils de connexion. Vide dans le dépôt (aucun identifiant versionné) : les valeurs réelles sont fournies par le propriétaire.",
+    "playlists": {
+      "description": "Liste des sources de chaînes au format M3U. Vide dans le dépôt public (aucun identifiant versionné) : les URLs réelles sont servies depuis le dépôt privé missa-tv-config.",
       "type": "array",
       "maxItems": 16,
       "items": {
@@ -47,13 +41,12 @@
         "required": [
           "id",
           "name",
-          "portalUrl",
-          "mac"
+          "url"
         ],
         "additionalProperties": false,
         "properties": {
           "id": {
-            "description": "Identifiant technique stable du profil.",
+            "description": "Identifiant technique stable de la playlist.",
             "type": "string",
             "minLength": 1,
             "maxLength": 64,
@@ -65,19 +58,23 @@
             "minLength": 1,
             "maxLength": 64
           },
-          "portalUrl": {
-            "description": "URL du portail (terminée par /c/ en général).",
+          "url": {
+            "description": "URL de la playlist M3U. Identifiant sensible : ne jamais le journaliser en clair.",
             "type": "string",
             "maxLength": 512,
             "pattern": "^https?://[^\\s]+$"
           },
-          "mac": {
-            "description": "Adresse MAC du profil, au format XX:XX:XX:XX:XX:XX.",
-            "type": "string",
-            "pattern": "^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"
+          "epgUrl": {
+            "description": "URL optionnelle d'un guide de programmes au format XMLTV, associée à cette playlist.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 512,
+            "pattern": "^https?://[^\\s]+$"
           },
           "enabled": {
-            "description": "Profil actif ou non.",
+            "description": "Playlist active ou non.",
             "type": "boolean",
             "default": true
           }

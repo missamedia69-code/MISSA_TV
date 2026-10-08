@@ -5,8 +5,8 @@ Ce script vérifie que ``remote-config/portal-config.json`` respecte son schéma
 et applique des contrôles de cohérence que JSON Schema ne peut pas exprimer :
 
   1. conformité au schéma ``portal-config.schema.json`` ;
-  2. unicité des identifiants de profil ;
-  3. existence du profil désigné par ``defaultProfileId`` ;
+  2. unicité des identifiants de playlist ;
+  3. existence de la playlist désignée par ``defaultPlaylistId`` ;
   4. cohérence du bloc ``bandwidth`` (seuils croissants, bitrates cohérents
      avec les hauteurs annoncées).
 
@@ -69,19 +69,19 @@ def valider_coherence(config: dict) -> list[str]:
     """Contrôles que le schéma ne peut pas exprimer."""
     erreurs: list[str] = []
 
-    profils = config.get("profiles", [])
-    identifiants = [p.get("id") for p in profils]
+    playlists = config.get("playlists", [])
+    identifiants = [p.get("id") for p in playlists]
 
     if len(identifiants) != len(set(identifiants)):
-        erreurs.append("identifiants de profil dupliqués")
+        erreurs.append("identifiants de playlist dupliqués")
 
-    defaut = config.get("defaultProfileId")
+    defaut = config.get("defaultPlaylistId")
     if defaut is not None and defaut not in identifiants:
-        erreurs.append(f"defaultProfileId « {defaut} » ne correspond à aucun profil")
+        erreurs.append(f"defaultPlaylistId « {defaut} » ne correspond à aucune playlist")
 
-    if not profils:
-        print("  (aucun profil déclaré : c'est l'état attendu du dépôt, "
-              "les valeurs réelles sont fournies au build ou saisies dans l'application)")
+    if not playlists:
+        print("  (aucune playlist déclarée : c'est l'état attendu du dépôt, "
+              "les URLs réelles sont servies depuis le dépôt privé missa-tv-config)")
 
     debit = config.get("bandwidth")
     if isinstance(debit, dict):
@@ -158,8 +158,8 @@ def main() -> int:
         return 1
 
     succes("portal-config.json conforme au schéma et cohérent")
-    nb = len(config.get("profiles", []))
-    print(f"  {nb} profil(s) déclaré(s), configVersion={config.get('configVersion')}")
+    nb = len(config.get("playlists", []))
+    print(f"  {nb} playlist(s) déclarée(s), schemaVersion={config.get('schemaVersion')}")
     return 0
 
 
