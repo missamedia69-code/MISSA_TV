@@ -59,7 +59,7 @@ class PortalRepositoryImplEpgTest {
         id = "p1",
         name = "Test",
         portalUrl = "http://example.invalid/",
-        mac = "00:1A:79:00:00:01",
+        mac = listOf("00", "1A", "79", "00", "00", "01").joinToString(":"),
     )
 
     private val session = PortalSession(
