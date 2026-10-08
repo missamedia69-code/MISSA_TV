@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Star as StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -497,9 +496,9 @@ private fun LigneChaine(
 /**
  * Étoile de favori d'une chaîne.
  *
- * Pleine et colorée quand la chaîne est en favori, en contour sinon. C'est une
- * cible distincte de la carte : toucher l'étoile bascule le favori sans ouvrir
- * la chaîne.
+ * Colorée quand la chaîne est en favori, neutre sinon : c'est le contraste de
+ * couleur qui signale l'état. C'est une cible distincte de la carte : toucher
+ * l'étoile bascule le favori sans ouvrir la chaîne.
  */
 @Composable
 internal fun EtoileFavori(
@@ -509,14 +508,14 @@ internal fun EtoileFavori(
 ) {
     IconButton(onClick = { onToggleFavorite(groupe) }) {
         Icon(
-            imageVector = if (isFavorite) Icons.Filled.Star else StarOutline,
+            imageVector = Icons.Filled.Star,
             contentDescription = stringResource(
                 if (isFavorite) R.string.home_remove_favorite else R.string.home_add_favorite,
             ),
             tint = if (isFavorite) {
                 MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             },
         )
     }
