@@ -29,7 +29,7 @@ permissions:
 
 env:
   GRADLE_OPTS: >-
-    -Dorg.gradle.jvmargs=-Xmx3g -Dorg.gradle.daemon=false -Dfile.encoding=UTF-8
+    -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dfile.encoding=UTF-8
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
@@ -140,7 +140,11 @@ jobs:
         continue-on-error: true
         run: |
           set -uo pipefail
-          ./gradlew ktlintCheck testDebugUnitTest lintDebug assembleDebug \
+          # assembleRelease exécute R8 et la réduction de ressources : la
+          # minification est ainsi vérifiée à chaque push, pas seulement lors
+          # d'une publication. L'APK release produit n'est pas signé (le
+          # keystore n'est fourni que par le workflow de publication).
+          ./gradlew ktlintCheck testDebugUnitTest lintDebug assembleDebug assembleRelease \
             --stacktrace --no-daemon > build-output.txt 2>&1
           echo "$?" > gradle-exit-code.txt
           echo "Code retour Gradle : $(cat gradle-exit-code.txt)"
@@ -236,11 +240,24 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      # L'APK release produit ici n'est PAS signé (le keystore n'existe que
+      # dans le workflow de publication) : il ne s'installe pas, mais il
+      # atteste que R8 et la réduction de ressources s'exécutent correctement.
+      - name: Publication de l'APK release (non signé)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: missa-tv-release-apk-non-signe
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Résumé de l'APK
         if: always()
         run: |
           set -uo pipefail
           APK="$(find app/build/outputs/apk/debug -name '*.apk' 2>/dev/null | head -1)"
+          APK_RELEASE="$(find app/build/outputs/apk/release -name '*.apk' 2>/dev/null | head -1)"
           {
             echo "## APK de développement"
             echo
@@ -256,6 +273,19 @@ jobs:
               echo '```'
               sha256sum "${APK}"
               echo '```'
+            fi
+            echo
+            echo "## Variante release (R8)"
+            echo
+            if [ -z "${APK_RELEASE}" ]; then
+              echo "Aucun APK release produit (R8 n'a pas abouti)."
+            else
+              echo "| | |"
+              echo "| --- | --- |"
+              echo "| Fichier | $(basename "${APK_RELEASE}") |"
+              echo "| Taille (minifiée) | $(du -h "${APK_RELEASE}" | cut -f1) |"
+              echo
+              echo "_Non signé : le keystore n'est fourni que par le workflow de publication._"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

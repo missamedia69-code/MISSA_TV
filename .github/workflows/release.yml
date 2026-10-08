@@ -79,7 +79,7 @@ jobs:
           set -euo pipefail
           if [ -z "${KEYSTORE_BASE64}" ]; then
             echo "::error::Secret MISSA_KEYSTORE_BASE64 absent : aucune version signée ne peut être produite."
-            echo "Voir docs/RAPPORT_FINAL.md (secrets à configurer)."
+            echo "Voir docs/MISE_A_JOUR_CONFIG.md (dépôt privé et secrets à configurer)."
             exit 1
           fi
           KEYSTORE="$(mktemp -d)/missa-release.keystore"
