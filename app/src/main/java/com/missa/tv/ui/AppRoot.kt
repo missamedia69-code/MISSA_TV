@@ -136,6 +136,10 @@ fun AppRoot(onExit: () -> Unit) {
                                 groups = ecran.groups,
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
+                                catalogRepository = point.catalogRepository(),
+                                epgCache = point.epgCache(),
+                                epgRepository = point.epgRepository(),
+                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -160,6 +164,10 @@ fun AppRoot(onExit: () -> Unit) {
                         factory = hiltViewModelFactory<ChannelGuideViewModel>(contexte) { point ->
                             ChannelGuideViewModel(
                                 channel = ecran.channel,
+                                catalogRepository = point.catalogRepository(),
+                                epgCache = point.epgCache(),
+                                epgRepository = point.epgRepository(),
+                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
