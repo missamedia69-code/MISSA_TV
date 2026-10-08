@@ -118,7 +118,7 @@ class StalkerResponseParserEpgTest {
     }
 
     @Test
-    fun `les heures HH:mm sans timestamp sont ignorées`() {
+    fun `les heures HH-mm sans timestamp sont ignorées`() {
         // « 20:00 » sans la date du jour est inexploitable : deviner la date
         // produirait un programme affiché au mauvais moment.
         val corps = """
