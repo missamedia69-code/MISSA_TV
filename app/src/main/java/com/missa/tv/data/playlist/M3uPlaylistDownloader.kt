@@ -92,21 +92,23 @@ class OkHttpPlaylistFetcher(
  *  - statut HTTP d'erreur : [AppError.PlaylistRejected] ;
  *  - contenu non reconnu, vide ou trop volumineux : erreurs de [M3uFailure].
  */
-class M3uPlaylistDownloader(
-    private val fetcher: PlaylistHttpFetcher,
-    private val reader: M3uPlaylistReader = M3uPlaylistReader(),
-) {
-
-    /**
-     * Télécharge puis analyse la playlist située à [url].
-     *
-     * Les en-têtes [userAgent] et [referrer], s'ils sont fournis, sont envoyés
-     * avec la requête : certains serveurs de playlist les exigent.
-     */
+interface PlaylistDownloader {
     suspend fun download(
         url: String,
         userAgent: String? = null,
         referrer: String? = null,
+    ): AppResult<List<M3uEntry>>
+}
+
+class M3uPlaylistDownloader(
+    private val fetcher: PlaylistHttpFetcher,
+    private val reader: M3uPlaylistReader = M3uPlaylistReader(),
+) : PlaylistDownloader {
+
+    override suspend fun download(
+        url: String,
+        userAgent: String?,
+        referrer: String?,
     ): AppResult<List<M3uEntry>> {
         val entetes = buildMap {
             userAgent?.takeIf { it.isNotBlank() }?.let { put("User-Agent", it) }
