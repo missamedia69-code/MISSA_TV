@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
@@ -11,6 +12,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaSession
 import com.missa.tv.domain.model.BufferSettings
 import com.missa.tv.domain.playback.PlaybackCaps
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -74,6 +76,17 @@ class PlayerFactory @Inject constructor(
 
         return lecteur
     }
+
+    /**
+     * Crée une session multimédia liée à un lecteur.
+     *
+     * La session reçoit les touches média du système (lecture, pause, stop) —
+     * celles de la télécommande sur un téléviseur comme celles d'un casque ou
+     * d'Android Auto. Sans elle, ces touches resteraient sans effet. La session
+     * est créée avec le lecteur puis libérée avec lui par l'écran de lecture.
+     */
+    fun createMediaSession(player: Player): MediaSession =
+        MediaSession.Builder(context, player).build()
 
     /**
      * Paramètres de sélection de piste pour des contraintes données.

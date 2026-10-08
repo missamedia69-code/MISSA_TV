@@ -11,6 +11,7 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.session.MediaSession
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
@@ -112,6 +113,12 @@ class PlayerViewModel @Inject constructor(
 
     private var player: ExoPlayer? = null
 
+    /**
+     * Session multimédia du lecteur : elle rend la lecture pilotable par les
+     * touches média du système (télécommande, casque), sans autre effet.
+     */
+    private var mediaSession: MediaSession? = null
+
     /** Lecteur exposé à l'interface, créé une seule fois par écran. */
     val exoPlayer: ExoPlayer? get() = player
 
@@ -203,6 +210,10 @@ class PlayerViewModel @Inject constructor(
      * batterie et le réseau même sans image affichée.
      */
     fun releasePlayer() {
+        // La session d'abord : elle référence le lecteur et doit être libérée
+        // avant lui.
+        mediaSession?.release()
+        mediaSession = null
         player?.release()
         player = null
         _state.update { it.copy(phase = PlayerUiState.Phase.Idle) }
@@ -217,6 +228,11 @@ class PlayerViewModel @Inject constructor(
         val caps = PlaybackCaps.forMode(mode, bandwidthSettings)
         val lecteur = playerFactory.create(caps, bandwidthSettings.buffer)
         player = lecteur
+
+        // La session précédente est libérée avant d'en créer une nouvelle :
+        // elle reste liée au lecteur qu'elle pilote.
+        mediaSession?.release()
+        mediaSession = playerFactory.createMediaSession(lecteur)
 
         lecteur.addListener(object : Player.Listener {
 
