@@ -98,7 +98,9 @@ private fun TvPastille(titre: String, selectionnee: Boolean, onClick: () -> Unit
 fun TvChannelCard(
     groupe: ChannelGroup,
     programme: EpgEvent?,
+    isFavorite: Boolean,
     onSelected: (ChannelGroup) -> Unit,
+    onToggleFavorite: (ChannelGroup) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -139,6 +141,10 @@ fun TvChannelCard(
                 }
                 programme?.let { ProgrammeEnCours(programme = it) }
             }
+
+            // L'étoile est une cible focalisable distincte : à la télécommande,
+            // elle bascule le favori sans ouvrir la chaîne.
+            EtoileFavori(groupe = groupe, isFavorite = isFavorite, onToggleFavorite = onToggleFavorite)
 
             Icon(
                 imageVector = Icons.Filled.PlayArrow,

@@ -76,6 +76,11 @@
     <string name="home_open_settings">Settings</string>
     <string name="home_config_first_time">No portal is configured yet. Enter the details provided by your service.</string>
     <string name="home_update_required">A new version of the application is available.</string>
+    <string name="home_show_favorites">Show favorites only</string>
+    <string name="home_show_all_channels">Show all channels</string>
+    <string name="home_add_favorite">Add to favorites</string>
+    <string name="home_remove_favorite">Remove from favorites</string>
+    <string name="home_favorites_empty">No favorites yet. Tap a channel\'s star to find it here.</string>
 
     <!-- Player -->
     <string name="player_open">Watch</string>

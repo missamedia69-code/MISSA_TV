@@ -75,6 +75,11 @@
     <string name="home_open_settings">Réglages</string>
     <string name="home_config_first_time">Aucun portail n\'est configuré. Saisissez les informations fournies par votre fournisseur d\'accès.</string>
     <string name="home_update_required">Une nouvelle version de l\'application est disponible.</string>
+    <string name="home_show_favorites">N\'afficher que les favoris</string>
+    <string name="home_show_all_channels">Afficher toutes les chaînes</string>
+    <string name="home_add_favorite">Ajouter aux favoris</string>
+    <string name="home_remove_favorite">Retirer des favoris</string>
+    <string name="home_favorites_empty">Aucun favori pour l\'instant. Touchez l\'étoile d\'une chaîne pour la retrouver ici.</string>
 
     <!-- Écran de lecture -->
     <string name="player_open">Regarder</string>

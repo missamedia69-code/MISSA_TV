@@ -65,6 +65,7 @@ fun AppRoot(onExit: () -> Unit) {
                                 configRepository = point.remoteConfigRepository(),
                                 settingsStore = point.settingsStore(),
                                 catalogCache = point.catalogCache(),
+                                favoriteCache = point.favoriteCache(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -84,6 +85,8 @@ fun AppRoot(onExit: () -> Unit) {
                         onChannelSelected = { groupe ->
                             navigateur.open(Screen.Player(vm.channelToPlay(groupe)))
                         },
+                        onToggleFavorite = vm::toggleFavorite,
+                        onShowFavoritesOnly = vm::setShowFavoritesOnly,
                         onOpenEpg = {
                             navigateur.open(Screen.Epg(groups = etat.visibleGroups))
                         },

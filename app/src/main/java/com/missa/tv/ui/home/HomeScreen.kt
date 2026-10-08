@@ -23,8 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Star as StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -67,6 +69,8 @@ fun HomeScreen(
     onRetry: () -> Unit,
     onCategorySelected: (String?) -> Unit,
     onChannelSelected: (ChannelGroup) -> Unit,
+    onToggleFavorite: (ChannelGroup) -> Unit,
+    onShowFavoritesOnly: (Boolean) -> Unit,
     onOpenEpg: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -77,7 +81,7 @@ fun HomeScreen(
             // sans cette marge, le titre passerait sous l'heure et la batterie.
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        EnTete(state = state, onOpenEpg = onOpenEpg, onOpenSettings = onOpenSettings)
+        EnTete(state = state, onShowFavoritesOnly = onShowFavoritesOnly, onOpenEpg = onOpenEpg, onOpenSettings = onOpenSettings)
 
         if (state.requiresAppUpdate) {
             BandeauInformation(texte = stringResource(R.string.home_update_required))
@@ -104,13 +108,19 @@ fun HomeScreen(
         }
 
         when {
+            // Le filtre favoris est actif mais aucun favori ne correspond :
+            // un message dédié est plus clair qu'une liste simplement vide.
+            state.showFavoritesOnly && state.groups.isNotEmpty() && state.visibleGroups.isEmpty() ->
+                FavorisVides()
             // Une liste disponible est toujours préférée à un écran de
             // chargement : elle vient du portail ou du catalogue mémorisé.
             state.groups.isNotEmpty() -> Liste(
                 groups = state.visibleGroups,
                 nowPlaying = state.nowPlaying,
+                favoriteKeys = state.favoriteKeys,
                 device = device,
                 onChannelSelected = onChannelSelected,
+                onToggleFavorite = onToggleFavorite,
             )
             state.isLoading -> Chargement()
             state.error != null -> Erreur(state = state, onRetry = onRetry)
@@ -122,6 +132,7 @@ fun HomeScreen(
 @Composable
 private fun EnTete(
     state: HomeUiState,
+    onShowFavoritesOnly: (Boolean) -> Unit,
     onOpenEpg: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -148,6 +159,23 @@ private fun EnTete(
         }
 
         Row {
+            IconButton(onClick = { onShowFavoritesOnly(!state.showFavoritesOnly) }) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = stringResource(
+                        if (state.showFavoritesOnly) {
+                            R.string.home_show_all_channels
+                        } else {
+                            R.string.home_show_favorites
+                        },
+                    ),
+                    tint = if (state.showFavoritesOnly) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
             IconButton(onClick = onOpenEpg) {
                 Icon(
                     imageVector = Icons.Filled.Tv,
@@ -327,8 +355,10 @@ private fun AucuneChaine() {
 private fun Liste(
     groups: List<ChannelGroup>,
     nowPlaying: Map<String, EpgEvent>,
+    favoriteKeys: Set<String>,
     device: DeviceProfile,
     onChannelSelected: (ChannelGroup) -> Unit,
+    onToggleFavorite: (ChannelGroup) -> Unit,
 ) {
     // Sur un téléviseur, l'écran est large et regardé de loin : deux colonnes et
     // des vignettes plus grandes sont plus lisibles et plus faciles à cibler.
@@ -342,40 +372,28 @@ private fun Liste(
     ) {
         if (colonnes == 1) {
             items(items = groups, key = { it.key }) { groupe ->
-                val programme = nowPlaying[groupe.key]
-                if (surTeleviseur) {
-                    TvChannelCard(
-                        groupe = groupe,
-                        programme = programme,
-                        onSelected = onChannelSelected,
-                    )
-                } else {
-                    LigneChaine(
-                        groupe = groupe,
-                        programme = programme,
-                        onSelected = onChannelSelected,
-                    )
-                }
+                CarteChaine(
+                    groupe = groupe,
+                    programme = nowPlaying[groupe.key],
+                    isFavorite = groupe.key in favoriteKeys,
+                    surTeleviseur = surTeleviseur,
+                    onSelected = onChannelSelected,
+                    onToggleFavorite = onToggleFavorite,
+                )
             }
         } else {
             items(items = groups.chunked(colonnes), key = { it.first().key }) { rangee ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rangee.forEach { groupe ->
                         Box(modifier = Modifier.weight(1f)) {
-                            val programme = nowPlaying[groupe.key]
-                            if (surTeleviseur) {
-                                TvChannelCard(
-                                    groupe = groupe,
-                                    programme = programme,
-                                    onSelected = onChannelSelected,
-                                )
-                            } else {
-                                LigneChaine(
-                                    groupe = groupe,
-                                    programme = programme,
-                                    onSelected = onChannelSelected,
-                                )
-                            }
+                            CarteChaine(
+                                groupe = groupe,
+                                programme = nowPlaying[groupe.key],
+                                isFavorite = groupe.key in favoriteKeys,
+                                surTeleviseur = surTeleviseur,
+                                onSelected = onChannelSelected,
+                                onToggleFavorite = onToggleFavorite,
+                            )
                         }
                     }
                     // Garde l'alignement des colonnes quand la dernière rangée
@@ -387,12 +405,43 @@ private fun Liste(
     }
 }
 
+/** Choisit la carte tactile ou la carte TV pour un groupe. */
+@Composable
+private fun CarteChaine(
+    groupe: ChannelGroup,
+    programme: EpgEvent?,
+    isFavorite: Boolean,
+    surTeleviseur: Boolean,
+    onSelected: (ChannelGroup) -> Unit,
+    onToggleFavorite: (ChannelGroup) -> Unit,
+) {
+    if (surTeleviseur) {
+        TvChannelCard(
+            groupe = groupe,
+            programme = programme,
+            isFavorite = isFavorite,
+            onSelected = onSelected,
+            onToggleFavorite = onToggleFavorite,
+        )
+    } else {
+        LigneChaine(
+            groupe = groupe,
+            programme = programme,
+            isFavorite = isFavorite,
+            onSelected = onSelected,
+            onToggleFavorite = onToggleFavorite,
+        )
+    }
+}
+
 /** Une chaîne : numéro, logo, nom, qualités disponibles et programme en cours. */
 @Composable
 private fun LigneChaine(
     groupe: ChannelGroup,
     programme: EpgEvent?,
+    isFavorite: Boolean,
     onSelected: (ChannelGroup) -> Unit,
+    onToggleFavorite: (ChannelGroup) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -434,10 +483,65 @@ private fun LigneChaine(
                 programme?.let { ProgrammeEnCours(programme = it) }
             }
 
+            EtoileFavori(groupe = groupe, isFavorite = isFavorite, onToggleFavorite = onToggleFavorite)
+
             Icon(
                 imageVector = Icons.Filled.PlayArrow,
                 contentDescription = stringResource(R.string.player_open),
                 tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+/**
+ * Étoile de favori d'une chaîne.
+ *
+ * Pleine et colorée quand la chaîne est en favori, en contour sinon. C'est une
+ * cible distincte de la carte : toucher l'étoile bascule le favori sans ouvrir
+ * la chaîne.
+ */
+@Composable
+internal fun EtoileFavori(
+    groupe: ChannelGroup,
+    isFavorite: Boolean,
+    onToggleFavorite: (ChannelGroup) -> Unit,
+) {
+    IconButton(onClick = { onToggleFavorite(groupe) }) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Star else StarOutline,
+            contentDescription = stringResource(
+                if (isFavorite) R.string.home_remove_favorite else R.string.home_add_favorite,
+            ),
+            tint = if (isFavorite) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+    }
+}
+
+/** Message affiché quand le filtre favoris est actif sans aucun favori. */
+@Composable
+private fun FavorisVides() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.home_favorites_empty),
+                modifier = Modifier.padding(top = 16.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
             )
         }
     }

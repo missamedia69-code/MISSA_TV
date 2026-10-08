@@ -7,6 +7,7 @@ import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
 import com.missa.tv.data.local.CatalogCache
+import com.missa.tv.data.local.FavoriteCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.channel.ChannelVariantGrouper
 import com.missa.tv.domain.model.Category
@@ -31,6 +32,10 @@ data class HomeUiState(
     val groups: List<ChannelGroup> = emptyList(),
     val selectedCategoryId: String? = null,
     val qualityMode: QualityMode = QualityMode.DEFAULT,
+    /** Clés des groupes mis en favori par l'utilisateur. */
+    val favoriteKeys: Set<String> = emptySet(),
+    /** Vrai quand la liste n'affiche que les favoris. */
+    val showFavoritesOnly: Boolean = false,
     /**
      * Programme en cours de chaque groupe visible, indexé par clé de groupe.
      *
@@ -50,13 +55,20 @@ data class HomeUiState(
      */
     val isFromCache: Boolean = false,
 ) {
-    /** Chaînes à afficher, filtrées par la catégorie choisie. */
+    /** Chaînes à afficher, filtrées par la catégorie choisie et les favoris. */
     val visibleGroups: List<ChannelGroup>
-        get() = selectedCategoryId?.let { identifiant ->
-            groups.filter { groupe ->
-                groupe.variants.any { variante -> variante.channel.categoryId == identifiant }
+        get() {
+            val parCategorie = selectedCategoryId?.let { identifiant ->
+                groups.filter { groupe ->
+                    groupe.variants.any { variante -> variante.channel.categoryId == identifiant }
+                }
+            } ?: groups
+            return if (showFavoritesOnly) {
+                parCategorie.filter { groupe -> groupe.key in favoriteKeys }
+            } else {
+                parCategorie
             }
-        } ?: groups
+        }
 
     /** Vrai si aucune chaîne n'est disponible (liste vide et aucun échec). */
     val isEmpty: Boolean get() = !isLoading && error == null && groups.isEmpty()
@@ -76,6 +88,7 @@ class HomeViewModel @Inject constructor(
     private val configRepository: RemoteConfigRepository,
     private val settingsStore: SettingsStore,
     private val catalogCache: CatalogCache,
+    private val favoriteCache: FavoriteCache,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -116,6 +129,7 @@ class HomeViewModel @Inject constructor(
         // lente, la liste apparaît immédiatement au lieu de laisser un écran de
         // chargement pendant toute la durée du téléchargement.
         val cle = catalogRepository.cacheKey()
+        val favoris = favoriteCache.favorites(cle)
         val groupesMemorises = catalogCache.groups(cle)
         if (groupesMemorises.isNotEmpty()) {
             _state.update {
@@ -125,6 +139,7 @@ class HomeViewModel @Inject constructor(
                     categories = catalogCache.categories(cle),
                     groups = groupesMemorises,
                     qualityMode = qualityMode,
+                    favoriteKeys = favoris,
                     isFromCache = true,
                 )
             }
@@ -140,6 +155,7 @@ class HomeViewModel @Inject constructor(
                         categories = catalogue.categories,
                         groups = ChannelVariantGrouper.group(catalogue.channels),
                         qualityMode = qualityMode,
+                        favoriteKeys = favoris,
                         requiresAppUpdate = config.requiresAppUpdate(CURRENT_VERSION_CODE),
                         isFromCache = false,
                     )
@@ -164,6 +180,24 @@ class HomeViewModel @Inject constructor(
     /** Filtre la liste sur une catégorie ; `null` affiche tout. */
     fun selectCategory(categoryId: String?) {
         _state.update { it.copy(selectedCategoryId = categoryId) }
+    }
+
+    /** N'affiche que les favoris, ou revient à toutes les chaînes. */
+    fun setShowFavoritesOnly(actif: Boolean) {
+        _state.update { it.copy(showFavoritesOnly = actif) }
+    }
+
+    /** Ajoute un groupe aux favoris, ou l'en retire s'il y est déjà. */
+    fun toggleFavorite(group: ChannelGroup) {
+        viewModelScope.launch(dispatchers.io) {
+            val cle = catalogRepository.cacheKey()
+            val desormaisEnFavori = favoriteCache.toggle(cle, group.key)
+            _state.update { etat ->
+                val cles = etat.favoriteKeys.toMutableSet()
+                if (desormaisEnFavori) cles.add(group.key) else cles.remove(group.key)
+                etat.copy(favoriteKeys = cles)
+            }
+        }
     }
 
     /**
