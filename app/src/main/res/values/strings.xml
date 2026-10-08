@@ -100,6 +100,9 @@
 
     <!-- Réglages -->
     <string name="settings_title">Réglages</string>
+    <string name="settings_sources_section">Sources des chaînes</string>
+    <string name="settings_sources_none">Aucune source configurée pour l\'instant.</string>
+    <string name="settings_sources_online">Les sources sont gérées par la configuration en ligne et ne peuvent pas être modifiées ici.</string>
     <string name="settings_profiles">Profils de connexion</string>
     <string name="settings_profile_add">Ajouter un profil</string>
     <string name="settings_profile_name">Nom du profil</string>

@@ -36,11 +36,8 @@ sealed interface Screen {
     /** Programme complet d'une chaîne sur les prochaines 24 heures. */
     data class ChannelGuide(val channel: Channel) : Screen
 
-    /** Réglages : profils de connexion, qualité, diagnostics. */
+    /** Réglages : sources (lecture seule), qualité, diagnostics. */
     data object Settings : Screen
-
-    /** Configuration manuelle d'un portail (aucune valeur n'est fournie d'avance). */
-    data object ManualSetup : Screen
 }
 
 /**

@@ -69,7 +69,6 @@ fun HomeScreen(
     onChannelSelected: (ChannelGroup) -> Unit,
     onOpenEpg: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenManualSetup: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -115,7 +114,7 @@ fun HomeScreen(
             )
             state.isLoading -> Chargement()
             state.error != null -> Erreur(state = state, onRetry = onRetry)
-            else -> AucuneChaine(onOpenManualSetup = onOpenManualSetup)
+            else -> AucuneChaine()
         }
     }
 }
@@ -294,14 +293,12 @@ private fun Erreur(state: HomeUiState, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun AucuneChaine(onOpenManualSetup: () -> Unit) {
+private fun AucuneChaine() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
         ) {
-            // Engrenage : le geste attendu ici est de configurer le portail,
-            // pas de lancer une lecture.
             Icon(
                 imageVector = Icons.Filled.Settings,
                 contentDescription = null,
@@ -322,9 +319,6 @@ private fun AucuneChaine(onOpenManualSetup: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Button(onClick = onOpenManualSetup, modifier = Modifier.padding(top = 20.dp)) {
-                Text(text = stringResource(R.string.home_configure_portal))
-            }
         }
     }
 }

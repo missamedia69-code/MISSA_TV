@@ -88,7 +88,6 @@ fun AppRoot(onExit: () -> Unit) {
                             navigateur.open(Screen.Epg(groups = etat.visibleGroups))
                         },
                         onOpenSettings = { navigateur.open(Screen.Settings) },
-                        onOpenManualSetup = { navigateur.open(Screen.ManualSetup) },
                     )
                 }
 
@@ -175,14 +174,12 @@ fun AppRoot(onExit: () -> Unit) {
                     )
                 }
 
-                Screen.Settings, Screen.ManualSetup -> {
+                Screen.Settings -> {
                     val vm: SettingsViewModel = viewModel(
                         factory = hiltViewModelFactory<SettingsViewModel>(contexte) { point ->
                             SettingsViewModel(
-                                profileSource = point.portalProfileSource(),
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
-                                portalRepository = point.portalRepository(),
                                 crashRecorder = point.crashRecorder(),
                                 dispatchers = point.dispatcherProvider(),
                             )
@@ -193,18 +190,9 @@ fun AppRoot(onExit: () -> Unit) {
                     SettingsScreen(
                         state = etat,
                         device = appareil,
-                        // Depuis l'accueil sans portail configuré, le formulaire
-                        // est ouvert d'emblée : l'utilisateur n'a pas à le
-                        // chercher.
-                        ouvrirFormulaireParDefaut = !etat.hasProfiles || ecran == Screen.ManualSetup,
                         onBack = { navigateur.back() },
-                        onSaveProfile = vm::enregistrerProfil,
-                        onDeleteProfile = vm::supprimerProfil,
-                        onActivateProfile = vm::activerProfil,
                         onQualitySelected = vm::definirQualite,
                         onCheckConfig = vm::verifierConfiguration,
-                        onTestConnection = vm::testerConnexion,
-                        onMessageShown = vm::effacerMessage,
                     )
                 }
             }

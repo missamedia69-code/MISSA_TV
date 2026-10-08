@@ -101,6 +101,9 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_sources_section">Channel sources</string>
+    <string name="settings_sources_none">No sources configured yet.</string>
+    <string name="settings_sources_online">Sources are managed by the online configuration and cannot be changed here.</string>
     <string name="settings_profiles">Connection profiles</string>
     <string name="settings_profile_add">Add a profile</string>
     <string name="settings_profile_name">Profile name</string>
