@@ -2,6 +2,8 @@
 <resources>
     <!-- Fond sombre par défaut : interface pensée pour un écran de télévision
          et pour limiter la fatigue visuelle en lecture vidéo. -->
-    <color name="missa_background">#FF0B0B0F</color>
-    <color name="missa_icon_background">#FF12121A</color>
+    <color name="missa_background">#FF0B0E17</color>
+    <!-- Jaune du logo : fond de l'icône adaptative, sur lequel se détache le
+         téléviseur bleu du calque avant. -->
+    <color name="missa_icon_background">#FFF2E400</color>
 </resources>

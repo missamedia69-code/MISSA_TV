@@ -13,14 +13,20 @@ import androidx.compose.ui.unit.Density
 import com.missa.tv.ui.adaptive.DeviceProfile
 import com.missa.tv.ui.adaptive.rememberDeviceProfile
 
-/** Palette sombre : thème par défaut de l'application. */
+/** Palette sombre : thème par défaut de l'application (accents du logo). */
 private val DarkColorScheme = darkColorScheme(
-    primary = MissaRed,
-    onPrimary = Color.White,
-    primaryContainer = MissaRedDark,
-    onPrimaryContainer = Color.White,
-    secondary = MissaBlue,
-    onSecondary = Color.White,
+    primary = MissaYellow,
+    onPrimary = Color(0xFF201C00),
+    primaryContainer = Color(0xFF4A4400),
+    onPrimaryContainer = Color(0xFFFFEC62),
+    secondary = MissaGreenClair,
+    onSecondary = Color(0xFF003912),
+    secondaryContainer = Color(0xFF0E5227),
+    onSecondaryContainer = Color(0xFF9CF2B4),
+    tertiary = MissaBlueClair,
+    onTertiary = Color(0xFF003062),
+    tertiaryContainer = Color(0xFF00468C),
+    onTertiaryContainer = Color(0xFFD3E3FF),
     background = MissaBackground,
     onBackground = MissaOnSurface,
     surface = MissaSurface,
@@ -31,12 +37,20 @@ private val DarkColorScheme = darkColorScheme(
     onError = MissaOnError,
 )
 
-/** Palette claire : proposée sur téléphone et tablette. */
+/** Palette claire : proposée sur téléphone et tablette (couleurs du logo). */
 private val LightColorScheme = lightColorScheme(
-    primary = MissaRedDark,
+    primary = MissaBlue,
     onPrimary = Color.White,
-    secondary = MissaBlue,
+    primaryContainer = Color(0xFFD8E2FF),
+    onPrimaryContainer = Color(0xFF001847),
+    secondary = MissaGreenFonce,
     onSecondary = Color.White,
+    secondaryContainer = Color(0xFFBFF2CB),
+    onSecondaryContainer = Color(0xFF002109),
+    tertiary = MissaYellowFonce,
+    onTertiary = Color.White,
+    tertiaryContainer = MissaYellow,
+    onTertiaryContainer = Color(0xFF211C00),
     background = MissaBackgroundLight,
     onBackground = MissaOnSurfaceLight,
     surface = MissaSurfaceLight,
