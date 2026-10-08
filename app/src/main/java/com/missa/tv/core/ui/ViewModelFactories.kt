@@ -12,6 +12,7 @@ import com.missa.tv.data.local.EpgCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
+import com.missa.tv.domain.repository.CatalogRepository
 import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.PortalRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
@@ -37,6 +38,7 @@ import dagger.hilt.components.SingletonComponent
 interface AppEntryPoint {
     fun portalRepository(): PortalRepository
     fun remoteConfigRepository(): RemoteConfigRepository
+    fun catalogRepository(): CatalogRepository
     fun portalProfileSource(): PortalProfileSource
     fun settingsStore(): SettingsStore
     fun catalogCache(): CatalogCache

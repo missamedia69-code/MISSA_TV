@@ -6,19 +6,15 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
-import com.missa.tv.core.time.TimeSource
-import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.channel.ChannelVariantGrouper
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
-import com.missa.tv.domain.model.ChannelEpg
 import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.QualityMode
-import com.missa.tv.domain.repository.PortalProfileSource
-import com.missa.tv.domain.repository.PortalRepository
+import com.missa.tv.domain.repository.CatalogRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,18 +34,19 @@ data class HomeUiState(
     /**
      * Programme en cours de chaque groupe visible, indexé par clé de groupe.
      *
-     * Vient du guide mémorisé, rafraîchi en arrière-plan : une chaîne sans
-     * guide publié par le portail n'a simplement pas d'entrée.
+     * Alimenté par le guide de programmes ; tant qu'aucune source de guide n'est
+     * disponible, la carte reste vide et l'information est simplement absente.
      */
     val nowPlaying: Map<String, EpgEvent> = emptyMap(),
     /** Vrai si la configuration distante demande une version plus récente. */
     val requiresAppUpdate: Boolean = false,
     /**
-     * Vrai quand la liste affichée vient du catalogue local, et non du portail.
+     * Vrai quand la liste affichée vient du catalogue local, et non d'un
+     * téléchargement frais.
      *
      * L'écran le signale à l'utilisateur : une liste mémorisée peut être
      * légèrement en retard, il doit le savoir avant de conclure qu'une chaîne a
-     * disparu du portail.
+     * disparu.
      */
     val isFromCache: Boolean = false,
 ) {
@@ -61,27 +58,24 @@ data class HomeUiState(
             }
         } ?: groups
 
-    /** Vrai si le portail n'a renvoyé aucune chaîne (ou aucun portail configuré). */
+    /** Vrai si aucune chaîne n'est disponible (liste vide et aucun échec). */
     val isEmpty: Boolean get() = !isLoading && error == null && groups.isEmpty()
 }
 
 /**
- * Liste des chaînes du portail.
+ * Liste des chaînes, chargée depuis les playlists M3U déclarées par la
+ * configuration distante.
  *
- * Le portail publie souvent la même chaîne plusieurs fois, une fois par qualité.
- * Les diffusions sont regroupées : l'utilisateur voit « TF1 » une seule fois, et
- * l'application choisit la variante correspondant à son mode de qualité. C'est ce
- * regroupement qui rend le mode économie utile — sans lui, choisir « la bonne
- * qualité » reviendrait à chercher à la main dans la liste.
+ * Une même chaîne peut apparaître plusieurs fois, une fois par qualité : les
+ * diffusions sont regroupées, l'utilisateur voit « TF1 » une seule fois et
+ * l'application choisit la variante correspondant à son mode de qualité. C'est
+ * ce regroupement qui rend le mode économie utile.
  */
 class HomeViewModel @Inject constructor(
-    private val portalRepository: PortalRepository,
+    private val catalogRepository: CatalogRepository,
     private val configRepository: RemoteConfigRepository,
     private val settingsStore: SettingsStore,
-    private val profileSource: PortalProfileSource,
     private val catalogCache: CatalogCache,
-    private val epgLoader: EpgLoader,
-    private val timeSource: TimeSource,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -92,53 +86,24 @@ class HomeViewModel @Inject constructor(
     private var qualityMode: QualityMode = QualityMode.DEFAULT
 
     /**
-     * Signature des profils au dernier chargement.
+     * Recharge le catalogue si la liste est vide ou si le dernier chargement a
+     * échoué.
      *
-     * Elle distingue deux retours sur l'accueil : revenir depuis le lecteur ne
-     * change rien et ne doit pas relancer une requête, tandis que revenir après
-     * avoir configuré un portail doit **impérativement** recharger. Sans cette
-     * distinction, l'application restait vide après une configuration : le
-     * ViewModel survit (il appartient à l'activité) et ne rechargeait jamais.
-     */
-    private var signatureProfils: Int? = null
-
-    /**
-     * Recharge le catalogue si la configuration a changé, si la liste est vide ou
-     * si le dernier chargement a échoué.
-     *
-     * Appelée à chaque affichage de l'accueil : c'est ce qui rend la
-     * configuration visible immédiatement, sans redémarrer l'application.
+     * Appelée à chaque affichage de l'accueil : revenir depuis le lecteur ne
+     * relance rien, mais revenir d'un écran qui a pu changer la configuration
+     * recharge si besoin.
      */
     fun rafraichirSiNecessaire() {
         viewModelScope.launch(dispatchers.io) {
-            val signature = signatureDesProfils()
             val etat = _state.value
-            val doitRecharger = signature != signatureProfils ||
-                etat.groups.isEmpty() ||
-                etat.error != null
-
-            if (doitRecharger) {
-                signatureProfils = signature
-                charger()
-            }
-            // Dans la même coroutine : le programme en cours s'appuie sur les
-            // groupes que le chargement vient de publier.
-            rafraichirProgrammesCourants()
+            if (etat.groups.isEmpty() || etat.error != null) charger()
         }
     }
 
     /** Charge (ou recharge) les catégories et les chaînes. */
     fun load() {
-        viewModelScope.launch(dispatchers.io) {
-            signatureProfils = signatureDesProfils()
-            charger()
-        }
+        viewModelScope.launch(dispatchers.io) { charger() }
     }
-
-    /** Signature des profils enregistrés, utilisée pour détecter un changement. */
-    private suspend fun signatureDesProfils(): Int =
-        profileSource.profiles().hashCode() * 31 +
-            (profileSource.activeProfileId()?.hashCode() ?: 0)
 
     /** Chargement du catalogue, exécuté dans une coroutine d'entrée-sortie. */
     private suspend fun charger() {
@@ -147,34 +112,17 @@ class HomeViewModel @Inject constructor(
         val config = configRepository.current()
         qualityMode = settingsStore.playback().qualityMode ?: config.bandwidth.defaultMode
 
-        if (!profileSource.hasUsableProfile()) {
-            // Aucun portail configuré : ce n'est pas une erreur, c'est le premier
-            // lancement. L'écran propose la saisie manuelle.
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    error = null,
-                    groups = emptyList(),
-                    categories = emptyList(),
-                    qualityMode = qualityMode,
-                    isFromCache = false,
-                )
-            }
-            return
-        }
-
-        val portalId = profileSource.activePortalKey()
-
         // Le catalogue mémorisé est affiché sans attendre : sur une connexion
         // lente, la liste apparaît immédiatement au lieu de laisser un écran de
-        // chargement pendant toute la durée de l'interrogation du portail.
-        val groupesMemorises = catalogCache.groups(portalId)
+        // chargement pendant toute la durée du téléchargement.
+        val cle = catalogRepository.cacheKey()
+        val groupesMemorises = catalogCache.groups(cle)
         if (groupesMemorises.isNotEmpty()) {
             _state.update {
                 it.copy(
                     isLoading = false,
                     error = null,
-                    categories = catalogCache.categories(portalId),
+                    categories = catalogCache.categories(cle),
                     groups = groupesMemorises,
                     qualityMode = qualityMode,
                     isFromCache = true,
@@ -182,24 +130,7 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        val session = when (val resultat = portalRepository.connect()) {
-            is AppResult.Success -> resultat.value
-            is AppResult.Failure -> {
-                MissaLog.w("Ouverture de session impossible au chargement des chaînes")
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        isFromCache = groupesMemorises.isNotEmpty(),
-                        // Une liste mémorisée reste utilisable : l'échec est
-                        // signalé sans effacer ce que l'utilisateur avait.
-                        error = if (groupesMemorises.isEmpty()) resultat.error else null,
-                    )
-                }
-                return
-            }
-        }
-
-        when (val resultat = portalRepository.catalog(session)) {
+        when (val resultat = catalogRepository.load()) {
             is AppResult.Success -> {
                 val catalogue = resultat.value
                 _state.update {
@@ -213,20 +144,16 @@ class HomeViewModel @Inject constructor(
                         isFromCache = false,
                     )
                 }
-
-                // Mise en cache après l'affichage : l'écriture ne retarde jamais la
-                // liste, et son échec n'a aucune conséquence visible — la prochaine
-                // ouverture refera simplement l'appel au portail.
-                runCatching { catalogCache.save(portalId, catalogue) }
-                    .onFailure { erreur ->
-                        MissaLog.w("Catalogue local non enregistré : ${erreur.javaClass.simpleName}")
-                    }
             }
+
             is AppResult.Failure -> {
+                MissaLog.w("Catalogue non chargé depuis les playlists")
                 _state.update {
                     it.copy(
                         isLoading = false,
                         isFromCache = groupesMemorises.isNotEmpty(),
+                        // Une liste mémorisée reste utilisable : l'échec est
+                        // signalé sans effacer ce que l'utilisateur avait.
                         error = if (groupesMemorises.isEmpty()) resultat.error else null,
                     )
                 }
@@ -246,46 +173,6 @@ class HomeViewModel @Inject constructor(
      * autre : c'est ainsi que le mode économie réduit réellement la consommation.
      */
     fun channelToPlay(group: ChannelGroup): Channel = group.bestFor(qualityMode).channel
-
-    /**
-     * Affiche le programme en cours des chaînes visibles.
-     *
-     * Le guide mémorisé est affiché sans attendre le portail ; seules les
-     * chaînes dont le guide est périmé sont redemandées, dans la limite fixée
-     * par [EpgLoader] pour ne pas transformer l'ouverture de l'accueil en
-     * rafale de requêtes sur une connexion limitée.
-     */
-    private suspend fun rafraichirProgrammesCourants() {
-        val groupes = _state.value.visibleGroups
-        if (groupes.isEmpty()) return
-
-        val portalId = profileSource.activePortalKey()
-        val maintenant = timeSource.nowMs()
-        val ids = groupes.map { channelToPlay(it).id }
-        val cleParId = groupes.associate { channelToPlay(it).id to it.key }
-
-        // Affichage immédiat depuis le guide mémorisé.
-        val memorises = epgLoader.cachedGuides(portalId, ids, maintenant)
-        _state.update { etat ->
-            etat.copy(nowPlaying = programmeEnCours(memorises, cleParId))
-        }
-
-        // Rafraîchissement des guides périmés, puis nouvel affichage.
-        val outcome = epgLoader.refreshShortEpg(portalId, ids, maintenant)
-        _state.update { etat ->
-            etat.copy(nowPlaying = programmeEnCours(outcome.guides, cleParId))
-        }
-    }
-
-    /** Programmes en cours des guides, indexés par clé de groupe. */
-    private fun programmeEnCours(
-        guides: Map<String, ChannelEpg>,
-        cleParId: Map<String, String>,
-    ): Map<String, EpgEvent> = guides.mapNotNull { (channelId, guide) ->
-        val enCours = guide.current ?: return@mapNotNull null
-        val cle = cleParId[channelId] ?: return@mapNotNull null
-        cle to enCours
-    }.toMap()
 
     private companion object {
         /**

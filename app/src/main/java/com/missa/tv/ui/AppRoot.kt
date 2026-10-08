@@ -61,13 +61,10 @@ fun AppRoot(onExit: () -> Unit) {
                     val vm: HomeViewModel = viewModel(
                         factory = hiltViewModelFactory<HomeViewModel>(contexte) { point ->
                             HomeViewModel(
-                                portalRepository = point.portalRepository(),
+                                catalogRepository = point.catalogRepository(),
                                 configRepository = point.remoteConfigRepository(),
                                 settingsStore = point.settingsStore(),
-                                profileSource = point.portalProfileSource(),
                                 catalogCache = point.catalogCache(),
-                                epgLoader = point.epgLoader(),
-                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -101,14 +98,10 @@ fun AppRoot(onExit: () -> Unit) {
                         factory = hiltViewModelFactory<PlayerViewModel>(contexte) { point ->
                             PlayerViewModel(
                                 channel = ecran.channel,
-                                portalRepository = point.portalRepository(),
                                 configRepository = point.remoteConfigRepository(),
                                 settingsStore = point.settingsStore(),
                                 playerFactory = point.playerFactory(),
                                 qualityApplier = point.playbackQualityApplier(),
-                                profileSource = point.portalProfileSource(),
-                                epgLoader = point.epgLoader(),
-                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },

@@ -14,9 +14,6 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
-import com.missa.tv.core.result.AppResult
-import com.missa.tv.core.time.TimeSource
-import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
@@ -25,14 +22,10 @@ import com.missa.tv.domain.bandwidth.QualityController
 import com.missa.tv.domain.model.BandwidthSettings
 import com.missa.tv.domain.model.Channel
 import com.missa.tv.domain.model.ChannelEpg
-import com.missa.tv.domain.model.PortalSession
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.playback.PlaybackCaps
-import com.missa.tv.domain.repository.PortalProfileSource
-import com.missa.tv.domain.repository.PortalRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -74,8 +67,8 @@ data class PlayerUiState(
     /**
      * Guide de la chaîne : programme en cours et suivant.
      *
-     * Information affichée à côté du nom de la chaîne, chargée en parallèle
-     * de la lecture : son absence n'interrompt jamais la lecture.
+     * Renseigné par la source de guide de programmes ; reste `null` tant qu'aucun
+     * guide n'est disponible. Son absence n'interrompt jamais la lecture.
      */
     val epg: ChannelEpg? = null,
 ) {
@@ -86,7 +79,10 @@ data class PlayerUiState(
 }
 
 /**
- * Lecture d'une chaîne du portail.
+ * Lecture directe d'une chaîne.
+ *
+ * L'adresse du flux ([Channel.streamUrl]) est lue telle quelle : aucun lien
+ * temporaire n'est demandé, la lecture commence dès que le tampon est prêt.
  *
  * Le mode de qualité appliqué résulte de trois volontés, dans cet ordre :
  *  1. le choix explicite de l'utilisateur, s'il existe — il est respecté, y
@@ -98,14 +94,10 @@ data class PlayerUiState(
 @OptIn(UnstableApi::class)
 class PlayerViewModel @Inject constructor(
     private val channel: Channel,
-    private val portalRepository: PortalRepository,
     private val configRepository: RemoteConfigRepository,
     private val settingsStore: SettingsStore,
     private val playerFactory: PlayerFactory,
     private val qualityApplier: PlaybackQualityApplier,
-    private val profileSource: PortalProfileSource,
-    private val epgLoader: EpgLoader,
-    private val timeSource: TimeSource,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -118,8 +110,6 @@ class PlayerViewModel @Inject constructor(
     /** Décide des dégradations et remontées de palier. */
     private var qualityController = QualityController(bandwidthSettings)
 
-    private var session: PortalSession? = null
-    private var sessionKeepAlive: Job? = null
     private var player: ExoPlayer? = null
 
     /** Lecteur exposé à l'interface, créé une seule fois par écran. */
@@ -135,40 +125,17 @@ class PlayerViewModel @Inject constructor(
     }
 
     /**
-     * Ouvre la session puis lance la lecture.
+     * Lance la lecture du flux de la chaîne.
      *
-     * Les étapes sont séparées pour que l'interface puisse afficher un état
-     * précis : ouverture de session, création du lien, mise en mémoire tampon.
+     * Le mode est d'abord arrêté (choix utilisateur, sinon recommandation de la
+     * configuration, corrigée par l'état de la connexion), puis le lecteur est
+     * préparé sur l'adresse directe du flux.
      */
     fun startPlayback(recommendedMode: QualityMode = bandwidthSettings.defaultMode) {
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(phase = PlayerUiState.Phase.Opening, error = null) }
 
             val preferences = settingsStore.playback()
-            val session = when (val resultat = portalRepository.connect()) {
-                is AppResult.Success -> resultat.value
-                is AppResult.Failure -> {
-                    fail(resultat.error)
-                    return@launch
-                }
-            }
-            this@PlayerViewModel.session = session
-
-            // Le guide (programme en cours / à suivre) est chargé en parallèle
-            // de la lecture, avec la session déjà ouverte : il s'affiche dès
-            // réception, sans attendre le flux.
-            viewModelScope.launch(dispatchers.io) {
-                chargerGuide(session)
-            }
-
-            val lien = when (val resultat = portalRepository.createLink(session, channel)) {
-                is AppResult.Success -> resultat.value
-                is AppResult.Failure -> {
-                    fail(resultat.error)
-                    return@launch
-                }
-            }
-
             val modeDemande = preferences.qualityMode ?: recommendedMode
             val mode = qualityController.initialMode(
                 userMode = modeDemande,
@@ -184,12 +151,7 @@ class PlayerViewModel @Inject constructor(
             }
 
             withContext(dispatchers.main) {
-                preparePlayer(lien.url, mode)
-            }
-
-            sessionKeepAlive?.cancel()
-            sessionKeepAlive = viewModelScope.launch(dispatchers.io) {
-                portalRepository.keepAlive(session)
+                preparePlayer(channel.streamUrl, mode)
             }
         }
     }
@@ -241,8 +203,6 @@ class PlayerViewModel @Inject constructor(
      * batterie et le réseau même sans image affichée.
      */
     fun releasePlayer() {
-        sessionKeepAlive?.cancel()
-        sessionKeepAlive = null
         player?.release()
         player = null
         _state.update { it.copy(phase = PlayerUiState.Phase.Idle) }
@@ -283,8 +243,6 @@ class PlayerViewModel @Inject constructor(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                // Un lien de lecture peut expirer : on le signale sans masquer la
-                // cause, mais l'utilisateur n'a qu'une action utile : réessayer.
                 MissaLog.w("Erreur de lecture (${error.errorCodeName})", error)
                 _state.update {
                     it.copy(
@@ -366,28 +324,5 @@ class PlayerViewModel @Inject constructor(
     private fun applyMode(mode: QualityMode) {
         val lecteur = player ?: return
         qualityApplier.applyCaps(lecteur, PlaybackCaps.forMode(mode, bandwidthSettings))
-    }
-
-    private fun fail(error: AppError) {
-        _state.update { it.copy(phase = PlayerUiState.Phase.Failed, error = error) }
-    }
-
-    /**
-     * Charge le programme en cours et le suivant de la chaîne.
-     *
-     * La lecture n'attend pas le guide, et l'absence de guide n'interrompt
-     * rien : c'est une information affichée à côté du nom de la chaîne, pas
-     * une condition de lecture. Le guide mémorisé est affiché sans attendre ;
-     * seul un guide périmé est redemandé au portail.
-     */
-    private suspend fun chargerGuide(session: PortalSession) {
-        val portalId = profileSource.activePortalKey()
-        val outcome = epgLoader.refreshShortEpg(
-            portalId = portalId,
-            channelIds = listOf(channel.id),
-            nowMs = timeSource.nowMs(),
-            session = session,
-        )
-        _state.update { it.copy(epg = outcome.guides[channel.id]) }
     }
 }
