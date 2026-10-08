@@ -41,6 +41,9 @@
     <string name="error_playlist_invalid">Playlist illisible : le contenu n\'est pas au format M3U.</string>
     <string name="error_playlist_empty">La playlist ne contient aucune chaîne exploitable.</string>
     <string name="error_playlist_too_large">Playlist trop volumineuse : elle dépasse les limites acceptées.</string>
+    <string name="error_epg_invalid">Guide de programmes illisible : le contenu n\'est pas au format attendu.</string>
+    <string name="error_epg_empty">Guide de programmes vide : aucun programme n\'est publié.</string>
+    <string name="error_epg_too_large">Guide de programmes trop volumineux : il dépasse les limites acceptées.</string>
     <string name="error_config_invalid">Configuration invalide : la dernière configuration valide est conservée.</string>
     <string name="action_retry">Réessayer</string>
     <string name="action_cancel">Annuler</string>

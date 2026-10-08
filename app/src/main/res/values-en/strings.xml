@@ -42,6 +42,9 @@
     <string name="error_playlist_invalid">Unreadable playlist: the content is not in M3U format.</string>
     <string name="error_playlist_empty">The playlist contains no usable channel.</string>
     <string name="error_playlist_too_large">Playlist too large: it exceeds the accepted limits.</string>
+    <string name="error_epg_invalid">Programme guide unreadable: the content is not in the expected format.</string>
+    <string name="error_epg_empty">Programme guide empty: no programmes are published.</string>
+    <string name="error_epg_too_large">Programme guide too large: it exceeds the accepted limits.</string>
     <string name="error_config_invalid">Invalid configuration: the last valid configuration is kept.</string>
     <string name="action_retry">Retry</string>
     <string name="action_cancel">Cancel</string>

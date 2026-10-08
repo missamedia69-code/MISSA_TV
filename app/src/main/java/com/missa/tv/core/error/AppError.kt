@@ -46,6 +46,15 @@ sealed class AppError(
     /** La playlist dépasse la taille ou le nombre d'entrées acceptés. */
     data object PlaylistTooLarge : AppError(R.string.error_playlist_too_large, retryable = false)
 
+    /** Le contenu téléchargé n'est pas un guide de programmes XMLTV exploitable. */
+    data object EpgInvalid : AppError(R.string.error_epg_invalid, retryable = false)
+
+    /** Le guide est bien formé mais ne contient aucun programme exploitable. */
+    data object EpgEmpty : AppError(R.string.error_epg_empty, retryable = false)
+
+    /** Le guide dépasse le nombre maximal de programmes accepté. */
+    data object EpgTooLarge : AppError(R.string.error_epg_too_large, retryable = false)
+
     /** Toute autre erreur ; la cause est journalisée, jamais affichée. */
     data class Unknown(val cause: Throwable? = null) : AppError(R.string.error_portal_unreachable)
 }
