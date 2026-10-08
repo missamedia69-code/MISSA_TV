@@ -24,7 +24,7 @@ object Secrets {
     /** URL complète : schéma, hôte, port et chemin. */
     private val URL_REGEX = Regex("(https?)://([^:/\\s]+)(:\\d+)?([^\\s]*)")
 
-    /** Jeton d'autorisation Stalker, renvoyé par le handshake. */
+    /** Jeton d'autorisation « Bearer », pour ne jamais le journaliser. */
     private val TOKEN_REGEX = Regex("Bearer\\s+[A-Za-z0-9._~+/=-]{8,}")
 
     /** Jetons d'API GitHub, pour ne jamais les journaliser par accident. */

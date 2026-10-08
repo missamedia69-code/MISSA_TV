@@ -6,15 +6,14 @@ import androidx.room.RoomDatabase
 /**
  * Base locale de l'application.
  *
- * Elle ne contient que le catalogue du portail et son guide : aucun
- * identifiant de connexion, aucune adresse MAC, aucun jeton. Ces éléments-là
- * vivent dans le stockage chiffré (DataStore chiffré, voir
- * `EncryptedPortalProfileSource`), et la base peut donc être effacée par
- * l'utilisateur sans conséquence sur sa configuration.
+ * Elle ne contient que le catalogue de chaînes et son guide : aucune adresse de
+ * playlist, aucun jeton. Ces éléments-là vivent dans le stockage chiffré
+ * (DataStore chiffré, voir `EncryptedPlaylistSourceStore`), et la base peut donc
+ * être effacée par l'utilisateur sans conséquence sur sa configuration.
  *
- * Le schéma n'est pas exporté : il n'existe qu'une version publiée, et la
- * migration destructive reste acceptable pour un cache — il se reconstruit au
- * prochain chargement réussi du portail.
+ * Le schéma n'est pas exporté : le catalogue est un cache reconstructible, une
+ * migration destructive reste acceptable — il se reconstruit au prochain
+ * chargement réussi.
  *
  * Historique des versions :
  *  - 1 : catalogue (catégories, chaînes) ;

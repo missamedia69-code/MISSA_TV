@@ -7,9 +7,9 @@ import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.playlist.M3uChannelMapper
 import com.missa.tv.data.playlist.PlaylistRepository
+import com.missa.tv.domain.model.Catalog
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
-import com.missa.tv.domain.model.PortalCatalog
 import com.missa.tv.domain.repository.CatalogRepository
 import com.missa.tv.domain.repository.PlaylistSourceStore
 import kotlinx.coroutines.withContext
@@ -35,13 +35,13 @@ class M3uCatalogRepository(
     private val timeSource: TimeSource,
 ) : CatalogRepository {
 
-    override suspend fun load(): AppResult<PortalCatalog> = withContext(dispatchers.io) {
+    override suspend fun load(): AppResult<Catalog> = withContext(dispatchers.io) {
         when (val resultat = playlistRepository.entries()) {
             is AppResult.Failure -> resultat
 
             is AppResult.Success -> {
                 val channels = M3uChannelMapper.toChannels(resultat.value)
-                val catalog = PortalCatalog(
+                val catalog = Catalog(
                     categories = categoriesDe(channels),
                     channels = channels,
                     loadedAtMs = timeSource.nowMs(),

@@ -5,9 +5,9 @@ import com.missa.tv.data.local.db.CatalogDao
 import com.missa.tv.data.local.db.CategoryEntity
 import com.missa.tv.data.local.db.ChannelEntity
 import com.missa.tv.data.local.db.ChannelGroupSummary
+import com.missa.tv.domain.model.Catalog
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
-import com.missa.tv.domain.model.PortalCatalog
 import com.missa.tv.domain.model.VideoQuality
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -53,7 +53,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes"), Category("20", "Sport")),
                 channels = listOf(chaine("1", 1, "Chaîne une")),
                 loadedAtMs = 0,
@@ -72,7 +72,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes")),
                 channels = listOf(
                     chaine("1", 1, "TF1"),
@@ -103,7 +103,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes")),
                 channels = listOf(chaine("1", 1, "Chaîne unique HD")),
                 loadedAtMs = 0,
@@ -123,7 +123,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes"), Category("20", "Sport")),
                 channels = listOf(
                     chaine("1", 1, "Direct", categorie = "10"),
@@ -142,7 +142,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = emptyList(),
                 channels = listOf(
                     chaine("1", 1, "Match FHD"),
@@ -167,7 +167,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes")),
                 channels = listOf(chaine("1", 1, "Ancienne")),
                 loadedAtMs = 0,
@@ -175,7 +175,7 @@ class CatalogCacheTest {
         )
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("20", "Sport")),
                 channels = listOf(chaine("9", 9, "Nouvelle", categorie = "20")),
                 loadedAtMs = 0,
@@ -196,7 +196,7 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(
+            Catalog(
                 categories = listOf(Category("10", "Généralistes")),
                 channels = listOf(chaine("1", 1, "Chaîne une")),
                 loadedAtMs = 0,
@@ -217,11 +217,11 @@ class CatalogCacheTest {
 
         catalogue.save(
             PORTAL,
-            PortalCatalog(emptyList(), listOf(chaine("1", 1, "Une")), loadedAtMs = 0),
+            Catalog(emptyList(), listOf(chaine("1", 1, "Une")), loadedAtMs = 0),
         )
         catalogue.save(
             "autre-portail",
-            PortalCatalog(emptyList(), listOf(chaine("2", 2, "Deux")), loadedAtMs = 0),
+            Catalog(emptyList(), listOf(chaine("2", 2, "Deux")), loadedAtMs = 0),
         )
 
         catalogue.clearAll()

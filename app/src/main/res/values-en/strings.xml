@@ -35,8 +35,6 @@
 
     <!-- Errors -->
     <string name="error_portal_unreachable">Portal unreachable. Check your connection and try again.</string>
-    <string name="error_mac_unauthorized">This device is not authorised by the portal.</string>
-    <string name="error_subscription_expired">Subscription expired or inactive.</string>
     <string name="error_stream_unavailable">Stream temporarily unavailable.</string>
     <string name="error_network_lost">Network lost. Reconnecting…</string>
     <string name="error_playlist_unreachable">Playlist unreachable. Check your connection and try again.</string>
@@ -73,7 +71,6 @@
     <string name="home_variants">%1$d available qualities</string>
     <string name="home_loading">Loading channels…</string>
     <string name="home_open_settings">Settings</string>
-    <string name="home_configure_portal">Set up a portal</string>
     <string name="home_config_first_time">No portal is configured yet. Enter the details provided by your service.</string>
     <string name="home_update_required">A new version of the application is available.</string>
 
@@ -104,14 +101,6 @@
     <string name="settings_sources_section">Channel sources</string>
     <string name="settings_sources_none">No sources configured yet.</string>
     <string name="settings_sources_online">Sources are managed by the online configuration and cannot be changed here.</string>
-    <string name="settings_profiles">Connection profiles</string>
-    <string name="settings_profile_add">Add a profile</string>
-    <string name="settings_profile_name">Profile name</string>
-    <string name="settings_portal_url">Portal address</string>
-    <string name="settings_portal_url_hint">http://example/</string>
-    <string name="settings_mac">Device MAC address</string>
-    <string name="settings_mac_hint">00:1A:79:XX:XX:XX</string>
-    <string name="settings_secrets_notice">This information is never written to logs and stays encrypted on this device.</string>
     <string name="settings_quality_section">Picture quality</string>
     <string name="settings_quality_default">Default mode</string>
     <string name="settings_config_section">Remote configuration</string>
@@ -124,18 +113,9 @@
     <string name="settings_legal">MISSA TV is a player: the application provides no channel and no stream. You are responsible for watching content you are entitled to watch.</string>
 
     <!-- Validation -->
-    <string name="validation_url_required">Portal address is required.</string>
-    <string name="validation_url_invalid">Invalid address: it must start with http:// or https://</string>
-    <string name="validation_mac_required">MAC address is required.</string>
-    <string name="validation_mac_invalid">Invalid MAC address: six groups of two hexadecimal characters.</string>
-    <string name="validation_name_required">Profile name is required.</string>
-    <string name="settings_profile_saved">Profile saved.</string>
     <string name="home_cached_catalog">Showing the saved catalog: the portal could not be reached.</string>
     <string name="settings_last_incident">Last incident: %1$s</string>
     <string name="error_config_not_found">Configuration file not found: check the path and branch read from the repository.</string>
-    <string name="settings_test_connection">Test connection</string>
-    <string name="settings_connection_ok">Connection successful: %1$d channels received from the portal.</string>
-    <string name="error_session_expired">Session expired: go back to the home screen to reconnect to the portal.</string>
 
     <!-- TV guide (EPG) -->
     <string name="epg_open">TV guide</string>

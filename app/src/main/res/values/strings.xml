@@ -34,8 +34,6 @@
 
     <!-- Erreurs -->
     <string name="error_portal_unreachable">Portail injoignable. Vérifiez la connexion puis réessayez.</string>
-    <string name="error_mac_unauthorized">Cet appareil n\'est pas autorisé par le portail.</string>
-    <string name="error_subscription_expired">Abonnement expiré ou inactif.</string>
     <string name="error_stream_unavailable">Flux momentanément indisponible.</string>
     <string name="error_network_lost">Réseau perdu. Reconnexion…</string>
     <string name="error_playlist_unreachable">Playlist injoignable. Vérifiez la connexion puis réessayez.</string>
@@ -72,7 +70,6 @@
     <string name="home_variants">%1$d qualités disponibles</string>
     <string name="home_loading">Chargement des chaînes…</string>
     <string name="home_open_settings">Réglages</string>
-    <string name="home_configure_portal">Configurer un portail</string>
     <string name="home_config_first_time">Aucun portail n\'est configuré. Saisissez les informations fournies par votre fournisseur d\'accès.</string>
     <string name="home_update_required">Une nouvelle version de l\'application est disponible.</string>
 
@@ -103,14 +100,6 @@
     <string name="settings_sources_section">Sources des chaînes</string>
     <string name="settings_sources_none">Aucune source configurée pour l\'instant.</string>
     <string name="settings_sources_online">Les sources sont gérées par la configuration en ligne et ne peuvent pas être modifiées ici.</string>
-    <string name="settings_profiles">Profils de connexion</string>
-    <string name="settings_profile_add">Ajouter un profil</string>
-    <string name="settings_profile_name">Nom du profil</string>
-    <string name="settings_portal_url">Adresse du portail</string>
-    <string name="settings_portal_url_hint">http://exemple/</string>
-    <string name="settings_mac">Adresse MAC de l\'appareil</string>
-    <string name="settings_mac_hint">00:1A:79:XX:XX:XX</string>
-    <string name="settings_secrets_notice">Ces informations ne sont jamais affichées dans les journaux et restent stockées chiffrées sur cet appareil.</string>
     <string name="settings_quality_section">Qualité d\'image</string>
     <string name="settings_quality_default">Mode appliqué par défaut</string>
     <string name="settings_config_section">Configuration distante</string>
@@ -123,18 +112,9 @@
     <string name="settings_legal">MISSA TV est un lecteur : l\'application ne fournit aucune chaîne ni aucun flux. Vous êtes responsable de l\'usage de contenus que vous avez le droit de regarder.</string>
 
     <!-- Validation -->
-    <string name="validation_url_required">Adresse du portail requise.</string>
-    <string name="validation_url_invalid">Adresse invalide : elle doit commencer par http:// ou https://</string>
-    <string name="validation_mac_required">Adresse MAC requise.</string>
-    <string name="validation_mac_invalid">Adresse MAC invalide : six groupes de deux caractères hexadécimaux.</string>
-    <string name="validation_name_required">Nom du profil requis.</string>
-    <string name="settings_profile_saved">Profil enregistré.</string>
     <string name="home_cached_catalog">Catalogue mémorisé affiché : le portail n\'a pas pu être joint.</string>
     <string name="settings_last_incident">Dernier incident : %1$s</string>
     <string name="error_config_not_found">Fichier de configuration introuvable : vérifiez le chemin et la branche lus dans le dépôt.</string>
-    <string name="settings_test_connection">Tester la connexion</string>
-    <string name="settings_connection_ok">Connexion réussie : %1$d chaînes reçues du portail.</string>
-    <string name="error_session_expired">Session expirée : revenez à l\'accueil pour vous reconnecter au portail.</string>
 
     <!-- Programme TV (guide EPG) -->
     <string name="epg_open">Programme TV</string>

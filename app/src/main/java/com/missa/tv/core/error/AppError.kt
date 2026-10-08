@@ -16,25 +16,7 @@ sealed class AppError(
     val retryable: Boolean = true,
 ) {
 
-    /** Le portail ne répond pas (DNS, port fermé, délai dépassé). */
-    data object PortalUnreachable : AppError(R.string.error_portal_unreachable)
-
-    /** Handshake refusé : l'appareil n'est pas reconnu par le portail. */
-    data object MacUnauthorized : AppError(R.string.error_mac_unauthorized, retryable = false)
-
-    /** Abonnement expiré ou désactivé côté portail. */
-    data object SubscriptionExpired : AppError(R.string.error_subscription_expired, retryable = false)
-
-    /**
-     * Session ouverte devenue inutilisable : elle appartient à un autre lancement,
-     * ou le portail ne la reconnaît plus.
-     *
-     * Distinct d'[SubscriptionExpired] : le problème vient de la session, pas du
-     * compte de l'utilisateur.
-     */
-    data object SessionExpired : AppError(R.string.error_session_expired)
-
-    /** Le portail répond mais ne fournit aucun flux pour cette chaîne. */
+    /** Le flux de la chaîne est indisponible (coupure, adresse expirée). */
     data object StreamUnavailable : AppError(R.string.error_stream_unavailable)
 
     /** Plus de réseau (Wi-Fi ou données mobiles perdues). */

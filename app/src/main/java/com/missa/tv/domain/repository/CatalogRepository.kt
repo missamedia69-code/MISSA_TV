@@ -1,7 +1,7 @@
 package com.missa.tv.domain.repository
 
 import com.missa.tv.core.result.AppResult
-import com.missa.tv.domain.model.PortalCatalog
+import com.missa.tv.domain.model.Catalog
 
 /**
  * Chargement du catalogue de chaînes.
@@ -17,7 +17,7 @@ interface CatalogRepository {
      * Catalogue chargé depuis les sources de playlists, ou repris du cache local
      * si toutes les sources sont inaccessibles.
      */
-    suspend fun load(): AppResult<PortalCatalog>
+    suspend fun load(): AppResult<Catalog>
 
     /**
      * Clé du catalogue local.

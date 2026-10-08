@@ -66,6 +66,5 @@ class PlaylistFailoverPolicyTest {
     @Test
     fun `n autorise pas la bascule pour une erreur etrangere aux playlists`() {
         assertThat(politique.shouldFailover(AppError.NetworkLost)).isFalse()
-        assertThat(politique.shouldFailover(AppError.PortalUnreachable)).isFalse()
     }
 }

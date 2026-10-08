@@ -5,15 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.log.CrashRecorder
-import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.CatalogCache
-import com.missa.tv.data.local.EpgCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
 import com.missa.tv.domain.repository.CatalogRepository
-import com.missa.tv.domain.repository.PortalProfileSource
-import com.missa.tv.domain.repository.PortalRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -35,17 +31,13 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface AppEntryPoint {
-    fun portalRepository(): PortalRepository
     fun remoteConfigRepository(): RemoteConfigRepository
     fun catalogRepository(): CatalogRepository
-    fun portalProfileSource(): PortalProfileSource
     fun settingsStore(): SettingsStore
     fun catalogCache(): CatalogCache
-    fun epgCache(): EpgCache
     fun playerFactory(): PlayerFactory
     fun playbackQualityApplier(): PlaybackQualityApplier
     fun dispatcherProvider(): DispatcherProvider
-    fun timeSource(): TimeSource
     fun crashRecorder(): CrashRecorder
 }
 

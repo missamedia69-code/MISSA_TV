@@ -5,10 +5,10 @@ import com.missa.tv.core.time.TimeSource
 import com.missa.tv.data.local.db.CatalogDao
 import com.missa.tv.data.local.db.CategoryEntity
 import com.missa.tv.data.local.db.ChannelEntity
+import com.missa.tv.domain.model.Catalog
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.ChannelVariant
-import com.missa.tv.domain.model.PortalCatalog
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,7 +34,7 @@ class CatalogCache @Inject constructor(
 ) {
 
     /** Enregistre le catalogue d'un portail, en remplacement du précédent. */
-    suspend fun save(portalId: String, catalog: PortalCatalog) {
+    suspend fun save(portalId: String, catalog: Catalog) {
         val maintenant = timeSource.nowMs()
         val categories = catalog.categories.mapIndexed { index, categorie ->
             CategoryEntity.fromDomain(portalId, categorie, index)
