@@ -61,13 +61,13 @@ class OkHttpPlaylistFetcher(
                 val corps = reponse.body
                 if (corps == null) {
                     reponse.close()
-                    PlaylistHttpResponse.Refused(reponse.code())
+                    PlaylistHttpResponse.Refused(reponse.code)
                 } else {
                     // Le flux reste ouvert : il est lu puis fermé par le téléchargeur.
                     PlaylistHttpResponse.Body(corps.byteStream())
                 }
             } else {
-                val code = reponse.code()
+                val code = reponse.code
                 reponse.close()
                 PlaylistHttpResponse.Refused(code)
             }
