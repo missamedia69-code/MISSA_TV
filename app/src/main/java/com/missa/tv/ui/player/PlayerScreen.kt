@@ -3,6 +3,7 @@ package com.missa.tv.ui.player
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +52,7 @@ import com.missa.tv.R
 import com.missa.tv.core.time.ClockFormat
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.ui.adaptive.DeviceProfile
+import kotlinx.coroutines.delay
 
 /**
  * Écran de lecture.
@@ -61,6 +65,9 @@ import com.missa.tv.ui.adaptive.DeviceProfile
  * le moteur de lecture ([com.missa.tv.domain.playback.PlaybackCaps]) décident
  * réellement de ce qui est téléchargé.
  */
+/** Délai avant le masquage automatique des commandes pendant la lecture. */
+private const val COMMANDES_MASQUAGE_AUTO_MS = 6_000L
+
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerScreen(
@@ -76,6 +83,16 @@ fun PlayerScreen(
 ) {
     var controlesVisibles by remember { mutableStateOf(true) }
     var selecteurOuvert by remember { mutableStateOf(false) }
+
+    // Les commandes s'effacent d'elles-mêmes pendant la lecture : sur un
+    // téléviseur, elles ne doivent pas rester incrustées sur l'image. Un appui
+    // (tactile ou télécommande) les fait réapparaître et réarme la minuterie.
+    LaunchedEffect(controlesVisibles, selecteurOuvert, state.phase) {
+        if (controlesVisibles && !selecteurOuvert && state.phase == PlayerUiState.Phase.Playing) {
+            delay(COMMANDES_MASQUAGE_AUTO_MS)
+            controlesVisibles = false
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -247,11 +264,15 @@ private fun Commandes(
 
             // Pastille de qualité : elle affiche le mode en vigueur et ouvre le
             // sélecteur. C'est aussi le rappel permanent de ce que l'application
-            // est en train de télécharger.
+            // est en train de télécharger. Focalisable à la télécommande : le
+            // fond s'éclaircit quand le focus D-pad est dessus.
+            var pastilleFocalisee by remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(Color(0x66000000))
+                    .background(if (pastilleFocalisee) Color(0xCC444444) else Color(0x66000000))
+                    .focusable()
+                    .onFocusChanged { pastilleFocalisee = it.isFocused }
                     .clickable(onClick = onOuvrirSelecteur)
                     .padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
