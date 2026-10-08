@@ -7,6 +7,7 @@ import com.missa.tv.data.local.db.CategoryEntity
 import com.missa.tv.data.local.db.ChannelEntity
 import com.missa.tv.domain.model.Catalog
 import com.missa.tv.domain.model.Category
+import com.missa.tv.domain.model.Channel
 import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.ChannelVariant
 import javax.inject.Inject
@@ -88,6 +89,15 @@ class CatalogCache @Inject constructor(
         dao.variants(portalId, groupKey).map { entite ->
             ChannelVariant(channel = entite.toDomain(), quality = entite.quality)
         }
+
+    /**
+     * Toutes les diffusions mémorisées d'une source, sans regroupement.
+     *
+     * Sert au guide de programmes : c'est ici qu'on lit l'identifiant `tvgId` de
+     * chaque chaîne pour l'associer aux programmes publiés.
+     */
+    suspend fun channels(portalId: String): List<Channel> =
+        dao.channelsOrderedByGroup(portalId).map { it.toDomain() }
 
     /** Nombre de diffusions mémorisées, pour dater ou vider le cache. */
     suspend fun channelCount(portalId: String): Int = dao.channelCount(portalId)
