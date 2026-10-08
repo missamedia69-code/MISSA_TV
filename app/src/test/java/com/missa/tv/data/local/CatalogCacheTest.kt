@@ -43,7 +43,7 @@ class CatalogCacheTest {
         id = id,
         number = numero,
         name = nom,
-        cmd = "ffmpeg http://example.invalid/live/$id",
+        streamUrl = "ffmpeg http://example.invalid/live/$id",
         categoryId = categorie,
     )
 

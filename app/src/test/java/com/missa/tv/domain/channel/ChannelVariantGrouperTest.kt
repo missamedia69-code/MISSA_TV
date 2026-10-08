@@ -26,7 +26,7 @@ class ChannelVariantGrouperTest {
         id = numero.toString(),
         number = numero,
         name = nom,
-        cmd = "ffmpeg http://exemple.invalid/live/$numero",
+        streamUrl = "ffmpeg http://exemple.invalid/live/$numero",
         categoryId = categorie,
     )
 

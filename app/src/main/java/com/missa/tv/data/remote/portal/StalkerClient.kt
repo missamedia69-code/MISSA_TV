@@ -174,7 +174,7 @@ class StalkerClient(
             parameters = mapOf(
                 "type" to StalkerProtocol.TYPE_ITV,
                 "action" to StalkerProtocol.ACTION_CREATE_LINK,
-                "cmd" to channel.cmd,
+                "cmd" to channel.streamUrl,
                 "forced_storage" to "0",
                 "disable_ad" to "0",
                 "download" to "0",

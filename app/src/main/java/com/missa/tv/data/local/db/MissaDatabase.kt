@@ -18,11 +18,12 @@ import androidx.room.RoomDatabase
  *
  * Historique des versions :
  *  - 1 : catalogue (catégories, chaînes) ;
- *  - 2 : ajout du guide électronique (`epg_events`).
+ *  - 2 : ajout du guide électronique (`epg_events`) ;
+ *  - 3 : chaîne lue par `streamUrl` (+`tvgId`, `userAgent`, `referrer`).
  */
 @Database(
     entities = [CategoryEntity::class, ChannelEntity::class, EpgEventEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class MissaDatabase : RoomDatabase() {

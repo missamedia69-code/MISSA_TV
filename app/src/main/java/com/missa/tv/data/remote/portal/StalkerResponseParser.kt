@@ -377,7 +377,7 @@ class StalkerResponseParser(
             // `number` arrive indifféremment en chaîne ou en nombre.
             number = int("number") ?: 0,
             name = nom,
-            cmd = string("cmd").orEmpty(),
+            streamUrl = string("cmd").orEmpty(),
             logoUrl = string("logo")?.takeIf { it.startsWith("http") },
             categoryId = string("tv_genre_id"),
             isCensored = boolean("censored") ?: false,

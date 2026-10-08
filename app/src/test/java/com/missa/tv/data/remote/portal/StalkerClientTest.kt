@@ -218,7 +218,7 @@ class StalkerClientTest {
             }
             val client = StalkerClient(api, clockMs = { 5_000L })
             val session = client.connect(profil)
-            val chaine = Channel(id = "1", number = 1, name = "Une", cmd = "ffmpeg x")
+            val chaine = Channel(id = "1", number = 1, name = "Une", streamUrl = "ffmpeg x")
 
             val lien = client.createLink(session, profil, chaine)
 

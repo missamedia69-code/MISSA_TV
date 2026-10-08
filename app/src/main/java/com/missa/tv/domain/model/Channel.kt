@@ -7,21 +7,29 @@ data class Category(
 )
 
 /**
- * Une chaîne du portail.
+ * Une chaîne.
  *
- * [cmd] est la commande de lecture brute renvoyée par le portail (`ffmpeg ...`).
- * Elle n'est jamais utilisée directement : un lien de lecture temporaire est
- * demandé au portail au moment de regarder la chaîne.
+ * [streamUrl] est l'adresse du flux à lire. Pour une chaîne issue d'une playlist
+ * M3U c'est l'adresse directe du flux ; pour l'accès historique par portail elle
+ * porte la commande brute (`ffmpeg ...`), un lien de lecture temporaire étant
+ * alors demandé au portail au moment de regarder la chaîne.
+ *
+ * [tvgId], [userAgent] et [referrer] proviennent des playlists M3U : identifiant
+ * de correspondance pour les guides de programmes, et en-têtes exigés par
+ * certains flux à la lecture.
  */
 data class Channel(
     val id: String,
     val number: Int,
     val name: String,
-    val cmd: String,
+    val streamUrl: String,
     val logoUrl: String? = null,
     val categoryId: String? = null,
     val isCensored: Boolean = false,
     val isAvailable: Boolean = true,
+    val tvgId: String? = null,
+    val userAgent: String? = null,
+    val referrer: String? = null,
 ) {
     /** Nombre affiché à l'utilisateur (1, 2, 3…). */
     val displayNumber: String get() = number.toString()
