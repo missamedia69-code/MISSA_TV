@@ -135,11 +135,8 @@ fun AppRoot(onExit: () -> Unit) {
                         factory = hiltViewModelFactory<EpgViewModel>(contexte) { point ->
                             EpgViewModel(
                                 groups = ecran.groups,
-                                profileSource = point.portalProfileSource(),
-                                epgLoader = point.epgLoader(),
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
-                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -164,10 +161,6 @@ fun AppRoot(onExit: () -> Unit) {
                         factory = hiltViewModelFactory<ChannelGuideViewModel>(contexte) { point ->
                             ChannelGuideViewModel(
                                 channel = ecran.channel,
-                                portalRepository = point.portalRepository(),
-                                profileSource = point.portalProfileSource(),
-                                epgCache = point.epgCache(),
-                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },

@@ -3,15 +3,12 @@ package com.missa.tv.ui.epg
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.missa.tv.core.dispatchers.DispatcherProvider
-import com.missa.tv.core.time.TimeSource
-import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.model.Channel
 import com.missa.tv.domain.model.ChannelEpg
 import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.QualityMode
-import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,18 +40,16 @@ data class EpgUiState(
  * programme en cours et le suivant.
  *
  * La grille porte sur les groupes reçus à l'ouverture (catégorie comprise) :
- * elle décrit ce que l'utilisateur voyait, pas un catalogue figé. Le guide
- * mémorisé est affiché sans attendre le portail ; les chaînes rendues
- * visibles au défilement sont rafraîchies à la demande ([rafraichirPour]),
- * dans la limite fixée par [EpgLoader].
+ * elle décrit ce que l'utilisateur voyait, pas un catalogue figé.
+ *
+ * Tant qu'aucune source de guide n'est branchée, les lignes sont affichées sans
+ * programme : le guide XMLTV (étape suivante) viendra remplir ces cellules sans
+ * changer la structure de l'écran.
  */
 class EpgViewModel @Inject constructor(
     private val groups: List<ChannelGroup>,
-    private val profileSource: PortalProfileSource,
-    private val epgLoader: EpgLoader,
     private val settingsStore: SettingsStore,
     private val configRepository: RemoteConfigRepository,
-    private val timeSource: TimeSource,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -70,7 +65,7 @@ class EpgViewModel @Inject constructor(
         }
     }
 
-    /** Recharge la grille entière, guides mémorisés puis portail. */
+    /** Recharge la grille entière. */
     fun refresh() {
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isRefreshing = true) }
@@ -81,17 +76,11 @@ class EpgViewModel @Inject constructor(
     /**
      * Rafraîchit les guides des chaînes rendues visibles au défilement.
      *
-     * Appelé par l'écran à chaque changement de la fenêtre visible : les
-     * chaînes hors champ ne sont jamais demandées au portail.
+     * Sans source de guide branchée, il n'y a rien à demander : l'appel est
+     * conservé pour que l'écran n'ait pas à connaître cette absence.
      */
     fun rafraichirPour(visibles: List<ChannelGroup>) {
-        if (visibles.isEmpty()) return
-        viewModelScope.launch(dispatchers.io) {
-            val portalId = profileSource.activePortalKey()
-            val ids = visibles.map { channelIdPour(it) }.distinct()
-            val outcome = epgLoader.refreshShortEpg(portalId, ids, timeSource.nowMs())
-            appliquer(outcome.guides)
-        }
+        // Aucune source de guide pour l'instant : rien à rafraîchir.
     }
 
     /** Chaîne à lire pour un groupe — et dont le programme est affiché. */
@@ -101,37 +90,17 @@ class EpgViewModel @Inject constructor(
         qualityMode = settingsStore.playback().qualityMode
             ?: configRepository.current().bandwidth.defaultMode
 
-        val portalId = profileSource.activePortalKey()
-        val maintenant = timeSource.nowMs()
-        val ids = groups.map { channelIdPour(it) }
-
-        // Guides mémorisés, affichés sans attendre le portail.
-        appliquer(epgLoader.cachedGuides(portalId, ids, maintenant))
-
-        // Rafraîchissement des guides périmés.
-        val outcome = epgLoader.refreshShortEpg(portalId, ids, maintenant)
-        appliquer(outcome.guides)
-        _state.update { it.copy(isRefreshing = false) }
-    }
-
-    /** Met à jour les lignes à partir des guides, par identifiant de diffusion. */
-    private fun appliquer(guides: Map<String, ChannelEpg>) {
-        _state.update { etat ->
-            val lignes = etat.rows.ifEmpty { groups.map { rangee(it, null) } }
-            etat.copy(
-                rows = lignes.map { ligne ->
-                    val guide = guides[ligne.channelId] ?: return@map ligne
-                    ligne.copy(current = guide.current, next = guide.next)
-                },
+        _state.update {
+            it.copy(
+                rows = groups.map { groupe -> rangee(groupe, null) },
+                isRefreshing = false,
             )
         }
     }
 
-    private fun channelIdPour(groupe: ChannelGroup): String = channelToPlay(groupe).id
-
     private fun rangee(groupe: ChannelGroup, guide: ChannelEpg?): EpgRow = EpgRow(
         group = groupe,
-        channelId = channelIdPour(groupe),
+        channelId = channelToPlay(groupe).id,
         current = guide?.current,
         next = guide?.next,
     )
