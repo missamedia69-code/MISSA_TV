@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -38,12 +39,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.missa.tv.R
+import com.missa.tv.core.time.ClockFormat
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.ui.adaptive.DeviceProfile
 
@@ -68,6 +71,7 @@ fun PlayerScreen(
     onClearMode: () -> Unit,
     onRetry: () -> Unit,
     onDismissNotice: () -> Unit,
+    onOpenEpg: () -> Unit,
     onBack: () -> Unit,
 ) {
     var controlesVisibles by remember { mutableStateOf(true) }
@@ -114,6 +118,7 @@ fun PlayerScreen(
                 state = state,
                 exoPlayer = exoPlayer,
                 onOuvrirSelecteur = { selecteurOuvert = true },
+                onOpenEpg = onOpenEpg,
                 onBack = onBack,
             )
         }
@@ -147,6 +152,7 @@ private fun Commandes(
     state: PlayerUiState,
     exoPlayer: ExoPlayer?,
     onOuvrirSelecteur: () -> Unit,
+    onOpenEpg: () -> Unit,
     onBack: () -> Unit,
 ) {
     // La vidéo occupe tout l'écran ; seules les commandes évitent les barres
@@ -169,19 +175,51 @@ private fun Commandes(
                     tint = Color.White,
                 )
             }
-            Text(
-                text = state.channel?.name.orEmpty(),
-                modifier = Modifier.padding(start = 4.dp),
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Column(modifier = Modifier.padding(start = 4.dp).weight(1f)) {
+                Text(
+                    text = state.channel?.name.orEmpty(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                // Programme en cours et suivant, quand le portail publie un
+                // guide : l'information est présente sans jamais bloquer la lecture.
+                state.epg?.current?.let { programme ->
+                    Text(
+                        text = stringResource(R.string.epg_now_title, programme.title),
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                state.epg?.next?.let { suivant ->
+                    Text(
+                        text = stringResource(
+                            R.string.epg_next_at,
+                            ClockFormat.hourMinute(suivant.startMs),
+                            suivant.title,
+                        ),
+                        color = Color.White.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
             if (state.qualityLocked) {
                 Icon(
                     imageVector = Icons.Filled.Lock,
                     contentDescription = stringResource(R.string.quality_locked),
                     tint = Color.White,
                     modifier = Modifier.padding(start = 8.dp).size(18.dp),
+                )
+            }
+            IconButton(onClick = onOpenEpg) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = stringResource(R.string.epg_open),
+                    tint = Color.White,
                 )
             }
         }

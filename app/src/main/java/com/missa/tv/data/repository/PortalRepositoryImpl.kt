@@ -9,6 +9,7 @@ import com.missa.tv.data.remote.portal.PortalFailure
 import com.missa.tv.data.remote.portal.PortalProtocolException
 import com.missa.tv.data.remote.portal.StalkerClient
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.PortalCatalog
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.PortalSession
@@ -127,20 +128,64 @@ class PortalRepositoryImpl @Inject constructor(
         try {
             AppResult.success(client.createLink(session, profil, channel))
         } catch (erreur: PortalProtocolException) {
-            if (erreur.failure == PortalFailure.UNAUTHORIZED) {
-                // Session expirée côté portail : l'appelant doit rouvrir une
-                // session plutôt que de réessayer avec le même jeton.
-                profilsParSession.remove(session.token)
-            }
+            // Session expirée côté portail : l'appelant doit rouvrir une
+            // session plutôt que de réessayer avec le même jeton.
+            oublierSiSessionRefusee(session, erreur)
             AppResult.failure(erreur.toAppError())
         } catch (erreur: IOException) {
             AppResult.failure(AppError.StreamUnavailable)
         }
     }
 
+    override suspend fun shortEpg(
+        session: PortalSession,
+        channelId: String,
+    ): AppResult<List<EpgEvent>> = withContext(dispatchers.io) {
+        val profil = profilsParSession[session.token]
+            ?: return@withContext AppResult.failure(AppError.SessionExpired)
+        try {
+            AppResult.success(client.shortEpg(session, profil, channelId))
+        } catch (erreur: PortalProtocolException) {
+            oublierSiSessionRefusee(session, erreur)
+            AppResult.failure(erreur.toAppError())
+        } catch (erreur: IOException) {
+            AppResult.failure(AppError.PortalUnreachable)
+        }
+    }
+
+    override suspend fun epg(
+        session: PortalSession,
+        channelId: String,
+        fromMs: Long,
+        toMs: Long,
+    ): AppResult<List<EpgEvent>> = withContext(dispatchers.io) {
+        val profil = profilsParSession[session.token]
+            ?: return@withContext AppResult.failure(AppError.SessionExpired)
+        try {
+            AppResult.success(client.events(session, profil, channelId, fromMs, toMs))
+        } catch (erreur: PortalProtocolException) {
+            oublierSiSessionRefusee(session, erreur)
+            AppResult.failure(erreur.toAppError())
+        } catch (erreur: IOException) {
+            AppResult.failure(AppError.PortalUnreachable)
+        }
+    }
+
     override suspend fun keepAlive(session: PortalSession) = withContext(dispatchers.io) {
         val profil = profilsParSession[session.token] ?: return@withContext
         client.keepAlive(session, profil)
+    }
+
+    /**
+     * Oublie une session que le portail a refusée.
+     *
+     * Un jeton refusé ne sera pas accepté au prochain appel : l'appelant doit
+     * rouvrir une session plutôt que réessayer avec le même jeton.
+     */
+    private fun oublierSiSessionRefusee(session: PortalSession, erreur: PortalProtocolException) {
+        if (erreur.failure == PortalFailure.UNAUTHORIZED) {
+            profilsParSession.remove(session.token)
+        }
     }
 
     private fun PortalFailure.toFailoverReason(): PortalFailoverPolicy.FailoverReason = when (this) {

@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.time.TimeSource
+import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.CatalogCache
+import com.missa.tv.data.local.EpgCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
@@ -38,6 +40,8 @@ interface AppEntryPoint {
     fun portalProfileSource(): PortalProfileSource
     fun settingsStore(): SettingsStore
     fun catalogCache(): CatalogCache
+    fun epgCache(): EpgCache
+    fun epgLoader(): EpgLoader
     fun playerFactory(): PlayerFactory
     fun playbackQualityApplier(): PlaybackQualityApplier
     fun dispatcherProvider(): DispatcherProvider

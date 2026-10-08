@@ -128,4 +128,19 @@
     <string name="settings_test_connection">Test connection</string>
     <string name="settings_connection_ok">Connection successful: %1$d channels received from the portal.</string>
     <string name="error_session_expired">Session expired: go back to the home screen to reconnect to the portal.</string>
+
+    <!-- TV guide (EPG) -->
+    <string name="epg_open">TV guide</string>
+    <string name="epg_title">TV guide</string>
+    <string name="epg_now">On now</string>
+    <string name="epg_now_title">On now: %1$s</string>
+    <string name="epg_next_at">At %1$s: %2$s</string>
+    <string name="epg_time_range">%1$s – %2$s</string>
+    <string name="epg_loading">Loading TV guide…</string>
+    <string name="epg_refresh">Refresh</string>
+    <string name="epg_empty_grid">No channel in this selection.</string>
+    <string name="epg_cached_notice">Showing the saved guide: the portal could not be reached.</string>
+    <string name="epg_open_channel">See the programme</string>
+    <string name="guide_empty">No programme published for the next 24 hours.</string>
+    <string name="guide_now_badge">On now</string>
 </resources>

@@ -6,9 +6,11 @@ import com.missa.tv.core.json.asObjectOrNull
 import com.missa.tv.core.json.boolean
 import com.missa.tv.core.json.booleanTolerant
 import com.missa.tv.core.json.int
+import com.missa.tv.core.json.obj
 import com.missa.tv.core.json.string
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.PortalAccount
 import com.missa.tv.domain.model.StreamLink
 import kotlinx.serialization.SerializationException
@@ -205,6 +207,109 @@ class StalkerResponseParser(
             isHls = url.contains(".m3u8", ignoreCase = true),
             createdAtMs = nowMs,
         )
+    }
+
+    /**
+     * Guide court d'une chaîne (`get_short_epg`).
+     *
+     * Le programme en cours et les suivants, tels que le portail les publie
+     * pour la liste des chaînes : une poignée d'événements, ou aucun si le
+     * portail ne fournit pas de guide pour cette chaîne.
+     */
+    fun shortEpg(body: String, channelId: String): List<EpgEvent> =
+        extractEvents(payload(body), channelId)
+
+    /**
+     * Guide d'une chaîne sur une fenêtre (`get_events`).
+     *
+     * La réponse est paginée comme celle des chaînes : `js.data` est alors un
+     * objet contenant le tableau de la page (`data`) et la pagination
+     * (`total_items`, `max_page_items`). Les deux formes — tableau direct et
+     * objet paginé — sont acceptées, comme pour les chaînes.
+     */
+    fun events(body: String, channelId: String): List<EpgEvent> =
+        extractEvents(payload(body), channelId)
+
+    /**
+     * Extrait les événements d'une réponse de guide.
+     *
+     * Deux formes coexistent selon les portails et selon l'action demandée :
+     *  - un tableau d'événements (`{name, start_timestamp, end_timestamp…}`) ;
+     *  - un tableau de chaînes imbriquant chacune son guide (`epg`), lorsque
+     *    le portail répond pour toutes les chaînes d'un coup.
+     *
+     * Un élément est traité comme une chaîne imbriquée dès qu'il porte un
+     * tableau `epg` non vide ; sinon c'est un événement de [channelId].
+     */
+    private fun extractEvents(js: JsonElement, channelId: String): List<EpgEvent> {
+        val elements = when (js) {
+            is JsonArray -> js
+            is JsonObject -> {
+                val donnees = js.array("data")
+                if (donnees.isNotEmpty()) {
+                    donnees
+                } else {
+                    // Forme paginée : le tableau est à l'intérieur de `js.data`.
+                    js.obj("data")?.array("data") ?: JsonArray(emptyList())
+                }
+            }
+            else -> throw PortalProtocolException(PortalFailure.MALFORMED, "Guide inattendu")
+        }
+
+        val paires = mutableListOf<Pair<String, JsonObject>>()
+        for (element in elements) {
+            val objet = element.asObjectOrNull() ?: continue
+            val imbrique = objet.array("epg")
+            if (imbrique.isNotEmpty()) {
+                val idChaine = objet.string("ch_id") ?: objet.string("id") ?: continue
+                for (evenement in imbrique) {
+                    evenement.asObjectOrNull()?.let { paires += idChaine to it }
+                }
+            } else {
+                paires += channelId to objet
+            }
+        }
+
+        return paires.mapNotNull { (id, evenement) -> evenement.toEpgEvent(id) }
+    }
+
+    /**
+     * Construit un événement, ou `null` s'il est inutilisable.
+     *
+     * Sont écartés : les événements sans titre, sans horodatage exploitable, et
+     * ceux dont la fin précède le début. Mieux vaut un guide incomplet qu'un
+     * guide faux : un programme inventé serait affiché comme en cours.
+     */
+    private fun JsonObject.toEpgEvent(channelId: String): EpgEvent? {
+        val titre = string("name") ?: string("title") ?: return null
+        val debut = timestampMs("start_timestamp") ?: timestampMs("start") ?: return null
+        val fin = timestampMs("end_timestamp") ?: timestampMs("end") ?: return null
+        if (fin <= debut) return null
+
+        return EpgEvent(
+            // Sans identifiant, la clé est reconstruite : deux événements de la
+            // même chaîne ne peuvent pas partager un début à la milliseconde.
+            id = string("id") ?: "$channelId-$debut",
+            channelId = channelId,
+            title = titre,
+            description = string("descr") ?: string("description"),
+            startMs = debut,
+            endMs = fin,
+        )
+    }
+
+    /**
+     * Horodatage Unix du portail, en millisecondes.
+     *
+     * Le portail publie des secondes ; certains publient déjà des
+     * millisecondes, et d'autres encore des heures « HH:MM » inexploitables
+     * sans la date du jour — ceux-là sont ignorés plutôt que devinés.
+     */
+    private fun JsonObject.timestampMs(field: String): Long? {
+        val secondes = (this[field] as? JsonPrimitive)?.content?.toLongOrNull() ?: return null
+        if (secondes <= 0L) return null
+        // Au-delà de ~5138 en années, la valeur est déjà en millisecondes.
+        return if (secondes > 100_000_000_000L) secondes else secondes * 1000L
     }
 
     /**

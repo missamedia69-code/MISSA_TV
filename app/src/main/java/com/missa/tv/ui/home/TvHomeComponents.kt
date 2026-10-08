@@ -25,6 +25,7 @@ import androidx.tv.material3.Card
 import com.missa.tv.R
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.ChannelGroup
+import com.missa.tv.domain.model.EpgEvent
 
 /**
  * Composants d'interface réservés à Android TV.
@@ -96,6 +97,7 @@ private fun TvPastille(titre: String, selectionnee: Boolean, onClick: () -> Unit
 @Composable
 fun TvChannelCard(
     groupe: ChannelGroup,
+    programme: EpgEvent?,
     onSelected: (ChannelGroup) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -135,6 +137,7 @@ fun TvChannelCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                programme?.let { ProgrammeEnCours(programme = it) }
             }
 
             Icon(

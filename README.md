@@ -34,8 +34,9 @@ toujours ce qu'elle fait — y compris quand elle ne peut rien améliorer.
 | Lecteur Media3 et mode faible débit (5 modes, adaptation automatique) | terminé |
 | Composants Android TV (focus `tv-material`, navigation au D-pad) | terminé |
 | Catalogue local Room (ouverture immédiate, repli hors ligne) | terminé |
+| Guide des programmes (EPG : en cours / à suivre, grille, programme 24 h, rafraîchissement WorkManager) | terminé |
 | Publication signée (R8, keystore par secrets) | terminé |
-| EPG complet, code parental, enregistrement, Chromecast | **phase 2** (architecture préparée, non implémentée) |
+| Code parental, enregistrement, Chromecast | **phase 2** (architecture préparée, non implémentée) |
 
 ---
 
@@ -120,8 +121,12 @@ permet à la CI de valider la minification à chaque push sans détenir de secre
    fournisseur, puis enregistrer. Le profil peut être nommé ; plusieurs profils
    sont possibles, avec bascule automatique si l'un d'eux ne répond plus.
 3. **Choisir une chaîne.** Les diffusions d'une même chaîne (SD, HD, FHD) sont
-   regroupées : une seule ligne par chaîne.
-4. **Régler la qualité** depuis l'écran de lecture (D-pad sur TV, feuille
+   regroupées : une seule ligne par chaîne. Le programme en cours est affiché
+   sous chaque chaîne quand le portail publie un guide.
+4. **Consulter le programme.** Le bouton « Programme TV » ouvre la grille (en
+   cours et à suivre pour chaque chaîne) ; le programme complet d'une chaîne
+   s'ouvre depuis la grille ou depuis l'écran de lecture.
+5. **Régler la qualité** depuis l'écran de lecture (D-pad sur TV, feuille
    glissante sur mobile) : cinq modes, du plus économe au maximum, plus un mode
    audio seul.
 

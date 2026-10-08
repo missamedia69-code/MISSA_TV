@@ -6,13 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.ChannelGroup
 
 /**
  * Écrans de l'application.
  *
  * La navigation est écrite à la main : la bibliothèque de navigation de Jetpack
  * exige minSdk 24, alors que le projet cible minSdk 23 pour rester installable
- * sur les boîtiers Android TV anciens. Le besoin est ici très simple — quatre
+ * sur les boîtiers Android TV anciens. Le besoin est ici très simple — six
  * écrans et une pile d'un niveau.
  */
 sealed interface Screen {
@@ -22,6 +23,18 @@ sealed interface Screen {
 
     /** Lecture d'une chaîne. */
     data class Player(val channel: Channel) : Screen
+
+    /**
+     * Grille du programme : pour chaque chaîne de la liste, le programme en
+     * cours et le suivant.
+     *
+     * Reçoit les groupes tels qu'affichés à l'ouverture : la grille porte sur
+     * la sélection courante (catégorie comprise), pas sur un catalogue figé.
+     */
+    data class Epg(val groups: List<ChannelGroup>) : Screen
+
+    /** Programme complet d'une chaîne sur les prochaines 24 heures. */
+    data class ChannelGuide(val channel: Channel) : Screen
 
     /** Réglages : profils de connexion, qualité, diagnostics. */
     data object Settings : Screen

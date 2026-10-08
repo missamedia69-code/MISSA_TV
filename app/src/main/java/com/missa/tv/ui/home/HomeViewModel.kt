@@ -6,12 +6,16 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
+import com.missa.tv.core.time.TimeSource
+import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.channel.ChannelVariantGrouper
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.ChannelEpg
 import com.missa.tv.domain.model.ChannelGroup
+import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.PortalRepository
@@ -31,6 +35,13 @@ data class HomeUiState(
     val groups: List<ChannelGroup> = emptyList(),
     val selectedCategoryId: String? = null,
     val qualityMode: QualityMode = QualityMode.DEFAULT,
+    /**
+     * Programme en cours de chaque groupe visible, indexé par clé de groupe.
+     *
+     * Vient du guide mémorisé, rafraîchi en arrière-plan : une chaîne sans
+     * guide publié par le portail n'a simplement pas d'entrée.
+     */
+    val nowPlaying: Map<String, EpgEvent> = emptyMap(),
     /** Vrai si la configuration distante demande une version plus récente. */
     val requiresAppUpdate: Boolean = false,
     /**
@@ -69,6 +80,8 @@ class HomeViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val profileSource: PortalProfileSource,
     private val catalogCache: CatalogCache,
+    private val epgLoader: EpgLoader,
+    private val timeSource: TimeSource,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -108,6 +121,9 @@ class HomeViewModel @Inject constructor(
                 signatureProfils = signature
                 charger()
             }
+            // Dans la même coroutine : le programme en cours s'appuie sur les
+            // groupes que le chargement vient de publier.
+            rafraichirProgrammesCourants()
         }
     }
 
@@ -147,7 +163,7 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        val portalId = identifiantPortail()
+        val portalId = profileSource.activePortalKey()
 
         // Le catalogue mémorisé est affiché sans attendre : sur une connexion
         // lente, la liste apparaît immédiatement au lieu de laisser un écran de
@@ -232,19 +248,42 @@ class HomeViewModel @Inject constructor(
     fun channelToPlay(group: ChannelGroup): Channel = group.bestFor(qualityMode).channel
 
     /**
-     * Identifiant du portail servant de clé au cache.
+     * Affiche le programme en cours des chaînes visibles.
      *
-     * C'est le profil actif, à défaut le premier profil complet enregistré : deux
-     * profils ne partagent jamais leur catalogue, et un cache orphelin ne peut
-     * donc pas afficher les chaînes d'un autre abonnement.
+     * Le guide mémorisé est affiché sans attendre le portail ; seules les
+     * chaînes dont le guide est périmé sont redemandées, dans la limite fixée
+     * par [EpgLoader] pour ne pas transformer l'ouverture de l'accueil en
+     * rafale de requêtes sur une connexion limitée.
      */
-    private suspend fun identifiantPortail(): String {
-        val profils = profileSource.profiles()
-        val actif = profileSource.activeProfileId()
-        return profils.firstOrNull { it.id == actif }?.id
-            ?: profils.firstOrNull { it.isComplete }?.id
-            ?: CACHE_SANS_PROFIL
+    private suspend fun rafraichirProgrammesCourants() {
+        val groupes = _state.value.visibleGroups
+        if (groupes.isEmpty()) return
+
+        val portalId = profileSource.activePortalKey()
+        val maintenant = timeSource.nowMs()
+        val ids = groupes.map { channelToPlay(it).id }
+        val cleParId = groupes.associate { channelToPlay(it).id to it.key }
+
+        // Affichage immédiat depuis le guide mémorisé.
+        val memorises = epgLoader.cachedGuides(portalId, ids, maintenant)
+        _state.update { etat ->
+            etat.copy(nowPlaying = programmeEnCours(memorises, cleParId))
+        }
+
+        // Rafraîchissement des guides périmés, puis nouvel affichage.
+        val outcome = epgLoader.refreshShortEpg(portalId, ids, maintenant)
+        _state.update { etat ->
+            etat.copy(nowPlaying = programmeEnCours(outcome.guides, cleParId))
+        }
     }
+
+    /** Programmes en cours des guides, indexés par clé de groupe. */
+    private fun programmeEnCours(
+        guides: Map<String, ChannelEpg>,
+        cleParId: Map<String, String>,
+    ): Map<String, EpgEvent> = guides.mapNotNull { (channelId, guide) ->
+        guide.current?.let { cleParId[channelId] to it }
+    }.toMap()
 
     private companion object {
         /**
@@ -252,8 +291,5 @@ class HomeViewModel @Inject constructor(
          * distante. Renseignée par le build.
          */
         val CURRENT_VERSION_CODE: Int = com.missa.tv.BuildConfig.VERSION_CODE
-
-        /** Clé de cache utilisée lorsqu'aucun profil n'est encore complet. */
-        const val CACHE_SANS_PROFIL: String = "sans-profil"
     }
 }

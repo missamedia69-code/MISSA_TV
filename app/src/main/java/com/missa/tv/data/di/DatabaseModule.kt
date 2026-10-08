@@ -3,6 +3,7 @@ package com.missa.tv.data.di
 import android.content.Context
 import androidx.room.Room
 import com.missa.tv.data.local.db.CatalogDao
+import com.missa.tv.data.local.db.EpgDao
 import com.missa.tv.data.local.db.MissaDatabase
 import dagger.Module
 import dagger.Provides
@@ -34,4 +35,7 @@ object DatabaseModule {
 
     @Provides
     fun catalogDao(database: MissaDatabase): CatalogDao = database.catalogDao()
+
+    @Provides
+    fun epgDao(database: MissaDatabase): EpgDao = database.epgDao()
 }

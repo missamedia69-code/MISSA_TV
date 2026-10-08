@@ -1,16 +1,20 @@
 package com.missa.tv.data.remote.portal
 
-import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.json.int
+import com.missa.tv.core.json.obj
+import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.log.Secrets
+import com.missa.tv.core.time.ClockFormat
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.domain.model.PortalAccount
 import com.missa.tv.domain.model.PortalCatalog
 import com.missa.tv.domain.model.PortalProfile
 import com.missa.tv.domain.model.PortalSession
 import com.missa.tv.domain.model.StreamLink
 import java.io.IOException
+import java.util.TimeZone
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonObject
 
@@ -184,6 +188,80 @@ class StalkerClient(
     }
 
     /**
+     * Guide court d'une chaîne : le programme en cours et les suivants.
+     *
+     * C'est l'action `get_short_epg`, demandée avec l'identifiant de la chaîne.
+     * Le portail peut ne publier aucun guide pour certaines chaînes : la
+     * réponse est alors une liste vide, ce qui n'est pas une erreur.
+     */
+    suspend fun shortEpg(
+        session: PortalSession,
+        profile: PortalProfile,
+        channelId: String,
+    ): List<EpgEvent> {
+        val body = request(
+            endpoint = session.endpoint,
+            parameters = mapOf(
+                "type" to StalkerProtocol.TYPE_ITV,
+                "action" to StalkerProtocol.ACTION_GET_SHORT_EPG,
+                "ch_id" to channelId,
+            ),
+            profile = profile,
+            token = session.token,
+            timezone = session.timezone,
+        )
+        return parser.shortEpg(body, channelId)
+    }
+
+    /**
+     * Guide complet d'une chaîne sur la fenêtre [fromMs, toMs], page après page.
+     *
+     * C'est l'action `get_events`, paginée comme `get_all_channels` : la boucle
+     * s'arrête sur une page vide ou quand la pagination annonce la fin. Les
+     * dates sont transmises au format attendu par le portail (`yyyy-MM-dd`),
+     * dans le fuseau de la session.
+     */
+    suspend fun events(
+        session: PortalSession,
+        profile: PortalProfile,
+        channelId: String,
+        fromMs: Long,
+        toMs: Long,
+    ): List<EpgEvent> {
+        val fuseau = TimeZone.getTimeZone(session.timezone)
+        val collected = mutableListOf<EpgEvent>()
+        var page = 1
+
+        while (page <= MAX_PAGES) {
+            val body = request(
+                endpoint = session.endpoint,
+                parameters = mapOf(
+                    "type" to StalkerProtocol.TYPE_ITV,
+                    "action" to StalkerProtocol.ACTION_GET_EVENTS,
+                    "ch_id" to channelId,
+                    "date_from" to ClockFormat.dayParam(fromMs, fuseau),
+                    "date_to" to ClockFormat.dayParam(toMs, fuseau),
+                    "p" to page.toString(),
+                ),
+                profile = profile,
+                token = session.token,
+                timezone = session.timezone,
+            )
+
+            val pageEvents = parser.events(body, channelId)
+            if (pageEvents.isEmpty()) break
+            collected += pageEvents
+
+            if (!hasNextPage(body, page)) break
+            page++
+        }
+
+        return collected
+            .distinctBy { it.id }
+            .sortedWith(compareBy({ it.startMs }, { it.endMs }))
+    }
+
+    /**
      * Maintient la session active.
      *
      * Le portail invalide les sessions inactives au bout de quelques minutes :
@@ -297,11 +375,18 @@ class StalkerClient(
         }
     }
 
-    /** Détecte la présence d'une page suivante dans une réponse paginée. */
+    /**
+     * Détecte la présence d'une page suivante dans une réponse paginée.
+     *
+     * `get_all_channels` publie la pagination au niveau de `js` ; `get_events`
+     * la publie à l'intérieur de l'objet `js.data`. Les deux niveaux sont donc
+     * examinés.
+     */
     private fun hasNextPage(body: String, currentPage: Int): Boolean {
         val js = runCatching { parser.payload(body) as? JsonObject }.getOrNull() ?: return false
-        val total = js.int("total_items") ?: return false
-        val parPage = js.int("max_page_items") ?: return false
+        val source = js.obj("data") ?: js
+        val total = source.int("total_items") ?: return false
+        val parPage = source.int("max_page_items") ?: return false
         if (total <= 0 || parPage <= 0) return false
         return currentPage * parPage < total
     }

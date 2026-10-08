@@ -33,13 +33,17 @@ contient aucune chaîne et aucun flux.**
 **Volume** : 64 fichiers Kotlin (7 870 lignes) côté application, 16 fichiers de test (3 320 lignes) et 173 méthodes de test,
 800 lignes de documentation.
 
-### Phase 2 — architecture préparée, non implémentée
+### Phase 2
 
-EPG complet, code parental, enregistrement, Chromecast : aucun de ces chantiers
-n'est codé. Leur point d'accroche est décrit dans
-[`ARCHITECTURE.md`](ARCHITECTURE.md#10-phase-2--architecture-préparée-non-implémentée)
-(actions `get_events` / `get_short_epg` déjà déclarées, `media3-session` déjà
-présent, drapeau `isCensored` déjà dans le modèle de chaîne).
+Le **guide des programmes (EPG)** est désormais livré : actions
+`get_events` / `get_short_epg` exploitées, table Room `epg_events`, grille du
+programme, programme complet d'une chaîne et rafraîchissement périodique
+WorkManager (voir [`ARCHITECTURE.md`](ARCHITECTURE.md#10-guide-électronique-des-programmes-epg)).
+
+Code parental, enregistrement, Chromecast : l'architecture est préparée mais ces
+chantiers ne sont pas codés. Leur point d'accroche est décrit dans
+[`ARCHITECTURE.md`](ARCHITECTURE.md#11-phase-2--architecture-préparée-non-implémentée)
+(`media3-session` déjà présent, drapeau `isCensored` déjà dans le modèle de chaîne).
 
 ---
 

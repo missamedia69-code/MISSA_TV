@@ -37,4 +37,21 @@ interface PortalProfileSource {
 
     /** Vrai si au moins un profil complet est disponible. */
     suspend fun hasUsableProfile(): Boolean = profiles().any { it.enabled && it.isComplete }
+
+    /**
+     * Identifiant de portail servant de clé aux caches locaux (catalogue, EPG).
+     *
+     * C'est le profil actif, à défaut le premier profil complet enregistré :
+     * deux profils ne partagent jamais leurs caches, et un cache orphelin ne
+     * peut donc pas afficher les chaînes d'un autre abonnement.
+     */
+    suspend fun activePortalKey(): String =
+        profiles().firstOrNull { it.id == activeProfileId() }?.id
+            ?: profiles().firstOrNull { it.isComplete }?.id
+            ?: NO_PROFILE_KEY
+
+    companion object {
+        /** Clé de cache utilisée lorsqu'aucun profil n'est encore complet. */
+        const val NO_PROFILE_KEY: String = "sans-profil"
+    }
 }

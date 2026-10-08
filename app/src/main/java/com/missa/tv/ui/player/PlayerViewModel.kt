@@ -15,6 +15,8 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
+import com.missa.tv.core.time.TimeSource
+import com.missa.tv.data.epg.EpgLoader
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
@@ -22,9 +24,11 @@ import com.missa.tv.domain.bandwidth.ConnectionClass
 import com.missa.tv.domain.bandwidth.QualityController
 import com.missa.tv.domain.model.BandwidthSettings
 import com.missa.tv.domain.model.Channel
+import com.missa.tv.domain.model.ChannelEpg
 import com.missa.tv.domain.model.PortalSession
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.playback.PlaybackCaps
+import com.missa.tv.domain.repository.PortalProfileSource
 import com.missa.tv.domain.repository.PortalRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
@@ -67,6 +71,13 @@ data class PlayerUiState(
     val availableHeights: List<Int> = emptyList(),
     val notice: PlayerNotice? = null,
     val error: AppError? = null,
+    /**
+     * Guide de la chaîne : programme en cours et suivant.
+     *
+     * Information affichée à côté du nom de la chaîne, chargée en parallèle
+     * de la lecture : son absence n'interrompt jamais la lecture.
+     */
+    val epg: ChannelEpg? = null,
 ) {
     /** Vrai si le flux ne propose qu'une seule qualité d'image. */
     val isSingleQuality: Boolean get() = availableHeights.size <= 1
@@ -92,6 +103,9 @@ class PlayerViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val playerFactory: PlayerFactory,
     private val qualityApplier: PlaybackQualityApplier,
+    private val profileSource: PortalProfileSource,
+    private val epgLoader: EpgLoader,
+    private val timeSource: TimeSource,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -139,6 +153,13 @@ class PlayerViewModel @Inject constructor(
                 }
             }
             this@PlayerViewModel.session = session
+
+            // Le guide (programme en cours / à suivre) est chargé en parallèle
+            // de la lecture, avec la session déjà ouverte : il s'affiche dès
+            // réception, sans attendre le flux.
+            viewModelScope.launch(dispatchers.io) {
+                chargerGuide(session)
+            }
 
             val lien = when (val resultat = portalRepository.createLink(session, channel)) {
                 is AppResult.Success -> resultat.value
@@ -349,5 +370,24 @@ class PlayerViewModel @Inject constructor(
 
     private fun fail(error: AppError) {
         _state.update { it.copy(phase = PlayerUiState.Phase.Failed, error = error) }
+    }
+
+    /**
+     * Charge le programme en cours et le suivant de la chaîne.
+     *
+     * La lecture n'attend pas le guide, et l'absence de guide n'interrompt
+     * rien : c'est une information affichée à côté du nom de la chaîne, pas
+     * une condition de lecture. Le guide mémorisé est affiché sans attendre ;
+     * seul un guide périmé est redemandé au portail.
+     */
+    private suspend fun chargerGuide(session: PortalSession) {
+        val portalId = profileSource.activePortalKey()
+        val outcome = epgLoader.refreshShortEpg(
+            portalId = portalId,
+            channelIds = listOf(channel.id),
+            nowMs = timeSource.nowMs(),
+            session = session,
+        )
+        _state.update { it.copy(epg = outcome.guides[channel.id]) }
     }
 }

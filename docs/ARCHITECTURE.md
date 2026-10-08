@@ -209,17 +209,53 @@ leur exécution relève de la recette manuelle décrite dans
 
 ---
 
-## 10. Phase 2 — architecture préparée, non implémentée
+## 10. Guide électronique des programmes (EPG)
+
+Le portail publie un guide par chaîne, en deux granularités : le **guide
+court** (`get_short_epg`, le programme en cours et les suivants) et le **guide
+complet** (`get_events`, paginé sur une fenêtre de dates). L'application affiche
+les deux, toujours depuis le cache d'abord.
+
+```
+StalkerClient.shortEpg / events ──► StalkerResponseParser (formes tolérées)
+        │                                    │
+        ▼                                    ▼
+PortalRepository.shortEpg / epg      EpgEvent (domaine : startMs, endMs, titre)
+        │                                    │
+        ▼                                    ▼
+EpgLoader (politique de rafraîchissement) ──► EpgCache (Room, table epg_events)
+        │                                    │
+        ▼                                    ▼
+HomeViewModel / EpgViewModel /         ChannelEpg.of (sélection : en cours,
+ChannelGuideViewModel /                suivant, à venir — le périmé est
+PlayerViewModel                        filtré par le temps)
+```
+
+| Composant | Rôle |
+| --- | --- |
+| `EpgEvent` / `ChannelEpg` | Modèle du domaine. `ChannelEpg.of` ne retient que ce qui chevauche l'instant présent : un guide périmé ne peut pas afficher un programme terminé comme en cours. |
+| `StalkerResponseParser.shortEpg` / `events` | Analyse tolérante : tableau d'événements, tableau de chaînes imbriquées, réponse paginée (`js.data.data`), horodatages en secondes ou en millisecondes. Les heures « HH:MM » seules sont ignorées (la date du jour manque). |
+| `StalkerClient.events` | Pagination identique à celle des chaînes, avec `date_from` / `date_to` au format `yyyy-MM-dd` dans le fuseau de la session. |
+| `EpgCache` | Table `epg_events`, fusion par identifiant (guide court et guide complet coexistent), suppression des programmes terminés à chaque écriture : la table reste bornée sans migration. |
+| `EpgLoader` | Politique partagée par tous les écrans : guides mémorisés d'abord, puis rafraîchissement des chaînes périmées (30 min), borné à 40 requêtes, interrompu au premier échec. |
+| `EpgRefreshWorker` | Rafraîchissement périodique (3 h) des guides **déjà mémorisés** (30 chaînes max) : jamais le catalogue entier. |
+| Écrans | Accueil (programme en cours sous chaque chaîne), grille « Programme TV » (en cours + suivant par chaîne, rafraîchie au défilement), programme d'une chaîne (24 h, bouton « Regarder »), lecteur (programme en cours + suivant). |
+
+La base passe en version 2 (ajout de `epg_events`) ; la migration destructive
+reste acceptable, le guide se reconstruit au prochain chargement.
+
+---
+
+## 11. Phase 2 — architecture préparée, non implémentée
 
 Ces fonctions ne sont **pas** livrées ; leur place est réservée pour ne pas avoir
 à réécrire les couches existantes.
 
 | Fonction | Point d'accroche prévu | Ce qu'il faudra ajouter |
 | --- | --- | --- |
-| EPG complet | `StalkerProtocol.ACTION_GET_EVENTS` / `ACTION_GET_SHORT_EPG` sont déjà déclarées ; `StalkerClient` sait envoyer une action arbitraire | table Room `events` (chaîne, début, fin, titre, description), écran de grille, `WorkManager` de rafraîchissement |
 | Code parental | `SettingsStore` et l'écran de réglages existent | hachage du code (jamais en clair), drapeau `isCensored` des chaînes déjà présent dans le modèle, écran de verrouillage avant l'accès aux catégories réservées |
 | Enregistrement | `PlayerFactory` construit un lecteur unique ; `Media3` fournit `MediaRecorder`/`DownloadManager` | service d'enregistrement au premier plan, stockage, notification de progression, gestion de l'espace libre |
 | Chromecast | `media3-session` est déjà une dépendance | `MediaSessionService`, `CastPlayer` et bouton de diffusion ; le mode faible débit devient un plafond transmis au récepteur |
 
-Ces quatre chantiers n'ajoutent aucune dépendance lourde et n'invalident aucune
+Ces trois chantiers n'ajoutent aucune dépendance lourde et n'invalident aucune
 décision d'architecture prise ici.

@@ -14,6 +14,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.missa.tv.core.ui.hiltViewModelFactory
 import com.missa.tv.ui.adaptive.rememberDeviceProfile
+import com.missa.tv.ui.epg.ChannelGuideScreen
+import com.missa.tv.ui.epg.ChannelGuideViewModel
+import com.missa.tv.ui.epg.EpgScreen
+import com.missa.tv.ui.epg.EpgViewModel
 import com.missa.tv.ui.home.HomeScreen
 import com.missa.tv.ui.home.HomeViewModel
 import com.missa.tv.ui.navigation.Screen
@@ -62,6 +66,8 @@ fun AppRoot(onExit: () -> Unit) {
                                 settingsStore = point.settingsStore(),
                                 profileSource = point.portalProfileSource(),
                                 catalogCache = point.catalogCache(),
+                                epgLoader = point.epgLoader(),
+                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -81,6 +87,9 @@ fun AppRoot(onExit: () -> Unit) {
                         onChannelSelected = { groupe ->
                             navigateur.open(Screen.Player(vm.channelToPlay(groupe)))
                         },
+                        onOpenEpg = {
+                            navigateur.open(Screen.Epg(groups = etat.visibleGroups))
+                        },
                         onOpenSettings = { navigateur.open(Screen.Settings) },
                         onOpenManualSetup = { navigateur.open(Screen.ManualSetup) },
                     )
@@ -97,6 +106,9 @@ fun AppRoot(onExit: () -> Unit) {
                                 settingsStore = point.settingsStore(),
                                 playerFactory = point.playerFactory(),
                                 qualityApplier = point.playbackQualityApplier(),
+                                profileSource = point.portalProfileSource(),
+                                epgLoader = point.epgLoader(),
+                                timeSource = point.timeSource(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
@@ -118,6 +130,61 @@ fun AppRoot(onExit: () -> Unit) {
                         onClearMode = vm::clearMode,
                         onRetry = vm::retry,
                         onDismissNotice = vm::dismissNotice,
+                        onOpenEpg = {
+                            navigateur.open(Screen.ChannelGuide(ecran.channel))
+                        },
+                        onBack = { navigateur.back() },
+                    )
+                }
+
+                is Screen.Epg -> {
+                    val vm: EpgViewModel = viewModel(
+                        factory = hiltViewModelFactory<EpgViewModel>(contexte) { point ->
+                            EpgViewModel(
+                                groups = ecran.groups,
+                                profileSource = point.portalProfileSource(),
+                                epgLoader = point.epgLoader(),
+                                settingsStore = point.settingsStore(),
+                                configRepository = point.remoteConfigRepository(),
+                                timeSource = point.timeSource(),
+                                dispatchers = point.dispatcherProvider(),
+                            )
+                        },
+                    )
+                    val etat by vm.state.collectAsStateWithLifecycle()
+
+                    EpgScreen(
+                        state = etat,
+                        device = appareil,
+                        onChannelSelected = { groupe ->
+                            navigateur.open(Screen.ChannelGuide(vm.channelToPlay(groupe)))
+                        },
+                        onRowsVisible = vm::rafraichirPour,
+                        onRefresh = vm::refresh,
+                        onBack = { navigateur.back() },
+                    )
+                }
+
+                is Screen.ChannelGuide -> {
+                    val vm: ChannelGuideViewModel = viewModel(
+                        key = ecran.channel.id,
+                        factory = hiltViewModelFactory<ChannelGuideViewModel>(contexte) { point ->
+                            ChannelGuideViewModel(
+                                channel = ecran.channel,
+                                portalRepository = point.portalRepository(),
+                                profileSource = point.portalProfileSource(),
+                                epgCache = point.epgCache(),
+                                timeSource = point.timeSource(),
+                                dispatchers = point.dispatcherProvider(),
+                            )
+                        },
+                    )
+                    val etat by vm.state.collectAsStateWithLifecycle()
+
+                    ChannelGuideScreen(
+                        state = etat,
+                        onPlay = { navigateur.open(Screen.Player(ecran.channel)) },
+                        onRefresh = vm::refresh,
                         onBack = { navigateur.back() },
                     )
                 }

@@ -127,4 +127,19 @@
     <string name="settings_test_connection">Tester la connexion</string>
     <string name="settings_connection_ok">Connexion réussie : %1$d chaînes reçues du portail.</string>
     <string name="error_session_expired">Session expirée : revenez à l\'accueil pour vous reconnecter au portail.</string>
+
+    <!-- Programme TV (guide EPG) -->
+    <string name="epg_open">Programme TV</string>
+    <string name="epg_title">Programme TV</string>
+    <string name="epg_now">En ce moment</string>
+    <string name="epg_now_title">En ce moment : %1$s</string>
+    <string name="epg_next_at">À %1$s : %2$s</string>
+    <string name="epg_time_range">%1$s – %2$s</string>
+    <string name="epg_loading">Chargement du programme…</string>
+    <string name="epg_refresh">Actualiser</string>
+    <string name="epg_empty_grid">Aucune chaîne dans cette sélection.</string>
+    <string name="epg_cached_notice">Programme mémorisé affiché : le portail n\'a pas pu être joint.</string>
+    <string name="epg_open_channel">Voir le programme</string>
+    <string name="guide_empty">Aucun programme publié pour les prochaines 24 heures.</string>
+    <string name="guide_now_badge">En cours</string>
 </resources>

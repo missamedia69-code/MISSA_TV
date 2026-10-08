@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.data.work.ConfigRefreshScheduler
+import com.missa.tv.data.work.EpgRefreshScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -32,6 +33,9 @@ class MissaTvApplication : Application(), Configuration.Provider {
     lateinit var configRefreshScheduler: ConfigRefreshScheduler
 
     @Inject
+    lateinit var epgRefreshScheduler: EpgRefreshScheduler
+
+    @Inject
     lateinit var crashRecorder: CrashRecorder
 
     override val workManagerConfiguration: Configuration
@@ -55,5 +59,10 @@ class MissaTvApplication : Application(), Configuration.Provider {
         // Vérification périodique de la configuration distante, même si
         // l'utilisateur n'ouvre pas l'application.
         configRefreshScheduler.schedulePeriodic()
+
+        // Rafraîchissement périodique du guide mémorisé : le programme en
+        // cours affiché à l'ouverture de l'accueil est à jour sans que
+        // l'utilisateur ait à attendre un chargement.
+        epgRefreshScheduler.schedulePeriodic()
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ import coil3.compose.AsyncImage
 import com.missa.tv.R
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.ChannelGroup
+import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.ui.adaptive.DeviceProfile
 import com.missa.tv.ui.adaptive.DeviceType
 import com.missa.tv.ui.adaptive.WindowWidthClass
@@ -64,6 +67,7 @@ fun HomeScreen(
     onRetry: () -> Unit,
     onCategorySelected: (String?) -> Unit,
     onChannelSelected: (ChannelGroup) -> Unit,
+    onOpenEpg: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenManualSetup: () -> Unit,
 ) {
@@ -74,7 +78,7 @@ fun HomeScreen(
             // sans cette marge, le titre passerait sous l'heure et la batterie.
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        EnTete(state = state, onOpenSettings = onOpenSettings)
+        EnTete(state = state, onOpenEpg = onOpenEpg, onOpenSettings = onOpenSettings)
 
         if (state.requiresAppUpdate) {
             BandeauInformation(texte = stringResource(R.string.home_update_required))
@@ -105,6 +109,7 @@ fun HomeScreen(
             // chargement : elle vient du portail ou du catalogue mémorisé.
             state.groups.isNotEmpty() -> Liste(
                 groups = state.visibleGroups,
+                nowPlaying = state.nowPlaying,
                 device = device,
                 onChannelSelected = onChannelSelected,
             )
@@ -116,7 +121,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun EnTete(state: HomeUiState, onOpenSettings: () -> Unit) {
+private fun EnTete(
+    state: HomeUiState,
+    onOpenEpg: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -139,17 +148,31 @@ private fun EnTete(state: HomeUiState, onOpenSettings: () -> Unit) {
             }
         }
 
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = stringResource(R.string.home_open_settings),
-            )
+        Row {
+            IconButton(onClick = onOpenEpg) {
+                Icon(
+                    imageVector = Icons.Filled.Tv,
+                    contentDescription = stringResource(R.string.epg_open),
+                )
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.home_open_settings),
+                )
+            }
         }
     }
 }
 
+/**
+ * Bandeau d'information (mise à jour disponible, contenu mémorisé…).
+ *
+ * Partagé avec l'écran du programme d'une chaîne, qui signale de la même
+ * façon un guide affiché depuis le cache.
+ */
 @Composable
-private fun BandeauInformation(texte: String) {
+internal fun BandeauInformation(texte: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -309,6 +332,7 @@ private fun AucuneChaine(onOpenManualSetup: () -> Unit) {
 @Composable
 private fun Liste(
     groups: List<ChannelGroup>,
+    nowPlaying: Map<String, EpgEvent>,
     device: DeviceProfile,
     onChannelSelected: (ChannelGroup) -> Unit,
 ) {
@@ -324,10 +348,19 @@ private fun Liste(
     ) {
         if (colonnes == 1) {
             items(items = groups, key = { it.key }) { groupe ->
+                val programme = nowPlaying[groupe.key]
                 if (surTeleviseur) {
-                    TvChannelCard(groupe = groupe, onSelected = onChannelSelected)
+                    TvChannelCard(
+                        groupe = groupe,
+                        programme = programme,
+                        onSelected = onChannelSelected,
+                    )
                 } else {
-                    LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                    LigneChaine(
+                        groupe = groupe,
+                        programme = programme,
+                        onSelected = onChannelSelected,
+                    )
                 }
             }
         } else {
@@ -335,10 +368,19 @@ private fun Liste(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rangee.forEach { groupe ->
                         Box(modifier = Modifier.weight(1f)) {
+                            val programme = nowPlaying[groupe.key]
                             if (surTeleviseur) {
-                                TvChannelCard(groupe = groupe, onSelected = onChannelSelected)
+                                TvChannelCard(
+                                    groupe = groupe,
+                                    programme = programme,
+                                    onSelected = onChannelSelected,
+                                )
                             } else {
-                                LigneChaine(groupe = groupe, onSelected = onChannelSelected)
+                                LigneChaine(
+                                    groupe = groupe,
+                                    programme = programme,
+                                    onSelected = onChannelSelected,
+                                )
                             }
                         }
                     }
@@ -351,9 +393,13 @@ private fun Liste(
     }
 }
 
-/** Une chaîne : numéro, logo, nom et nombre de qualités disponibles. */
+/** Une chaîne : numéro, logo, nom, qualités disponibles et programme en cours. */
 @Composable
-private fun LigneChaine(groupe: ChannelGroup, onSelected: (ChannelGroup) -> Unit) {
+private fun LigneChaine(
+    groupe: ChannelGroup,
+    programme: EpgEvent?,
+    onSelected: (ChannelGroup) -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -391,6 +437,7 @@ private fun LigneChaine(groupe: ChannelGroup, onSelected: (ChannelGroup) -> Unit
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                programme?.let { ProgrammeEnCours(programme = it) }
             }
 
             Icon(
@@ -399,6 +446,53 @@ private fun LigneChaine(groupe: ChannelGroup, onSelected: (ChannelGroup) -> Unit
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
+    }
+}
+
+/**
+ * Programme en cours d'une chaîne : pastille « en direct », titre et avancement.
+ *
+ * Affiché sous le nom de la chaîne quand le portail publie un guide. Sans
+ * guide, la ligne n'existe pas : l'absence d'information n'est pas un espace
+ * réservé, elle est simplement absente.
+ */
+@Composable
+internal fun ProgrammeEnCours(programme: EpgEvent) {
+    // L'avancement est recalculé à chaque recomposition : il progresse avec
+    // les mises à jour d'état, sans horloge dédiée.
+    val maintenant = System.currentTimeMillis()
+
+    Column(modifier = Modifier.padding(top = 4.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+            Text(
+                text = stringResource(R.string.epg_now),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = programme.title,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        LinearProgressIndicator(
+            progress = { programme.progressAt(maintenant) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        )
     }
 }
 
