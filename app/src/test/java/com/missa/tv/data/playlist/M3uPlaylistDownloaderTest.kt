@@ -38,7 +38,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `renvoie les entrees d une playlist telechargee`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps(playlistValide)) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps(playlistValide))
 
             val resultat = telechargeur.download("http://source.invalid/liste.m3u8")
 
@@ -49,7 +49,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `envoie l agent utilisateur et le referrent demandes`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps(playlistValide)) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps(playlistValide))
 
             telechargeur.download(
                 url = "http://source.invalid/liste.m3u8",
@@ -64,7 +64,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `n envoie pas d en-tete quand les valeurs sont vides`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps(playlistValide)) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps(playlistValide))
 
             telechargeur.download("http://source.invalid/liste.m3u8", userAgent = "  ")
 
@@ -78,7 +78,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `signale une cible injoignable`() = runTest {
-            fetcher.comportement = { throw IOException("réseau coupé") }
+            fetcher.prochaineException = IOException("réseau coupé")
 
             val resultat = telechargeur.download("http://source.invalid/liste.m3u8")
 
@@ -87,7 +87,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `signale une playlist refusee par le serveur`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Refused(403) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Refused(403)
 
             val resultat = telechargeur.download("http://source.invalid/liste.m3u8")
 
@@ -96,7 +96,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `signale un contenu non reconnu`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps("Page HTML sans playlist")) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps("Page HTML sans playlist"))
 
             val resultat = telechargeur.download("http://source.invalid/liste.m3u8")
 
@@ -105,7 +105,7 @@ class M3uPlaylistDownloaderTest {
 
         @Test
         fun `signale une playlist sans aucune chaine`() = runTest {
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps("#EXTM3U")) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps("#EXTM3U"))
 
             val resultat = telechargeur.download("http://source.invalid/liste.m3u8")
 
@@ -118,7 +118,7 @@ class M3uPlaylistDownloaderTest {
                 fetcher = fetcher,
                 reader = M3uPlaylistReader(maxBytes = 20),
             )
-            fetcher.comportement = { PlaylistHttpResponse.Body(corps(playlistValide)) }
+            fetcher.prochaineReponse = PlaylistHttpResponse.Body(corps(playlistValide))
 
             val resultat = telechargeurBorne.download("http://source.invalid/liste.m3u8")
 
@@ -126,17 +126,18 @@ class M3uPlaylistDownloaderTest {
         }
     }
 
-    /** Doublure de l'accès réseau : renvoie la réponse configurée. */
+    /** Doublure de l'accès réseau : renvoie la réponse ou l'exception configurée. */
     private class FetcherFactice : PlaylistHttpFetcher {
 
-        var comportement: () -> PlaylistHttpResponse = {
-            throw IllegalStateException("doublure non configurée")
-        }
-        private(set) var derniereRequete: PlaylistHttpRequest? = null
+        var prochaineReponse: PlaylistHttpResponse = PlaylistHttpResponse.Refused(0)
+        var prochaineException: Throwable? = null
+        var derniereRequete: PlaylistHttpRequest? = null
 
         override suspend fun fetch(request: PlaylistHttpRequest): PlaylistHttpResponse {
             derniereRequete = request
-            return comportement()
+            val erreur = prochaineException
+            if (erreur != null) throw erreur
+            return prochaineReponse
         }
     }
 }
