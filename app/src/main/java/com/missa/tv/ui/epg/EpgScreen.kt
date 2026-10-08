@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -212,7 +213,7 @@ private fun TvLigneGrille(ligne: EpgRow, onSelected: (ChannelGroup) -> Unit) {
 
 /** Contenu d'une ligne : numéro, logo, nom, programme en cours et suivant. */
 @Composable
-private fun TexteLigne(ligne: EpgRow) {
+private fun RowScope.TexteLigne(ligne: EpgRow) {
     Text(
         text = ligne.group.lowest.channel.displayNumber,
         modifier = Modifier.width(40.dp),

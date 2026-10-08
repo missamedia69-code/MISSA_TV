@@ -282,7 +282,9 @@ class HomeViewModel @Inject constructor(
         guides: Map<String, ChannelEpg>,
         cleParId: Map<String, String>,
     ): Map<String, EpgEvent> = guides.mapNotNull { (channelId, guide) ->
-        guide.current?.let { cleParId[channelId] to it }
+        val enCours = guide.current ?: return@mapNotNull null
+        val cle = cleParId[channelId] ?: return@mapNotNull null
+        cle to enCours
     }.toMap()
 
     private companion object {
