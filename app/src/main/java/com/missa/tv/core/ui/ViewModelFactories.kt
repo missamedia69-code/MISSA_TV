@@ -12,6 +12,7 @@ import com.missa.tv.data.local.FavoriteCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.data.player.PlaybackQualityApplier
 import com.missa.tv.data.player.PlayerFactory
+import com.missa.tv.domain.player.PipController
 import com.missa.tv.domain.repository.CatalogRepository
 import com.missa.tv.domain.repository.EpgRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
@@ -45,6 +46,7 @@ interface AppEntryPoint {
     fun timeSource(): TimeSource
     fun playerFactory(): PlayerFactory
     fun playbackQualityApplier(): PlaybackQualityApplier
+    fun pipController(): PipController
     fun dispatcherProvider(): DispatcherProvider
     fun crashRecorder(): CrashRecorder
 }

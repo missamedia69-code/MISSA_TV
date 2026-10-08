@@ -8,10 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.missa.tv.core.ui.appEntryPoint
 import com.missa.tv.core.ui.hiltViewModelFactory
 import com.missa.tv.ui.adaptive.rememberDeviceProfile
 import com.missa.tv.ui.epg.ChannelGuideScreen
@@ -105,11 +107,17 @@ fun AppRoot(onExit: () -> Unit) {
                                 settingsStore = point.settingsStore(),
                                 playerFactory = point.playerFactory(),
                                 qualityApplier = point.playbackQualityApplier(),
+                                pipController = point.pipController(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
                     )
                     val etat by vm.state.collectAsStateWithLifecycle()
+
+                    // En Picture-in-Picture, l'écran de lecture masque ses
+                    // commandes : la fenêtre flottante ne montre que l'image.
+                    val pipController = remember(contexte) { appEntryPoint(contexte).pipController() }
+                    val enModePip by pipController.enModePip.collectAsStateWithLifecycle()
 
                     // Le lecteur est libéré dès que l'écran disparaît : Media3
                     // n'arrête rien de lui-même, et un lecteur oublié continue
@@ -122,6 +130,7 @@ fun AppRoot(onExit: () -> Unit) {
                         state = etat,
                         exoPlayer = vm.exoPlayer,
                         device = appareil,
+                        enModePip = enModePip,
                         onSelectMode = vm::selectMode,
                         onClearMode = vm::clearMode,
                         onRetry = vm::retry,

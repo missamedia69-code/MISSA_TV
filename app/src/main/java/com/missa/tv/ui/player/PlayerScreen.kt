@@ -74,6 +74,8 @@ fun PlayerScreen(
     state: PlayerUiState,
     exoPlayer: ExoPlayer?,
     device: DeviceProfile,
+    /** Vrai quand l'activité est en Picture-in-Picture : seule l'image reste. */
+    enModePip: Boolean,
     onSelectMode: (QualityMode, Boolean) -> Unit,
     onClearMode: () -> Unit,
     onRetry: () -> Unit,
@@ -100,7 +102,9 @@ fun PlayerScreen(
             .background(Color.Black)
             // Un appui n'importe où affiche ou masque les commandes : c'est le
             // comportement attendu sur un téléviseur comme sur un téléphone.
-            .clickable { controlesVisibles = !controlesVisibles },
+            // Désactivé en Picture-in-Picture : la fenêtre flottante n'offre que
+            // l'image, sans commandes à basculer.
+            .clickable(enabled = !enModePip) { controlesVisibles = !controlesVisibles },
     ) {
         if (exoPlayer != null) {
             AndroidView(
@@ -130,7 +134,7 @@ fun PlayerScreen(
             else -> Unit
         }
 
-        if (controlesVisibles) {
+        if (controlesVisibles && !enModePip) {
             Commandes(
                 state = state,
                 exoPlayer = exoPlayer,
@@ -140,16 +144,18 @@ fun PlayerScreen(
             )
         }
 
-        state.notice?.let { annonce ->
-            BandeauAnnonce(
-                state = state,
-                onDismiss = onDismissNotice,
-            )
+        if (!enModePip) {
+            state.notice?.let { annonce ->
+                BandeauAnnonce(
+                    state = state,
+                    onDismiss = onDismissNotice,
+                )
+            }
         }
     }
 
     QualitySelector(
-        visible = selecteurOuvert,
+        visible = selecteurOuvert && !enModePip,
         state = state,
         device = device,
         onSelect = { mode, verrouille ->

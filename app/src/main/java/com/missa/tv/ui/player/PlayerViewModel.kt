@@ -25,6 +25,7 @@ import com.missa.tv.domain.model.Channel
 import com.missa.tv.domain.model.ChannelEpg
 import com.missa.tv.domain.model.QualityMode
 import com.missa.tv.domain.playback.PlaybackCaps
+import com.missa.tv.domain.player.PipController
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,6 +100,7 @@ class PlayerViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val playerFactory: PlayerFactory,
     private val qualityApplier: PlaybackQualityApplier,
+    private val pipController: PipController,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -216,6 +218,8 @@ class PlayerViewModel @Inject constructor(
         mediaSession = null
         player?.release()
         player = null
+        // Sans lecture, plus rien ne peut passer en fenêtre flottante.
+        pipController.setEligible(false)
         _state.update { it.copy(phase = PlayerUiState.Phase.Idle) }
     }
 
@@ -244,6 +248,8 @@ class PlayerViewModel @Inject constructor(
                     }
                     Player.STATE_READY -> {
                         _state.update { it.copy(phase = PlayerUiState.Phase.Playing) }
+                        // Une vidéo prête peut passer en Picture-in-Picture.
+                        pipController.setEligible(true)
                     }
                     Player.STATE_ENDED -> {
                         _state.update { it.copy(phase = PlayerUiState.Phase.Finished) }
