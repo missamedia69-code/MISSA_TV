@@ -69,6 +69,11 @@
     <!-- Home screen -->
     <string name="home_title">Channels</string>
     <string name="home_categories_all">All</string>
+    <string name="home_sort_number">Numbering</string>
+    <string name="home_sort_alpha">A–Z</string>
+    <string name="home_sort_group">Groups</string>
+    <string name="home_sort_country">Country</string>
+    <string name="home_countries_all">All countries</string>
     <string name="home_channel_count">%1$d channels</string>
     <string name="home_channel_count_one">%1$d channel</string>
     <string name="home_variants">%1$d available qualities</string>

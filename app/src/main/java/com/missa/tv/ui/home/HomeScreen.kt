@@ -70,6 +70,8 @@ fun HomeScreen(
     device: DeviceProfile,
     onRetry: () -> Unit,
     onCategorySelected: (String?) -> Unit,
+    onSortSelected: (SortMode) -> Unit,
+    onCountrySelected: (String?) -> Unit,
     onChannelSelected: (ChannelGroup) -> Unit,
     onToggleFavorite: (ChannelGroup) -> Unit,
     onShowFavoritesOnly: (Boolean) -> Unit,
@@ -109,6 +111,16 @@ fun HomeScreen(
                 categories = state.categories,
                 selection = state.selectedCategoryId,
                 onSelected = onCategorySelected,
+            )
+        }
+
+        SortRow(selection = state.sortMode, onSelected = onSortSelected)
+
+        if (state.countries.isNotEmpty()) {
+            CountriesRow(
+                countries = state.countries,
+                selection = state.selectedCountry,
+                onSelected = onCountrySelected,
             )
         }
 
@@ -263,6 +275,57 @@ private fun CategoriesRow(
                 titre = categorie.title,
                 selectionnee = selection == categorie.id,
                 onClick = { onSelected(categorie.id) },
+            )
+        }
+    }
+}
+
+/**
+ * Bandeau de tri : numérotation, alphabétique, groupes, pays. Toujours
+ * visible : changer l'ordre est une action courante, pas un réglage caché.
+ */
+@Composable
+private fun SortRow(selection: SortMode, onSelected: (SortMode) -> Unit) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(items = SortMode.values().toList(), key = { it.name }) { mode ->
+            PastilleCategorie(
+                titre = stringResource(mode.labelRes),
+                selectionnee = selection == mode,
+                onClick = { onSelected(mode) },
+            )
+        }
+    }
+}
+
+/** Bandeau de filtre par pays, affiché quand le catalogue déclare des pays. */
+@Composable
+private fun CountriesRow(
+    countries: List<String>,
+    selection: String?,
+    onSelected: (String?) -> Unit,
+) {
+    val tous = stringResource(R.string.home_countries_all)
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            PastilleCategorie(
+                titre = tous,
+                selectionnee = selection == null,
+                onClick = { onSelected(null) },
+            )
+        }
+        items(items = countries, key = { it }) { pays ->
+            PastilleCategorie(
+                titre = pays,
+                selectionnee = selection == pays,
+                onClick = { onSelected(pays) },
             )
         }
     }

@@ -68,6 +68,11 @@
     <!-- Écran d'accueil -->
     <string name="home_title">Chaînes</string>
     <string name="home_categories_all">Toutes</string>
+    <string name="home_sort_number">Numérotation</string>
+    <string name="home_sort_alpha">A–Z</string>
+    <string name="home_sort_group">Groupes</string>
+    <string name="home_sort_country">Pays</string>
+    <string name="home_countries_all">Tous pays</string>
     <string name="home_channel_count">%1$d chaînes</string>
     <string name="home_channel_count_one">%1$d chaîne</string>
     <string name="home_variants">%1$d qualités disponibles</string>

@@ -38,6 +38,12 @@ data class HomeUiState(
     val showFavoritesOnly: Boolean = false,
     /** Texte de recherche saisi ; vide pour tout afficher. */
     val query: String = "",
+    /** Ordre d'affichage choisi (numérotation, A–Z, groupes, pays). */
+    val sortMode: SortMode = SortMode.NUMERATION,
+    /** Pays filtré ; `null` affiche tous les pays. */
+    val selectedCountry: String? = null,
+    /** Pays présents au catalogue, pour le bandeau de filtre. */
+    val countries: List<String> = emptyList(),
     /**
      * Programme en cours de chaque groupe visible, indexé par clé de groupe.
      *
@@ -58,8 +64,9 @@ data class HomeUiState(
     val isFromCache: Boolean = false,
 ) {
     /**
-     * Chaînes à afficher, filtrées par la catégorie choisie, les favoris et la
-     * recherche. La recherche porte sur le nom affiché du groupe.
+     * Chaînes à afficher, filtrées par la catégorie choisie, le pays, les
+     * favoris et la recherche, puis triées selon le mode courant. La recherche
+     * porte sur le nom affiché du groupe.
      */
     val visibleGroups: List<ChannelGroup>
         get() {
@@ -68,14 +75,44 @@ data class HomeUiState(
                     groupe.variants.any { variante -> variante.channel.categoryId == identifiant }
                 }
             } ?: groups
+            val parPays = selectedCountry?.let { pays ->
+                parCategorie.filter { groupe ->
+                    groupe.variants.any { variante -> variante.channel.country == pays }
+                }
+            } ?: parCategorie
             val parFavoris = if (showFavoritesOnly) {
-                parCategorie.filter { groupe -> groupe.key in favoriteKeys }
+                parPays.filter { groupe -> groupe.key in favoriteKeys }
             } else {
-                parCategorie
+                parPays
             }
-            if (query.isBlank()) return parFavoris
-            return parFavoris.filter { groupe -> correspond(groupe.displayName, query) }
+            val parRecherche = if (query.isBlank()) {
+                parFavoris
+            } else {
+                parFavoris.filter { groupe -> correspond(groupe.displayName, query) }
+            }
+            return trier(parRecherche)
         }
+
+    /** Applique l'ordre d'affichage choisi ; les valeurs absentes vont en fin de liste. */
+    private fun trier(groupes: List<ChannelGroup>): List<ChannelGroup> = when (sortMode) {
+        SortMode.NUMERATION -> groupes.sortedBy { it.lowest.channel.number }
+        SortMode.ALPHABETIQUE ->
+            groupes.sortedBy { sansAccents(it.displayName).lowercase() }
+        SortMode.GROUPES ->
+            groupes.sortedWith(
+                compareBy(
+                    { sansAccents(it.lowest.channel.categoryId ?: FIN_DE_LISTE).lowercase() },
+                    { sansAccents(it.displayName).lowercase() },
+                ),
+            )
+        SortMode.PAYS ->
+            groupes.sortedWith(
+                compareBy(
+                    { sansAccents(it.lowest.channel.country ?: FIN_DE_LISTE).lowercase() },
+                    { sansAccents(it.displayName).lowercase() },
+                ),
+            )
+    }
 
     /** Vrai si aucune chaîne n'est disponible (liste vide et aucun échec). */
     val isEmpty: Boolean get() = !isLoading && error == null && groups.isEmpty()
@@ -90,14 +127,17 @@ private fun correspond(nom: String, requete: String): Boolean {
     return sansAccents(nom).contains(sansAccents(requete), ignoreCase = true)
 }
 
+/** Valeur de tri qui pousse les chaînes sans groupe ou sans pays en fin de liste. */
+private val FIN_DE_LISTE = Char.MAX_VALUE.toString()
 /** Décompose puis retire les marques diacritiques (é → e). */
 private fun sansAccents(texte: String): String =
     java.text.Normalizer.normalize(texte, java.text.Normalizer.Form.NFD)
         .replace(Regex("\\p{M}"), "")
 
 /**
- * Liste des chaînes, chargée depuis les playlists M3U déclarées par la
- * configuration distante.
+ * Liste des chaînes, chargée depuis le catalogue testé quand le workflow de
+ * contrôle l'a publié (seules les chaînes fonctionnelles sont alors listées),
+ * ou depuis les playlists M3U déclarées par la configuration distante en repli.
  *
  * Une même chaîne peut apparaître plusieurs fois, une fois par qualité : les
  * diffusions sont regroupées, l'utilisateur voit « TF1 » une seule fois et
@@ -161,6 +201,7 @@ class HomeViewModel @Inject constructor(
                     groups = groupesMemorises,
                     qualityMode = qualityMode,
                     favoriteKeys = favoris,
+                    countries = paysDe(groupesMemorises),
                     isFromCache = true,
                 )
             }
@@ -169,14 +210,16 @@ class HomeViewModel @Inject constructor(
         when (val resultat = catalogRepository.load()) {
             is AppResult.Success -> {
                 val catalogue = resultat.value
+                val groupes = ChannelVariantGrouper.group(catalogue.channels)
                 _state.update {
                     it.copy(
                         isLoading = false,
                         error = null,
                         categories = catalogue.categories,
-                        groups = ChannelVariantGrouper.group(catalogue.channels),
+                        groups = groupes,
                         qualityMode = qualityMode,
                         favoriteKeys = favoris,
+                        countries = paysDe(groupes),
                         requiresAppUpdate = config.requiresAppUpdate(CURRENT_VERSION_CODE),
                         isFromCache = false,
                     )
@@ -201,6 +244,16 @@ class HomeViewModel @Inject constructor(
     /** Filtre la liste sur une catégorie ; `null` affiche tout. */
     fun selectCategory(categoryId: String?) {
         _state.update { it.copy(selectedCategoryId = categoryId) }
+    }
+
+    /** Change l'ordre d'affichage des chaînes. */
+    fun selectSort(mode: SortMode) {
+        _state.update { it.copy(sortMode = mode) }
+    }
+
+    /** Filtre la liste sur un pays ; `null` affiche tous les pays. */
+    fun selectCountry(country: String?) {
+        _state.update { it.copy(selectedCountry = country) }
     }
 
     /** N'affiche que les favoris, ou revient à toutes les chaînes. */
@@ -233,6 +286,14 @@ class HomeViewModel @Inject constructor(
      * autre : c'est ainsi que le mode économie réduit réellement la consommation.
      */
     fun channelToPlay(group: ChannelGroup): Channel = group.bestFor(qualityMode).channel
+
+    /** Pays présents dans la liste, triés sans tenir compte des accents. */
+    private fun paysDe(groupes: List<ChannelGroup>): List<String> =
+        groupes
+            .flatMap { groupe -> groupe.variants.map { it.channel.country } }
+            .filterNotNull()
+            .distinct()
+            .sortedWith(compareBy { sansAccents(it).lowercase() })
 
     private companion object {
         /**

@@ -84,6 +84,8 @@ fun AppRoot(onExit: () -> Unit) {
                         device = appareil,
                         onRetry = vm::load,
                         onCategorySelected = vm::selectCategory,
+                        onSortSelected = vm::selectSort,
+                        onCountrySelected = vm::selectCountry,
                         onChannelSelected = { groupe ->
                             navigateur.open(Screen.Player(vm.channelToPlay(groupe)))
                         },
