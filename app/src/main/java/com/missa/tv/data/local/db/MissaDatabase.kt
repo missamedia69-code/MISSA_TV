@@ -20,11 +20,12 @@ import androidx.room.RoomDatabase
  *  - 1 : catalogue (catégories, chaînes) ;
  *  - 2 : ajout du guide électronique (`epg_events`) ;
  *  - 3 : chaîne lue par `streamUrl` (+`tvgId`, `userAgent`, `referrer`) ;
- *  - 4 : ajout des favoris (`favorites`).
+ *  - 4 : ajout des favoris (`favorites`) ;
+ *  - 5 : pays de la chaîne (`country`), pour le tri et le filtre par pays.
  */
 @Database(
     entities = [CategoryEntity::class, ChannelEntity::class, EpgEventEntity::class, FavoriteEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class MissaDatabase : RoomDatabase() {

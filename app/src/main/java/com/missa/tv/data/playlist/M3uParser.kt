@@ -170,6 +170,7 @@ class M3uParser(
         streamUrl = url,
         logoUrl = nonVide(attributs["tvg-logo"]),
         groupTitle = nonVide(attributs["group-title"]) ?: nonVide(groupe),
+        country = nonVide(attributs["tvg-country"]),
         tvgId = nonVide(attributs["tvg-id"]),
         userAgent = nonVide(userAgent),
         referrer = nonVide(referrer),

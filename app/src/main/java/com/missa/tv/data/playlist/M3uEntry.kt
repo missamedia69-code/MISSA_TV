@@ -25,6 +25,7 @@ data class M3uEntry(
     val streamUrl: String,
     val logoUrl: String? = null,
     val groupTitle: String? = null,
+    val country: String? = null,
     val tvgId: String? = null,
     val userAgent: String? = null,
     val referrer: String? = null,

@@ -117,6 +117,7 @@ class XmltvEpgRepositoryTest {
         streamUrl = "http://exemple.invalid/$id.m3u8",
         logoUrl = null,
         categoryId = null,
+        country = null,
         isCensored = false,
         isAvailable = true,
         tvgId = tvgId,

@@ -25,6 +25,8 @@ data class Channel(
     val streamUrl: String,
     val logoUrl: String? = null,
     val categoryId: String? = null,
+    /** Pays déclaré par la source (`tvg-country`), si connu. */
+    val country: String? = null,
     val isCensored: Boolean = false,
     val isAvailable: Boolean = true,
     val tvgId: String? = null,

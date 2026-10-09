@@ -28,6 +28,7 @@ object M3uChannelMapper {
         streamUrl = entree.streamUrl,
         logoUrl = entree.logoUrl,
         categoryId = entree.groupTitle,
+        country = entree.country,
         isCensored = false,
         isAvailable = true,
         tvgId = entree.tvgId,
