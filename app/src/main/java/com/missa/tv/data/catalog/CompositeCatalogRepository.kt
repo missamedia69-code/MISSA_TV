@@ -16,8 +16,8 @@ import com.missa.tv.domain.repository.CatalogRepository
  * elle qui indexe la liste mémorisée, les favoris et l'affichage immédiat.
  */
 class CompositeCatalogRepository(
-    private val tested: TestedCatalogRepository,
-    private val m3u: M3uCatalogRepository,
+    private val tested: CatalogRepository,
+    private val m3u: CatalogRepository,
 ) : CatalogRepository {
 
     /** Dernière source ayant fourni un catalogue, pour la clé de cache. */
