@@ -45,9 +45,12 @@ class CatalogJsonParser(
             return null
         }
 
+        // La numérotation suit les chaînes retenues, pas les lignes du fichier :
+        // une entrée écartée (sans URL) ne laisse pas de trou dans la liste.
         val chaines = racine.array("channels")
             .mapNotNull { it.asObjectOrNull() }
-            .mapIndexedNotNull { indice, objet -> chaine(objet, indice + 1) }
+            .mapNotNull { objet -> chaine(objet) }
+            .mapIndexed { indice, ch -> ch.copy(number = indice + 1) }
 
         return Catalog(
             categories = categoriesDe(chaines),
@@ -57,11 +60,12 @@ class CatalogJsonParser(
     }
 
     /** Une chaîne sans URL de flux est inexploitable : elle est écartée. */
-    private fun chaine(objet: JsonObject, numero: Int): Channel? {
+    private fun chaine(objet: JsonObject): Channel? {
         val url = objet.string("url")?.takeIf { it.contains("://") } ?: return null
         return Channel(
-            id = objet.string("id") ?: "catalogue-$numero",
-            number = numero,
+            id = objet.string("id") ?: url,
+            // Numéro provisoire : la liste retenue est renumérotée par le parseur.
+            number = 0,
             name = objet.string("name")?.takeIf { it.isNotBlank() } ?: url,
             streamUrl = url,
             logoUrl = objet.string("logo")?.takeIf { it.isNotBlank() },
