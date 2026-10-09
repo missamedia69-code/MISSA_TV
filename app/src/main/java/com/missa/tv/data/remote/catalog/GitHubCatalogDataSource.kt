@@ -56,7 +56,7 @@ class GitHubCatalogDataSource @Inject constructor(
             }
         }
     } catch (erreur: IOException) {
-        MissaLog.d("Catalogue testé : GitHub injoignable", erreur)
+        MissaLog.d("Catalogue testé : GitHub injoignable (${erreur.javaClass.simpleName})")
         null
     } catch (erreur: Exception) {
         MissaLog.w("Catalogue testé : échec inattendu", erreur)
