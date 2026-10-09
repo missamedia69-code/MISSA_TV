@@ -1,0 +1,44 @@
+# À COPIER dans le dépôt privé missa-tv-config sous
+# .github/workflows/build-catalog.yml
+#
+# Toutes les 6 h (et à chaque modification de portal-config.json, et sur
+# déclenchement manuel), teste toutes les chaînes de chaque liste M3U et
+# publie catalog.json : seules les chaînes qui répondent sont conservées.
+name: Test des chaînes et publication du catalogue
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - portal-config.json
+
+permissions:
+  contents: write
+
+jobs:
+  build-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Tester les chaînes et générer catalog.json
+        run: python3 scripts/build_catalog.py
+
+      - name: Publier catalog.json
+        run: |
+          git config user.name "missa-bot"
+          git config user.email "missa-bot@users.noreply.github.com"
+          git add catalog.json
+          if git diff --cached --quiet; then
+            echo "catalog.json inchangé"
+          else
+            git commit -m "data(catalog): mise à jour du catalogue des chaînes fonctionnelles"
+            git push
+          fi
