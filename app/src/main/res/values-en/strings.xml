@@ -118,6 +118,13 @@
     <string name="settings_sources_section">Channel sources</string>
     <string name="settings_sources_none">No sources configured yet.</string>
     <string name="settings_sources_online">Sources are managed by the online configuration and cannot be changed here.</string>
+    <string name="settings_catalog_origin">Channel source: %1$s</string>
+    <string name="settings_catalog_source_tested">tested catalog (channels verified online)</string>
+    <string name="settings_catalog_source_playlists">M3U playlists from the configuration</string>
+    <string name="settings_catalog_count">%1$d streams stored</string>
+    <string name="settings_catalog_updated">List updated on %1$s</string>
+    <string name="settings_catalog_never">No channel list loaded yet</string>
+    <string name="settings_catalog_refresh">Refresh channels</string>
     <string name="settings_quality_section">Picture quality</string>
     <string name="settings_quality_default">Default mode</string>
     <string name="settings_config_section">Remote configuration</string>

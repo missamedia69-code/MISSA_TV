@@ -40,10 +40,10 @@ import com.missa.tv.ui.common.DeviceDiagnosticSection
 /**
  * Réglages de l'application.
  *
- * Quatre sections : les sources de chaînes (lecture seule, gérées par la
- * configuration en ligne), la qualité d'image, la configuration distante et le
- * diagnostic. Un rappel légal figure en bas : l'application est un lecteur,
- * elle ne fournit aucune chaîne.
+ * Cinq sections : les chaînes (provenance, fraîcheur et actualisation de la
+ * liste), la qualité d'image, la configuration distante, le diagnostic et la
+ * version. Un rappel légal figure en bas : l'application est un lecteur, elle
+ * ne fournit aucune chaîne.
  */
 @Composable
 fun SettingsScreen(
@@ -52,6 +52,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onQualitySelected: (QualityMode?) -> Unit,
     onCheckConfig: () -> Unit,
+    onRefreshCatalog: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SectionSources(state = state)
+            SectionSources(state = state, onRefreshCatalog = onRefreshCatalog)
 
             SectionQualite(state = state, onQualitySelected = onQualitySelected)
 
@@ -103,16 +104,46 @@ fun SettingsScreen(
 }
 
 /**
- * Sources de chaînes déclarées par la configuration distante.
+ * Provenance des chaînes : source de la liste affichée (catalogue testé ou
+ * playlists), fraîcheur du catalogue local, sources déclarées et actualisation.
  *
- * Lecture seule : la configuration est gérée en ligne. Seuls les noms sont
- * affichés ; l'adresse d'une playlist est un identifiant sensible et n'apparaît
- * jamais ici.
+ * Les sources elles-mêmes restent en lecture seule : la configuration est
+ * gérée en ligne. Seuls les noms sont affichés ; l'adresse d'une playlist est
+ * un identifiant sensible et n'apparaît jamais ici.
  */
 @Composable
-private fun SectionSources(state: SettingsUiState) {
+private fun SectionSources(state: SettingsUiState, onRefreshCatalog: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         TitreSection(stringResource(R.string.settings_sources_section))
+
+        // Provenance et fraîcheur de la liste actuellement affichée : c'est la
+        // première information que l'utilisateur doit trouver ici.
+        val origine = stringResource(
+            if (state.fromTestedCatalog) {
+                R.string.settings_catalog_source_tested
+            } else {
+                R.string.settings_catalog_source_playlists
+            },
+        )
+        Text(
+            text = stringResource(R.string.settings_catalog_origin, origine),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+        )
+        if (state.channelCount > 0) {
+            Text(
+                text = stringResource(R.string.settings_catalog_count, state.channelCount),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            text = state.catalogUpdatedMs?.let {
+                stringResource(R.string.settings_catalog_updated, dateLisible(it))
+            } ?: stringResource(R.string.settings_catalog_never),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         if (state.playlists.isEmpty()) {
             Text(
@@ -124,6 +155,22 @@ private fun SectionSources(state: SettingsUiState) {
 
         state.playlists.forEach { source ->
             LigneSource(nom = source.name, active = source.enabled)
+        }
+
+        state.refreshError?.let { erreur ->
+            // Comme pour la vérification de configuration : sans message, un
+            // échec d'actualisation serait invisible.
+            Text(
+                text = stringResource(erreur),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        Button(onClick = onRefreshCatalog, enabled = !state.isRefreshing) {
+            if (state.isRefreshing) {
+                CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp).size(16.dp))
+            }
+            Text(text = stringResource(R.string.settings_catalog_refresh))
         }
 
         Text(

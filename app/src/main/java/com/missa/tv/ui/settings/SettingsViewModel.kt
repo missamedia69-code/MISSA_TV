@@ -7,9 +7,12 @@ import com.missa.tv.core.dispatchers.DispatcherProvider
 import com.missa.tv.core.log.CrashRecorder
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
+import com.missa.tv.data.catalog.TestedCatalogRepository
+import com.missa.tv.data.local.CatalogCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.model.PlaylistSource
 import com.missa.tv.domain.model.QualityMode
+import com.missa.tv.domain.repository.CatalogRepository
 import com.missa.tv.domain.repository.RemoteConfigRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +32,16 @@ data class SettingsUiState(
      * d'une playlist est un identifiant sensible et n'est jamais affichée.
      */
     val playlists: List<PlaylistSource> = emptyList(),
+    /** Vrai si la liste affichée vient du catalogue testé plutôt que des playlists. */
+    val fromTestedCatalog: Boolean = false,
+    /** Nombre de diffusions mémorisées pour la source courante. */
+    val channelCount: Int = 0,
+    /** Date du dernier enregistrement du catalogue local, `null` s'il est vide. */
+    val catalogUpdatedMs: Long? = null,
+    /** Vrai pendant le retéléchargement du catalogue. */
+    val isRefreshing: Boolean = false,
+    /** Échec de la dernière actualisation des chaînes. */
+    @StringRes val refreshError: Int? = null,
     val qualityMode: QualityMode? = null,
     val qualityLocked: Boolean = false,
     val lastSyncMs: Long = 0L,
@@ -50,8 +63,8 @@ data class SettingsUiState(
 }
 
 /**
- * Réglages : sources de la configuration distante (lecture seule), qualité
- * d'image par défaut, vérification de la configuration et diagnostics.
+ * Réglages : provenance des chaînes (source, fraîcheur, actualisation),
+ * qualité d'image par défaut, vérification de la configuration et diagnostics.
  *
  * Les sources ne sont pas modifiables depuis l'application : elles sont publiées
  * dans le dépôt privé de configuration. L'écran n'en montre que le nom, jamais
@@ -60,6 +73,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val configRepository: RemoteConfigRepository,
+    private val catalogRepository: CatalogRepository,
+    private val catalogCache: CatalogCache,
     private val crashRecorder: CrashRecorder,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
@@ -81,15 +96,41 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             val preferences = settingsStore.playback()
             val config = configRepository.current()
+            val cle = catalogRepository.cacheKey()
             _state.update {
                 it.copy(
                     playlists = config.playlists,
+                    fromTestedCatalog = cle == TestedCatalogRepository.CLE,
+                    channelCount = catalogCache.channelCount(cle),
+                    catalogUpdatedMs = catalogCache.lastUpdatedMs(cle),
                     qualityMode = preferences.qualityMode,
                     qualityLocked = preferences.qualityLocked,
                     lastSyncMs = configRepository.lastSyncMs(),
                     dernierIncident = crashRecorder.dernierIncident(),
                 )
             }
+        }
+    }
+
+    /**
+     * Retélécharge le catalogue depuis les sources en ligne.
+     *
+     * La liste mémorisée est remplacée en cas de succès ; en cas d'échec, elle
+     * reste en place et l'erreur est affichée.
+     */
+    fun actualiserCatalogue() {
+        viewModelScope.launch(dispatchers.io) {
+            _state.update { it.copy(isRefreshing = true, refreshError = null) }
+            val resultat = catalogRepository.load()
+            val erreur = when (resultat) {
+                is AppResult.Failure -> {
+                    MissaLog.w("Actualisation des chaînes sans succès")
+                    resultat.error.messageRes
+                }
+                is AppResult.Success -> null
+            }
+            _state.update { it.copy(isRefreshing = false, refreshError = erreur) }
+            rafraichir()
         }
     }
 

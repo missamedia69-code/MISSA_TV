@@ -204,6 +204,8 @@ fun AppRoot(onExit: () -> Unit) {
                             SettingsViewModel(
                                 settingsStore = point.settingsStore(),
                                 configRepository = point.remoteConfigRepository(),
+                                catalogRepository = point.catalogRepository(),
+                                catalogCache = point.catalogCache(),
                                 crashRecorder = point.crashRecorder(),
                                 dispatchers = point.dispatcherProvider(),
                             )
@@ -217,6 +219,7 @@ fun AppRoot(onExit: () -> Unit) {
                         onBack = { navigateur.back() },
                         onQualitySelected = vm::definirQualite,
                         onCheckConfig = vm::verifierConfiguration,
+                        onRefreshCatalog = vm::actualiserCatalogue,
                     )
                 }
             }

@@ -117,6 +117,13 @@
     <string name="settings_sources_section">Sources des chaînes</string>
     <string name="settings_sources_none">Aucune source configurée pour l\'instant.</string>
     <string name="settings_sources_online">Les sources sont gérées par la configuration en ligne et ne peuvent pas être modifiées ici.</string>
+    <string name="settings_catalog_origin">Provenance des chaînes : %1$s</string>
+    <string name="settings_catalog_source_tested">catalogue testé (chaînes vérifiées en ligne)</string>
+    <string name="settings_catalog_source_playlists">playlists M3U de la configuration</string>
+    <string name="settings_catalog_count">%1$d diffusions en mémoire</string>
+    <string name="settings_catalog_updated">Liste actualisée le %1$s</string>
+    <string name="settings_catalog_never">Aucune liste de chaînes chargée pour le moment</string>
+    <string name="settings_catalog_refresh">Actualiser les chaînes</string>
     <string name="settings_quality_section">Qualité d\'image</string>
     <string name="settings_quality_default">Mode appliqué par défaut</string>
     <string name="settings_config_section">Configuration distante</string>
