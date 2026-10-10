@@ -63,7 +63,11 @@ def parse_m3u(texte: str):
     attrs = {}
     nom = ""
     for ligne in texte.splitlines():
+        # Le BOM (U+FEFF) en tete de fichier ferait passer la directive
+        # #EXTM3U pour une URL de flux : on le retire explicitement.
         ligne = ligne.strip()
+        if ligne.startswith("\ufeff"):
+            ligne = ligne[1:]
         if not ligne:
             continue
         if ligne.startswith("#EXTINF"):
