@@ -49,8 +49,8 @@ def telecharge(url: str) -> str:
 
 def teste_chaine(url: str) -> bool:
     """Une chaîne fonctionne si elle répond 200 et envoie des octets."""
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=DELAI_CHAINE_S) as r:
             return r.status == 200 and len(r.read(OCTETS_MIN)) >= OCTETS_MIN
     except Exception:
@@ -75,13 +75,17 @@ def parse_m3u(texte: str):
             attrs = dict(ATTRIBUT.findall(m.group("attrs") or "")) if m else {}
             nom = (m.group("nom") or "").strip() if m else ""
         elif not ligne.startswith("#"):
-            chaines.append({
-                "name": nom or ligne,
-                "url": ligne,
-                "group": attrs.get("group-title", "").strip(),
-                "country": attrs.get("tvg-country", "").strip(),
-                "logo": attrs.get("tvg-logo", "").strip(),
-            })
+            # Certaines playlists (Free-TV) mettent un marqueur tel que
+            # [NO PUBLIC STREAM] à la place de l'URL : seules les vraies
+            # adresses http sont retenues comme flux.
+            if ligne.startswith("http://") or ligne.startswith("https://"):
+                chaines.append({
+                    "name": nom or ligne,
+                    "url": ligne,
+                    "group": attrs.get("group-title", "").strip(),
+                    "country": attrs.get("tvg-country", "").strip(),
+                    "logo": attrs.get("tvg-logo", "").strip(),
+                })
             attrs, nom = {}, ""
     return chaines
 
