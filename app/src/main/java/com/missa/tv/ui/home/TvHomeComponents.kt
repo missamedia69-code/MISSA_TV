@@ -4,12 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.tv.material3.Card
 import com.missa.tv.R
+import com.missa.tv.core.time.ClockFormat
 import com.missa.tv.domain.model.Category
 import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.EpgEvent
@@ -90,6 +96,12 @@ private fun TvPastille(titre: String, selectionnee: Boolean, onClick: () -> Unit
 /**
  * Une chaîne, telle qu'elle apparaît sur un téléviseur.
  *
+ * L'habillage s'inspire des guides des plateformes de streaming : une ligne
+ * large qui présente l'identité de la chaîne à gauche (numéro + logo), puis le
+ * programme en cours avec sa progression, et le programme suivant. Sans guide,
+ * la ligne reste propre : seule la mention « aucun programme annoncé »
+ * apparaît, jamais un bloc vide.
+ *
  * La carte entière est cliquable et réagit au focus : c'est indispensable à la
  * télécommande, où il n'y a pas de survol et où l'utilisateur doit voir sans
  * ambiguïté quel élément sera ouvert.
@@ -98,6 +110,7 @@ private fun TvPastille(titre: String, selectionnee: Boolean, onClick: () -> Unit
 fun TvChannelCard(
     groupe: ChannelGroup,
     programme: EpgEvent?,
+    suivant: EpgEvent?,
     isFavorite: Boolean,
     onSelected: (ChannelGroup) -> Unit,
     onToggleFavorite: (ChannelGroup) -> Unit,
@@ -110,36 +123,99 @@ fun TvChannelCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 20.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = groupe.lowest.channel.displayNumber,
-                modifier = Modifier.width(48.dp),
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            LogoChaine(url = groupe.lowest.channel.logoUrl)
+            // Identité de la chaîne : numéro au-dessus du logo, comme dans la
+            // colonne des en-têtes d'un guide.
+            Column(
+                modifier = Modifier.width(72.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = groupe.lowest.channel.displayNumber,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(6.dp))
+                LogoChaine(url = groupe.lowest.channel.logoUrl)
+            }
 
             Column(
                 modifier = Modifier
-                    .padding(start = 16.dp)
+                    .padding(start = 20.dp)
                     .weight(1f),
             ) {
                 Text(
                     text = groupe.displayName,
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (!groupe.hasSingleVariant) {
+
+                if (programme != null) {
+                    val maintenant = System.currentTimeMillis()
                     Text(
-                        text = stringResource(R.string.home_variants, groupe.distinctQualityCount),
+                        text = stringResource(R.string.epg_now),
+                        modifier = Modifier.padding(top = 6.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = "${ClockFormat.hourMinute(programme.startMs)} – " +
+                            ClockFormat.hourMinute(programme.endMs),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Text(
+                        text = programme.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    LinearProgressIndicator(
+                        progress = { programme.progressAt(maintenant) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                    if (suivant != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.epg_next_at,
+                                ClockFormat.hourMinute(suivant.startMs),
+                                suivant.title,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.home_no_program),
+                        modifier = Modifier.padding(top = 6.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (!groupe.hasSingleVariant) {
+                        Text(
+                            text = stringResource(R.string.home_variants, groupe.distinctQualityCount),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
-                programme?.let { ProgrammeEnCours(programme = it) }
             }
 
             // L'étoile est une cible focalisable distincte : à la télécommande,

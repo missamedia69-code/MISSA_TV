@@ -7,6 +7,7 @@ import com.missa.tv.core.error.AppError
 import com.missa.tv.core.log.MissaLog
 import com.missa.tv.core.result.AppResult
 import com.missa.tv.data.local.CatalogCache
+import com.missa.tv.data.local.EpgCache
 import com.missa.tv.data.local.FavoriteCache
 import com.missa.tv.data.local.SettingsStore
 import com.missa.tv.domain.channel.ChannelVariantGrouper
@@ -51,6 +52,8 @@ data class HomeUiState(
      * disponible, la carte reste vide et l'information est simplement absente.
      */
     val nowPlaying: Map<String, EpgEvent> = emptyMap(),
+    /** Programme suivant de chaque groupe visible, indexé par clé de groupe. */
+    val nextPlaying: Map<String, EpgEvent> = emptyMap(),
     /** Vrai si la configuration distante demande une version plus récente. */
     val requiresAppUpdate: Boolean = false,
     /**
@@ -150,6 +153,7 @@ class HomeViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val catalogCache: CatalogCache,
     private val favoriteCache: FavoriteCache,
+    private val epgCache: EpgCache,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -239,6 +243,30 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
+
+        chargerGuides(_state.value.groups, cle)
+    }
+
+    /**
+     * Lit le guide mémorisé des premières chaînes et alimente les programmes
+     * « en ce moment » et « suivant » de l'habillage guide.
+     *
+     * Le guide est absent tant qu'aucune source XMLTV n'est déclarée : les
+     * cartes affichent alors simplement « aucun programme annoncé ».
+     */
+    private fun chargerGuides(groupes: List<ChannelGroup>, cle: String) {
+        viewModelScope.launch(dispatchers.io) {
+            val maintenant = System.currentTimeMillis()
+            val enCours = mutableMapOf<String, EpgEvent>()
+            val aVenir = mutableMapOf<String, EpgEvent>()
+            groupes.take(PLAGES_AVEC_GUIDE).forEach { groupe ->
+                val idChaine = groupe.bestFor(qualityMode).channel.id
+                val guide = epgCache.guide(cle, idChaine, maintenant, HORIZON_GUIDE_MS)
+                guide.current?.let { enCours[groupe.key] = it }
+                guide.next?.let { aVenir[groupe.key] = it }
+            }
+            _state.update { it.copy(nowPlaying = enCours, nextPlaying = aVenir) }
+        }
     }
 
     /** Filtre la liste sur une catégorie ; `null` affiche tout. */
@@ -301,5 +329,11 @@ class HomeViewModel @Inject constructor(
          * distante. Renseignée par le build.
          */
         val CURRENT_VERSION_CODE: Int = com.missa.tv.BuildConfig.VERSION_CODE
+
+        /** Nombre de chaînes dont le guide est lu pour l'habillage guide. */
+        const val PLAGES_AVEC_GUIDE = 200
+
+        /** Fenêtre de lecture du guide : les 6 prochaines heures. */
+        const val HORIZON_GUIDE_MS = 6L * 60 * 60 * 1000
     }
 }

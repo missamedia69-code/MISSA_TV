@@ -137,6 +137,7 @@ fun HomeScreen(
             state.groups.isNotEmpty() -> Liste(
                 groups = state.visibleGroups,
                 nowPlaying = state.nowPlaying,
+                nextPlaying = state.nextPlaying,
                 favoriteKeys = state.favoriteKeys,
                 device = device,
                 onChannelSelected = onChannelSelected,
@@ -426,6 +427,7 @@ private fun AucuneChaine() {
 private fun Liste(
     groups: List<ChannelGroup>,
     nowPlaying: Map<String, EpgEvent>,
+    nextPlaying: Map<String, EpgEvent>,
     favoriteKeys: Set<String>,
     device: DeviceProfile,
     onChannelSelected: (ChannelGroup) -> Unit,
@@ -446,6 +448,7 @@ private fun Liste(
                 CarteChaine(
                     groupe = groupe,
                     programme = nowPlaying[groupe.key],
+                    suivant = nextPlaying[groupe.key],
                     isFavorite = groupe.key in favoriteKeys,
                     surTeleviseur = surTeleviseur,
                     onSelected = onChannelSelected,
@@ -460,6 +463,7 @@ private fun Liste(
                             CarteChaine(
                                 groupe = groupe,
                                 programme = nowPlaying[groupe.key],
+                                suivant = nextPlaying[groupe.key],
                                 isFavorite = groupe.key in favoriteKeys,
                                 surTeleviseur = surTeleviseur,
                                 onSelected = onChannelSelected,
@@ -481,6 +485,7 @@ private fun Liste(
 private fun CarteChaine(
     groupe: ChannelGroup,
     programme: EpgEvent?,
+    suivant: EpgEvent?,
     isFavorite: Boolean,
     surTeleviseur: Boolean,
     onSelected: (ChannelGroup) -> Unit,
@@ -490,6 +495,7 @@ private fun CarteChaine(
         TvChannelCard(
             groupe = groupe,
             programme = programme,
+            suivant = suivant,
             isFavorite = isFavorite,
             onSelected = onSelected,
             onToggleFavorite = onToggleFavorite,

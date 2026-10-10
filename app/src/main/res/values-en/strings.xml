@@ -77,6 +77,7 @@
     <string name="home_channel_count">%1$d channels</string>
     <string name="home_channel_count_one">%1$d channel</string>
     <string name="home_variants">%1$d available qualities</string>
+    <string name="home_no_program">No program announced</string>
     <string name="home_loading">Loading channels…</string>
     <string name="home_open_settings">Settings</string>
     <string name="home_config_first_time">No portal is configured yet. Enter the details provided by your service.</string>

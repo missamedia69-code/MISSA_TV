@@ -76,6 +76,7 @@
     <string name="home_channel_count">%1$d chaînes</string>
     <string name="home_channel_count_one">%1$d chaîne</string>
     <string name="home_variants">%1$d qualités disponibles</string>
+    <string name="home_no_program">Aucun programme annoncé</string>
     <string name="home_loading">Chargement des chaînes…</string>
     <string name="home_open_settings">Réglages</string>
     <string name="home_config_first_time">Aucun portail n\'est configuré. Saisissez les informations fournies par votre fournisseur d\'accès.</string>

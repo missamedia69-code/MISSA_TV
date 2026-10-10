@@ -68,6 +68,7 @@ fun AppRoot(onExit: () -> Unit) {
                                 settingsStore = point.settingsStore(),
                                 catalogCache = point.catalogCache(),
                                 favoriteCache = point.favoriteCache(),
+                                epgCache = point.epgCache(),
                                 dispatchers = point.dispatcherProvider(),
                             )
                         },
