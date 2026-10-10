@@ -55,7 +55,6 @@ import com.missa.tv.domain.model.ChannelGroup
 import com.missa.tv.domain.model.EpgEvent
 import com.missa.tv.ui.adaptive.DeviceProfile
 import com.missa.tv.ui.adaptive.DeviceType
-import com.missa.tv.ui.adaptive.WindowWidthClass
 
 /**
  * Liste des chaînes.
@@ -433,49 +432,26 @@ private fun Liste(
     onChannelSelected: (ChannelGroup) -> Unit,
     onToggleFavorite: (ChannelGroup) -> Unit,
 ) {
-    // Sur un téléviseur, l'écran est large et regardé de loin : deux colonnes et
-    // des vignettes plus grandes sont plus lisibles et plus faciles à cibler.
+    // L'habillage « guide » est une ligne large (identité de la chaîne,
+    // programme en cours, programme suivant), comme les guides des plateformes
+    // de streaming : une seule colonne, y compris sur téléviseur.
     val surTeleviseur = device.type == DeviceType.TELEVISION
-    val colonnes = if (device.widthClass == WindowWidthClass.EXPANDED && surTeleviseur) 2 else 1
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (colonnes == 1) {
-            items(items = groups, key = { it.key }) { groupe ->
-                CarteChaine(
-                    groupe = groupe,
-                    programme = nowPlaying[groupe.key],
-                    suivant = nextPlaying[groupe.key],
-                    isFavorite = groupe.key in favoriteKeys,
-                    surTeleviseur = surTeleviseur,
-                    onSelected = onChannelSelected,
-                    onToggleFavorite = onToggleFavorite,
-                )
-            }
-        } else {
-            items(items = groups.chunked(colonnes), key = { it.first().key }) { rangee ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    rangee.forEach { groupe ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            CarteChaine(
-                                groupe = groupe,
-                                programme = nowPlaying[groupe.key],
-                                suivant = nextPlaying[groupe.key],
-                                isFavorite = groupe.key in favoriteKeys,
-                                surTeleviseur = surTeleviseur,
-                                onSelected = onChannelSelected,
-                                onToggleFavorite = onToggleFavorite,
-                            )
-                        }
-                    }
-                    // Garde l'alignement des colonnes quand la dernière rangée
-                    // ne contient qu'un seul élément.
-                    if (rangee.size < colonnes) Box(modifier = Modifier.weight(1f))
-                }
-            }
+        items(items = groups, key = { it.key }) { groupe ->
+            CarteChaine(
+                groupe = groupe,
+                programme = nowPlaying[groupe.key],
+                suivant = nextPlaying[groupe.key],
+                isFavorite = groupe.key in favoriteKeys,
+                surTeleviseur = surTeleviseur,
+                onSelected = onChannelSelected,
+                onToggleFavorite = onToggleFavorite,
+            )
         }
     }
 }
