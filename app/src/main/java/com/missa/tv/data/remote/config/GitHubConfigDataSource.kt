@@ -46,6 +46,22 @@ interface GitHubContentsApi {
         @Query("ref") ref: String? = null,
     ): Response<GitHubContentDto>
 
+    /**
+     * Contenu brut d'un blob, par son empreinte.
+     *
+     * Contrairement à l'API Contents, qui laisse `content` vide au-delà d'un
+     * mébioctet, l'API Git Blobs renvoie toujours le document complet en
+     * base 64 : c'est le repli pour les fichiers volumineux.
+     */
+    @GET("repos/{owner}/{repo}/git/blobs/{sha}")
+    suspend fun blob(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+        @Path("sha") sha: String,
+        @Header("X-GitHub-Api-Version") apiVersion: String = API_VERSION,
+        @Header("Authorization") authorization: String? = null,
+    ): Response<GitHubContentDto>
+
     companion object {
         const val API_VERSION = "2022-11-28"
     }

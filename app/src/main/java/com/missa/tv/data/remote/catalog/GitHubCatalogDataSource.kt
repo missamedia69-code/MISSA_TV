@@ -36,7 +36,20 @@ class GitHubCatalogDataSource @Inject constructor(
         )
         when {
             reponse.isSuccessful -> {
-                val document = reponse.body()?.content?.decodeBase64()?.utf8()
+                val corps = reponse.body()
+                var document = corps?.content?.decodeBase64()?.utf8()
+                if (document.isNullOrBlank() && corps?.sha != null) {
+                    // Au-delà d'un mébioctet, l'API Contents renvoie un contenu
+                    // vide : le catalogue complet est alors lu par l'API Git
+                    // Blobs, qui n'a pas cette limite.
+                    MissaLog.d("Catalogue testé : ${corps.size} octets, lecture via l'API blob")
+                    document = api.blob(
+                        owner = RemoteConfigSource.owner,
+                        repo = RemoteConfigSource.repo,
+                        sha = corps.sha,
+                        authorization = RemoteConfigSource.authorization,
+                    ).body()?.content?.decodeBase64()?.utf8()
+                }
                 if (document.isNullOrBlank()) {
                     MissaLog.w("Catalogue testé : réponse sans contenu")
                     null
